@@ -1,4 +1,4 @@
 synthuse-src
 ============
 
-Synthuse - a pure java object spy and macro tool for windows.
+Synthuse (Synthetic-User) is a portable java base software testing framework for desktop windows applications.
