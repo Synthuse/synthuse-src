@@ -31,6 +31,12 @@ import javax.swing.JLabel;
 
 public class TestIdeFrame extends JFrame {
 
+	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/applications-education.png";
+	public static String RES_STR_STOP_IMG = "/org/synthuse/img/dialog-close.png";
+	public static String RES_STR_RUN_IMG = "/org/synthuse/img/arrow-right-3.png";
+	public static String RES_STR_CLEAR_IMG = "/org/synthuse/img/user-trash-2.png";
+	public static String RES_STR_COPY_IMG = "/org/synthuse/img/edit-copy-7.png";
+
 	/**
 	 * 
 	 */
@@ -48,7 +54,7 @@ public class TestIdeFrame extends JFrame {
 	
 	public TestIdeFrame() {
 		setTitle("Test IDE - Synthuse");
-		setIconImage(Toolkit.getDefaultToolkit().getImage(TestIdeFrame.class.getResource("/org/qedsys/synthuse/applications-education.png")));
+		setIconImage(Toolkit.getDefaultToolkit().getImage(TestIdeFrame.class.getResource(RES_STR_MAIN_ICON)));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 700, 367);
 		contentPane = new JPanel();
@@ -64,7 +70,7 @@ public class TestIdeFrame extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				if (btnRun.getText().equals("Run")) {
 					btnRun.setText("Stop");
-					btnRun.setIcon(new ImageIcon(SynthuseDlg.class.getResource("/org/qedsys/synthuse/dialog-close.png")));
+					btnRun.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_STOP_IMG)));
 					CommandProcessor.STOP_PROCESSOR.set(false);
 					CommandProcessor.executeThreaded(txtTest.getText(), new CommandProcessor.Events() {
 						@Override
@@ -74,18 +80,18 @@ public class TestIdeFrame extends JFrame {
 						@Override
 						public void executionCompleted() {
 							btnRun.setText("Run");
-							btnRun.setIcon(new ImageIcon(SynthuseDlg.class.getResource("/org/qedsys/synthuse/arrow-right-3.png")));
+							btnRun.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_RUN_IMG)));
 						}
 					});
 				}
 				else {
 					CommandProcessor.STOP_PROCESSOR.set(true);
 					//btnRun.setText("Run");
-					//btnRun.setIcon(new ImageIcon(SynthuseDlg.class.getResource("/org/qedsys/synthuse/arrow-right-3.png")));
+					//btnRun.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_RUN_IMG)));
 				}
 			}
 		});
-		btnRun.setIcon(new ImageIcon(SynthuseDlg.class.getResource("/org/qedsys/synthuse/arrow-right-3.png")));
+		btnRun.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_RUN_IMG)));
 		toolBar.add(btnRun);
 		
 		btnClear = new JButton("Clear");
@@ -94,7 +100,7 @@ public class TestIdeFrame extends JFrame {
 				txtTest.setText("");
 			}
 		});
-		btnClear.setIcon(new ImageIcon(SynthuseDlg.class.getResource("/org/qedsys/synthuse/user-trash-2.png")));
+		btnClear.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_CLEAR_IMG)));
 		toolBar.add(btnClear);
 		
 		btnCopy = new JButton("Copy Script");
@@ -106,7 +112,7 @@ public class TestIdeFrame extends JFrame {
 				//StatusWindow sw = new StatusWindow("this is a test BLAH really long string goes here to test status of stuff yaya!!!!123123 123 123", 4000);
 			}
 		});
-		btnCopy.setIcon(new ImageIcon(SynthuseDlg.class.getResource("/org/qedsys/synthuse/edit-copy-7.png")));
+		btnCopy.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_COPY_IMG)));
 		toolBar.add(btnCopy);
 		
 		JScrollPane scrollPane = new JScrollPane();

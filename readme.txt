@@ -1,6 +1,6 @@
 Synthuse 
 
-Version 1.0.5 released on 1-30-2014
+Version 1.0.6 released on 2-17-2014
 By Edward Jakubowski  ejakubowski7@gmail.com
 
 Description:
@@ -25,6 +25,9 @@ Software Requirements:
   
 
 Release Notes:
+  2-17-2014  version 1.0.6
+  - fixed Test IDE window
+  
   1-30-2014  version 1.0.5
    - Base version
 
