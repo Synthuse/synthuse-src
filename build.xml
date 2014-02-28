@@ -1,0 +1,72 @@
+<project name="Synthuse" default="dist" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+  <description> Simple build file for Synthuse </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="lib" location="lib"/>
+  <property name="dist" location="dist"/>
+  <property name="main.class" value="org.synthuse.SynthuseDlg"/>
+  <property name="jarname" value="synthuse.jar"/>
+  
+  <target name="bootstrap" description="Installs apche ivy">
+    <mkdir dir="${user.home}/.ant/lib"/>
+    <get dest="${user.home}/.ant/lib/ivy.jar" src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.3.0/ivy-2.3.0.jar"/>
+  </target>
+  
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+    <mkdir dir="${lib}"/>
+    <echo>basedir: ${basedir}</echo>
+    <echo>VM: ${java.vm.name}</echo>
+    <echo>Username: ${user.name}</echo>
+  </target>
+  
+  <!-- downloadable dependencies are listed in ivy.xml file and are downloaded to the lib/ivy directory. -->
+  <target name="resolve" depends="init" description="--> retreive dependencies with ivy">
+    <ivy:retrieve pattern="${lib}/[artifact]-[revision].[ext]"/>
+    <ivy:report todir="${build}"/>
+  </target>
+  
+  <target name="clean" description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+	<!-- <delete dir="${lib}"/> -->
+  </target>
+  
+  <target name="compile" depends="init" description="compile the source including jars from lib directory" >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}" destdir="${build}" includeantruntime="false">
+      <classpath>
+        <pathelement path="${classpath}"/>
+        <fileset dir="${lib}">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="dist" depends="compile" description="generate the DISTribution jar file" >
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}"/>
+    <!-- Put everything from ${build} and ${lib} into the output .jar file -->
+    <jar jarfile="${dist}/${jarname}" basedir="${build}">
+      <zipgroupfileset dir="${lib}" includes="*.jar"/> <!-- includes lib jars -->
+      <fileset dir="${src}"> <!-- includes images -->
+        <include name="**/*.png" />
+      </fileset>
+      <manifest>
+        <attribute name="Main-Class" value="${main.class}"/>
+        <attribute name="Class-Path" value="${mf.classpath}"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="run" depends="dist" description="runs our generated jar file">
+    <java jar="dist/${jarname}" fork="true"/>
+  </target>
+
+</project>

@@ -1,0 +1,7 @@
+<ivy-module version="2.0">
+    <info organisation="org.synthuse" module="Synthuse"/>
+    <dependencies>
+		<dependency org="net.java.dev.jna" name="jna" rev="3.4.0" conf="*->*,!sources,!javadoc"/>
+		<dependency org="net.java.dev.jna" name="platform" rev="3.4.0" conf="*->*,!sources,!javadoc"/>
+    </dependencies>
+</ivy-module>
