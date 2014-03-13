@@ -250,8 +250,8 @@ public class SynthuseDlg extends JFrame {
 					return; //don't save bad xpath to combobox
 				if (config.xpathList == null)
 					config.xpathList = "";
-				if (!config.xpathList.contains(xpathItem + "º")){
-					config.xpathList += xpathItem + "º";
+				if (!config.xpathList.contains(xpathItem + "\u00ba")){
+					config.xpathList += xpathItem + "\u00ba";
 					refreshDatabinding();
 					cmbXpath.setSelectedItem(xpathItem);
 				}
@@ -413,7 +413,7 @@ public class SynthuseDlg extends JFrame {
 	
 	public void refreshDatabinding() {
 		if (config.xpathList != null)
-			cmbXpath.setModel(new DefaultComboBoxModel<String>(config.xpathList.split("º")));
+			cmbXpath.setModel(new DefaultComboBoxModel<String>(config.xpathList.split("\u00ba")));
 		if (config.xpathHightlight != null)
 			XmlEditorKit.TAG_HIGHLIGHTED = config.xpathHightlight;
 	}
