@@ -56,13 +56,13 @@ public class CommandPopupMenu extends JPopupMenu {
 		JMenu mnMouse = new JMenu("Mouse");
 		add(mnMouse);
 		
-		CommandMenuItem mntmClick = new CommandMenuItem("click", 1, false);
+		CommandMenuItem mntmClick = new CommandMenuItem("click", 2, true);
 		mnMouse.add(mntmClick);
 		
-		CommandMenuItem mntmDoubleclick = new CommandMenuItem("doubleClick", 1, false);
+		CommandMenuItem mntmDoubleclick = new CommandMenuItem("doubleClick", 2, true);
 		mnMouse.add(mntmDoubleclick);
 
-		CommandMenuItem mntmRightclick = new CommandMenuItem("rightClick", 1, false);
+		CommandMenuItem mntmRightclick = new CommandMenuItem("rightClick", 2, true);
 		mnMouse.add(mntmRightclick);
 
 		CommandMenuItem mntmwinClick = new CommandMenuItem("winClick", 2);
@@ -89,8 +89,14 @@ public class CommandPopupMenu extends JPopupMenu {
 		CommandMenuItem mntmMouseupright = new CommandMenuItem("mouseUpRight", 1, false);
 		mnMouse.add(mntmMouseupright);
 		
-		CommandMenuItem mntmMousemove = new CommandMenuItem("mouseMove", 3, false);
+		CommandMenuItem mntmMousemove = new CommandMenuItem("mouseMove", 2, true);
 		mnMouse.add(mntmMousemove);
+
+		CommandMenuItem mntmMousemoveXy = new CommandMenuItem("mouseMoveXy", 3, false);
+		mnMouse.add(mntmMousemoveXy);
+
+		CommandMenuItem mntmSetTargetOffset = new CommandMenuItem("setTargetOffset", 3, false);
+		mnMouse.add(mntmSetTargetOffset);
 		
 		JMenu mnWinMessages = new JMenu("Win Messages");
 		add(mnWinMessages);

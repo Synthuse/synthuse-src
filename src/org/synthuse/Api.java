@@ -130,6 +130,8 @@ public class Api {
 		boolean IsWindowVisible(HWND hWnd);
 		
 		int GetWindowRect(HWND hWnd, RECT r);
+		int MapWindowPoints(HWND hWndFrom, HWND hWndTo, RECT r, int cPoints);
+		HWND GetDesktopWindow();
 		HDC GetWindowDC(HWND hWnd);
 		int ReleaseDC(HWND hWnd, HDC hDC);
 		boolean InvalidateRect(HWND hWnd, long lpRect, boolean bErase);
@@ -337,6 +339,17 @@ public class Api {
 	public void sendKeyUp(HWND handle, int keyCode) {
 		//user32.SendMessageA(handle, WM_KEYDOWN, keyCode, null);
 		user32.SendMessageA(handle, WM_KEYUP, keyCode, null);
+	}
+	
+	public Point getWindowPosition(HWND handle) {
+		Point windowPoint = new Point();
+		RECT rect = new RECT();
+		user32.GetWindowRect(handle, rect);
+		//System.out.println("rect: l" + rect.left + ",t" + rect.top + ",r" + rect.right + ",b" + rect.bottom);
+		//user32.MapWindowPoints(user32.GetDesktopWindow(), user32.GetParent(handle), rect, 2);
+		windowPoint.x = ((rect.right - rect.left) / 2) + rect.left;
+		windowPoint.y = ((rect.bottom - rect.top) / 2) + rect.top;
+		return windowPoint;
 	}
 	
 	public int getDiskUsedPercentage() {

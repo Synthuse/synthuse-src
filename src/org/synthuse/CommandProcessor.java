@@ -7,6 +7,7 @@
 
 package org.synthuse;
 
+import java.awt.Point;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Timestamp;
@@ -31,6 +32,7 @@ public class CommandProcessor implements Runnable{
 	public String lastError = "";
 	public String scriptStr = "";
 	private Api api = new Api();
+	private Point targetOffset = new Point();
 	
 	private int executeErrorCount = 0;
 	private String currentCommandText = "";
@@ -165,8 +167,12 @@ public class CommandProcessor implements Runnable{
 				return cmdMouseDownRight(args);
 			if (command.equals("mouseUpRight")) 
 				return cmdMouseUpRight(args);
-			if (command.equals("mouseMove")) 
+			if (command.equals("mouseMove"))
 				return cmdMouseMove(args);
+			if (command.equals("mouseMoveXy"))
+				return cmdMouseMoveXy(args);
+			if (command.equals("setTargetOffset"))
+				return cmdSetTargetOffset(args);
 			
 			//Windows Api Commands
 			if (command.equals("windowFocus")) 
@@ -334,16 +340,37 @@ public class CommandProcessor implements Runnable{
 	}
 	
 	private boolean cmdClick(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		HWND handle = findHandleWithXpath(args[0]);
+		if (handle == null)
+			return false;
+		Point p = api.getWindowPosition(handle);
+		RobotMacro.mouseMove(p.x + targetOffset.x, p.y + targetOffset.y);
 		RobotMacro.leftClickMouse();
 		return true;
 	}
 
 	private boolean cmdDoubleClick(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		HWND handle = findHandleWithXpath(args[0]);
+		if (handle == null)
+			return false;
+		Point p = api.getWindowPosition(handle);
+		RobotMacro.mouseMove(p.x + targetOffset.x, p.y + targetOffset.y);
 		RobotMacro.doubleClickMouse();
 		return true;
 	}
 
 	private boolean cmdRightClick(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		HWND handle = findHandleWithXpath(args[0]);
+		if (handle == null)
+			return false;
+		Point p = api.getWindowPosition(handle);
+		RobotMacro.mouseMove(p.x + targetOffset.x, p.y + targetOffset.y);
 		RobotMacro.rightClickMouse();
 		return true;
 	}
@@ -369,6 +396,27 @@ public class CommandProcessor implements Runnable{
 	}
 	
 	private boolean cmdMouseMove(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		HWND handle = findHandleWithXpath(args[0]);
+		if (handle == null)
+			return false;
+		Point p = api.getWindowPosition(handle);
+		RobotMacro.mouseMove(p.x + targetOffset.x, p.y + targetOffset.y);
+		//System.out.println("point " + p.x + "," + p.y);
+		return true;
+	}
+
+	private boolean cmdSetTargetOffset(String[] args) {
+		if (!checkArgumentLength(args, 2))
+			return false;
+		int x = Integer.parseInt(args[0]);
+		int y = Integer.parseInt(args[1]);
+		targetOffset.x = x;
+		targetOffset.y = y;
+		return true;
+	}	
+	private boolean cmdMouseMoveXy(String[] args) {
 		if (!checkArgumentLength(args, 2))
 			return false;
 		int x = Integer.parseInt(args[0]);
