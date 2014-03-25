@@ -1,7 +1,12 @@
 <ivy-module version="2.0">
     <info organisation="org.synthuse" module="Synthuse"/>
+    <configurations defaultconfmapping="runtime->*,!sources,!javadoc">
+		<conf name="runtime"/>
+		<conf name="test"/>
+	</configurations>
     <dependencies>
-		<dependency org="net.java.dev.jna" name="jna" rev="3.4.0" conf="*->*,!sources,!javadoc"/>
-		<dependency org="net.java.dev.jna" name="platform" rev="3.4.0" conf="*->*,!sources,!javadoc"/>
+		<dependency org="net.java.dev.jna" name="jna" rev="3.4.0"/>
+		<dependency org="net.java.dev.jna" name="platform" rev="3.4.0"/>
+		<dependency org="junit" name="junit" rev="4.11" conf="test->*,!sources,!javadoc"/>
     </dependencies>
 </ivy-module>

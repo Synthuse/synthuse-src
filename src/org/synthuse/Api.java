@@ -120,6 +120,7 @@ public class Api {
 		HWND SetFocus(HWND hWnd);
 		
 		HWND FindWindow(String winClass, String title);
+		LRESULT PostMessage(HWND hWnd, int Msg, WPARAM wParam, LPARAM lParam);
 		LRESULT SendMessage(HWND hWnd, int Msg, WPARAM wParam, LPARAM lParam);
 	    LRESULT SendMessageA(HWND editHwnd, int wmGettext, long l, byte[] lParamStr);
 	    boolean DestroyWindow(HWND hWnd);
@@ -296,7 +297,8 @@ public class Api {
 	
 	public boolean closeWindow(HWND handle) {
 		//return user32.DestroyWindow(handle);
-		user32.SendMessage(handle, WM_CLOSE , null, null);
+		//user32.SendMessage(handle, WM_CLOSE , null, null);
+		user32.PostMessage(handle, WM_CLOSE , null, null);
 		//user32.SendMessage(handle, WM_NCDESTROY , null, null);
 		return true;
 	}

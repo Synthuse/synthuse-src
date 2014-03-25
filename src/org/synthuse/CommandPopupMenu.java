@@ -137,6 +137,15 @@ public class CommandPopupMenu extends JPopupMenu {
 		CommandMenuItem mntmGetwindowclass = new CommandMenuItem("getWindowClass", 2);
 		mnWinMessages.add(mntmGetwindowclass);
 		
+		CommandMenuItem mntmOpen = new CommandMenuItem("open", 2, false);
+		add(mntmOpen);
+		
+		CommandMenuItem mntmDisplayText = new CommandMenuItem("displayText", 3, false);
+		add(mntmDisplayText);
+
+		//CommandMenuItem mntmOpenAndWait = new CommandMenuItem("openAndWait", 1, false);
+		//add(mntmOpenAndWait);
+
 		CommandMenuItem mntmPause = new CommandMenuItem("pause", 2, false);
 		add(mntmPause);
 		

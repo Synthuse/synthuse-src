@@ -8,34 +8,36 @@
 package org.synthuse;
 
 import java.awt.Point;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.sql.Timestamp;
 import java.text.DecimalFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JOptionPane;
-
-import com.sun.jna.platform.win32.WinDef.HWND;
+import org.synthuse.commands.*;
 
 public class CommandProcessor implements Runnable{
 	
-	private static String WIN_XML = "";
-	public static long LAST_UPDATED_XML = 0;
 	public static long SPEED = 1000; // ms
 	public static double XML_UPDATE_THRESHOLD = 5.0; // seconds
 	public static long WAIT_TIMEOUT_THRESHOLD = 30000; //ms
-	public static AtomicBoolean STOP_PROCESSOR = new AtomicBoolean(false);
+	public static AtomicBoolean STOP_PROCESSOR = new AtomicBoolean(false); //stop script from executing
+	public static boolean DEFAULT_QUIET = false; //by default is quiet enabled
 	
+	protected CommandProcessor CommandProcessor = null;
+	public int executeErrorCount;
 	public String lastError = "";
+	public String currentCommandText = "";
+	public Point targetOffset = new Point();
+	public StatusWindow currentStatusWin = null;
+			
 	public String scriptStr = "";
-	private Api api = new Api();
-	private Point targetOffset = new Point();
-	
-	private int executeErrorCount = 0;
-	private String currentCommandText = "";
+	public BaseCommand base = new BaseCommand(this);
+	public MouseCommands mouse = new MouseCommands(this);
+	public KeyboardCommands keyboard = new KeyboardCommands(this);
+	public WindowsCommands win = new WindowsCommands(this);
+	public MainCommands main = new MainCommands(this);
+
+	private boolean isQuiet = DEFAULT_QUIET;
+	private int scriptErrorCount = 0;
 	
 	public static interface Events {
 		void statusChanged(String status);
@@ -50,12 +52,29 @@ public class CommandProcessor implements Runnable{
 		}
 	};
 	
+	public int getErrors() {
+		return scriptErrorCount;
+	}
+	
+	public void setScript(String Script) {
+		scriptStr = Script;
+	}
+	
+	public void setQuiet(boolean val) {
+		isQuiet = val;
+	}
+	
 	public CommandProcessor () {
+	}
+
+	public CommandProcessor (String scriptStr) {
+		this.scriptStr = scriptStr;
 	}
 	
 	public CommandProcessor (String scriptStr, Events customEvents) { //multithreading support
 		this.scriptStr = scriptStr;
-		this.events = customEvents;
+		if (customEvents != null)
+			this.events = customEvents;
 	}
 	
 	@Override
@@ -63,15 +82,18 @@ public class CommandProcessor implements Runnable{
 		executeAllScriptCommands(scriptStr);
 	}
 	
-	public static void executeThreaded(String scriptStr, Events customEvents) { //multithreading support
-		Thread t = new Thread(new CommandProcessor(scriptStr, customEvents));
+	public static CommandProcessor executeThreaded(String scriptStr, Events customEvents) { //multithreading support
+		CommandProcessor cp = new CommandProcessor(scriptStr, customEvents);
+		Thread t = new Thread(cp);
         t.start();
+        return cp;
 	}
 	
 	public void executeAllScriptCommands(String scriptStr) {
 		events.statusChanged("Executing Test Script...");
 		//CommandProcessor cmdProcessor = new CommandProcessor();
-		int errors = 0;
+		scriptErrorCount = 0;
+		lastError = "";
 		long startTime = System.nanoTime();
 		String[] lines = scriptStr.split("\n");
 		for (String line : lines) {
@@ -86,13 +108,13 @@ public class CommandProcessor implements Runnable{
 			events.statusChanged("Executing line: " + line);
 			if (parsed.length == 4 || parsed.length == 3)
 				execute(parsed[2].trim(), new String[] {});
-			if (parsed.length == 6)
+			if (parsed.length == 6 || parsed.length == 5)
 				execute(parsed[2].trim(), new String[] {parsed[4].trim()});
 			if (parsed.length == 7)
 				execute(parsed[2].trim(), new String[] {parsed[4].trim(), parsed[6].trim()});
 			
 			if (executeErrorCount > 0) //check if any errors occurred
-				++errors;
+				++scriptErrorCount;
 
 			if (STOP_PROCESSOR.get())
 				break;
@@ -101,9 +123,9 @@ public class CommandProcessor implements Runnable{
 		String forcedStr = "Completed";
 		if (STOP_PROCESSOR.get())
 			forcedStr = "Stopped";
-		events.statusChanged("Script Execution " + forcedStr + " with " + errors + " error(s) in " + new DecimalFormat("#.###").format(seconds) + " seconds");
+		events.statusChanged("Script Execution " + forcedStr + " with " + scriptErrorCount + " error(s) in " + new DecimalFormat("#.###").format(seconds) + " seconds");
 		events.executionCompleted();
-		if (errors > 0)
+		if (scriptErrorCount > 0 && !isQuiet)
 			JOptionPane.showMessageDialog(null, lastError);
 	}
 	
@@ -115,12 +137,16 @@ public class CommandProcessor implements Runnable{
 			joinedArgs += arg + " | ";
 		if (joinedArgs.endsWith("| "))
 			joinedArgs = joinedArgs.substring(0, joinedArgs.length()-2);
-		StatusWindow sw = new StatusWindow(command + " " + joinedArgs, -1);
+		//StatusWindow sw = null;
+		if (!isQuiet)
+			currentStatusWin = new StatusWindow(command + " " + joinedArgs, -1);
 		
 		Object result = executeCommandSwitch(command, args);
 		if (SPEED > 0) 
 			try { Thread.sleep(SPEED); } catch (Exception e) {e.printStackTrace();}
-		sw.dispose();
+		
+		if (!isQuiet && currentStatusWin != null)
+			currentStatusWin.dispose();
 		return result;
 	}
 	
@@ -129,531 +155,110 @@ public class CommandProcessor implements Runnable{
 
 			//Key commands
 			if (command.equals("sendKeys")) 
-				return cmdSendKeys(args);
+				return keyboard.cmdSendKeys(args);
 			if (command.equals("keyDown")) 
-				return cmdKeyDown(args);
+				return keyboard.cmdKeyDown(args);
 			if (command.equals("keyUp")) 
-				return cmdKeyUp(args);
+				return keyboard.cmdKeyUp(args);
 			if (command.equals("keyCopy")) 
-				return cmdKeyCopy(args);
+				return keyboard.cmdKeyCopy(args);
 			if (command.equals("keyPaste")) 
-				return cmdKeyPaste(args);
+				return keyboard.cmdKeyPaste(args);
 			if (command.equals("keyEscape")) 
-				return cmdKeyEscape(args);
+				return keyboard.cmdKeyEscape(args);
 			if (command.equals("keyFunctionX")) 
-				return cmdKeyFunc(args);
+				return keyboard.cmdKeyFunc(args);
 
 			
 			//Mouse commands
 			if (command.equals("click")) 
-				return cmdClick(args);
+				return mouse.cmdClick(args);
 			if (command.equals("doubleClick")) 
-				return cmdDoubleClick(args);
+				return mouse.cmdDoubleClick(args);
 			if (command.equals("rightClick")) 
-				return cmdRightClick(args);
+				return mouse.cmdRightClick(args);
 			if (command.equals("winClick")) 
-				return cmdWinClick(args);
+				return mouse.cmdWinClick(args);
 			if (command.equals("winDoubleClick")) 
-				return cmdWinDoubleClick(args);
+				return mouse.cmdWinDoubleClick(args);
 			if (command.equals("winRightClick")) 
-				return cmdWinRightClick(args);
+				return mouse.cmdWinRightClick(args);
 			if (command.equals("dragAndDrop")) 
-				return cmdRightClick(args);
+				return mouse.cmdRightClick(args);
 			if (command.equals("mouseDown")) 
-				return cmdMouseDown(args);
+				return mouse.cmdMouseDown(args);
 			if (command.equals("mouseUp")) 
-				return cmdMouseUp(args);
+				return mouse.cmdMouseUp(args);
 			if (command.equals("mouseDownRight")) 
-				return cmdMouseDownRight(args);
+				return mouse.cmdMouseDownRight(args);
 			if (command.equals("mouseUpRight")) 
-				return cmdMouseUpRight(args);
+				return mouse.cmdMouseUpRight(args);
 			if (command.equals("mouseMove"))
-				return cmdMouseMove(args);
+				return mouse.cmdMouseMove(args);
 			if (command.equals("mouseMoveXy"))
-				return cmdMouseMoveXy(args);
+				return mouse.cmdMouseMoveXy(args);
 			if (command.equals("setTargetOffset"))
-				return cmdSetTargetOffset(args);
+				return mouse.cmdSetTargetOffset(args);
 			
 			//Windows Api Commands
 			if (command.equals("windowFocus")) 
-				return cmdWindowFocus(args);
+				return win.cmdWindowFocus(args);
 			if (command.equals("windowMinimize")) 
-				return cmdWindowMinimize(args);
+				return win.cmdWindowMinimize(args);
 			if (command.equals("windowMaximize")) 
-				return cmdWindowMaximize(args);
+				return win.cmdWindowMaximize(args);
 			if (command.equals("windowRestore")) 
-				return cmdWindowRestore(args);
+				return win.cmdWindowRestore(args);
 			if (command.equals("windowShow")) 
-				return cmdWindowShow(args);
+				return win.cmdWindowShow(args);
 			if (command.equals("windowHide")) 
-				return cmdWindowHide(args);
+				return win.cmdWindowHide(args);
 			if (command.equals("windowSwitchToThis")) 
-				return cmdWindowSwitchToThis(args);
+				return win.cmdWindowSwitchToThis(args);
 			if (command.equals("windowClose")) 
-				return cmdWindowClose(args);
+				return win.cmdWindowClose(args);
 			if (command.equals("setWindowText")) 
-				return cmdSetText(args);
+				return win.cmdSetText(args);
 			if (command.equals("getWindowText")) 
-				return cmdGetText(args);
+				return win.cmdGetText(args);
 			
-			// Misc Commands
+			// Misc Command and Test/Sample command
 			if (command.equals("delay") || command.equals("pause")) {
+				if (!base.checkArgumentLength(args, 1))
+					return false;
+				if (!base.checkFirstArgumentLength(args))
+					return false;
+				if (!base.checkIsNumeric(args[0]))
+					return false;
+				//System.out.println("sleeping for " + args[0] );
 				Thread.sleep(Long.parseLong(args[0]));
 				return true;
 			}
 			
+			if (command.equals("open")) 
+				return main.cmdOpen(args);
+			if (command.equals("displayText")) 
+				return main.cmdDisplayText(args);
 			if (command.equals("setSpeed")) 
-				return cmdSetSpeed(args);
+				return main.cmdSetSpeed(args);
 			if (command.equals("setTimeout")) 
-				return cmdSetTimeout(args);
+				return main.cmdSetTimeout(args);
 			if (command.equals("waitForTitle")) 
-				return cmdWaitForTitle(args);
+				return main.cmdWaitForTitle(args);
 			if (command.equals("waitForText")) 
-				return cmdWaitForText(args);
+				return main.cmdWaitForText(args);
 			if (command.equals("waitForClass")) 
-				return cmdWaitForClass(args);
+				return main.cmdWaitForClass(args);
 			if (command.equals("waitForVisible")) 
-				return cmdWaitForVisible(args);
+				return main.cmdWaitForVisible(args);
 			
 		}
 		catch (Exception e) {
-			appendError(e);
+			base.appendError(e);
 			return false;
 		}
-		appendError("Error: Command '" + command + "' not found.");
+		base.appendError("Error: Command '" + command + "' not found.");
 		return false;
 	}
-
-	private void appendError(Exception e) {
-		++executeErrorCount;
-		StringWriter sw = new StringWriter();
-		e.printStackTrace(new PrintWriter(sw));
-		lastError += new Timestamp((new Date()).getTime()) + " - " + sw.toString() + "\n";
-		try {
-			sw.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	private void appendError(String msg) {
-		++executeErrorCount;
-		lastError += new Timestamp((new Date()).getTime()) + " - " + msg + "\n";
-	}
-
-	private boolean checkArgumentLength(String[] args, int expectedLength) {
-		if (args.length < expectedLength) {
-			appendError("Error: expected at least " + expectedLength + " arguments (" + currentCommandText + "[" + args.length + "])");
-			return false;
-		}
-		return true;
-	}
-	
-	private boolean whenFalseAppendError(boolean cmdResult) {
-		if (!cmdResult)
-			appendError("Error: command '" + currentCommandText + "' failed");
-		return cmdResult;
-	}
-
-	private HWND findHandleWithXpath(String xpath) {
-		return findHandleWithXpath(xpath, false);
-	}
-	
-	private HWND findHandleWithXpath(String xpath, boolean ignoreFailedFind) {
-		HWND result = null;
-		double secondsFromLastUpdate = ((double)(System.nanoTime() - LAST_UPDATED_XML) / 1000000000);
-		if (secondsFromLastUpdate > XML_UPDATE_THRESHOLD) { //default 5 second threshold
-			WIN_XML = WindowsEnumeratedXml.getXml();
-			LAST_UPDATED_XML = System.nanoTime();
-		}
-		WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
-		String resultStr =  "";
-		List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
-		for(String item: resultList) {
-			if (item.contains("hwnd=")) {
-				List<String> hwndList = WindowsEnumeratedXml.evaluateXpathGetValues(item, "//@hwnd");
-				resultStr = hwndList.get(0);
-			}
-			else
-				resultStr = item;
-			break;
-		}
-		result = Api.GetHandleFromString(resultStr);
-		if (result == null && !ignoreFailedFind)
-			appendError("Error: Failed to find window handle matching: " + xpath);
-		return result;
-	}
-	
-	private boolean cmdSendKeys(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		return whenFalseAppendError(RobotMacro.sendKeys(args[0]));
-	}
-	
-	private boolean cmdKeyDown(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		if (args[0].length() < 1){
-			appendError("Error: command '" + currentCommandText + "' failed, expected first argument length > 0");
-			return false;
-		}
-		char keyChar = args[0].charAt(0);
-		return RobotMacro.keyDown(keyChar);
-	}
-	
-	private boolean cmdKeyUp(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		if (args[0].length() < 1){
-			appendError("Error: command '" + currentCommandText + "' failed, expected first argument length > 0");
-			return false;
-		}
-		char keyChar = args[0].charAt(0);
-		return RobotMacro.keyUp(keyChar);
-	}
-	
-	private boolean cmdKeyCopy(String[] args) {
-		RobotMacro.copyKey();
-		return true;
-	}
-	
-	private boolean cmdKeyPaste(String[] args) {
-		RobotMacro.pasteKey();
-		return true;
-	}
-	
-	private boolean cmdKeyEscape(String[] args) {
-		RobotMacro.escapeKey();
-		return true;
-	}
-	
-	private boolean cmdKeyFunc(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		if (args[0].length() < 1){
-			appendError("Error: command '" + currentCommandText + "' failed, expected first argument length > 0");
-			return false;
-		}
-		int fNum = Integer.parseInt(args[0]);
-		RobotMacro.functionKey(fNum);
-		return true;
-	}
-	
-	private boolean cmdClick(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		Point p = api.getWindowPosition(handle);
-		RobotMacro.mouseMove(p.x + targetOffset.x, p.y + targetOffset.y);
-		RobotMacro.leftClickMouse();
-		return true;
-	}
-
-	private boolean cmdDoubleClick(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		Point p = api.getWindowPosition(handle);
-		RobotMacro.mouseMove(p.x + targetOffset.x, p.y + targetOffset.y);
-		RobotMacro.doubleClickMouse();
-		return true;
-	}
-
-	private boolean cmdRightClick(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		Point p = api.getWindowPosition(handle);
-		RobotMacro.mouseMove(p.x + targetOffset.x, p.y + targetOffset.y);
-		RobotMacro.rightClickMouse();
-		return true;
-	}
-	
-	private boolean cmdMouseDown(String[] args) {
-		RobotMacro.leftMouseDown();
-		return true;
-	}
-	
-	private boolean cmdMouseUp(String[] args) {
-		RobotMacro.leftMouseUp();
-		return true;
-	}
-	
-	private boolean cmdMouseDownRight(String[] args) {
-		RobotMacro.rightMouseDown();
-		return true;
-	}
-	
-	private boolean cmdMouseUpRight(String[] args) {
-		RobotMacro.rightMouseUp();
-		return true;
-	}
-	
-	private boolean cmdMouseMove(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		Point p = api.getWindowPosition(handle);
-		RobotMacro.mouseMove(p.x + targetOffset.x, p.y + targetOffset.y);
-		//System.out.println("point " + p.x + "," + p.y);
-		return true;
-	}
-
-	private boolean cmdSetTargetOffset(String[] args) {
-		if (!checkArgumentLength(args, 2))
-			return false;
-		int x = Integer.parseInt(args[0]);
-		int y = Integer.parseInt(args[1]);
-		targetOffset.x = x;
-		targetOffset.y = y;
-		return true;
-	}	
-	private boolean cmdMouseMoveXy(String[] args) {
-		if (!checkArgumentLength(args, 2))
-			return false;
-		int x = Integer.parseInt(args[0]);
-		int y = Integer.parseInt(args[1]);
-		RobotMacro.mouseMove(x, y);
-		return true;
-	}
-	
-	private boolean cmdWinClick(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.sendClick(handle);
-		return true;
-	}
-
-	private boolean cmdWinDoubleClick(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.sendDoubleClick(handle);
-		return true;
-	}
-
-	private boolean cmdWinRightClick(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.sendRightClick(handle);
-		return true;
-	}
-	
-	private boolean cmdWindowFocus(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.activateWindow(handle);
-		//api.showWindow(handle);
-		return true;
-	}
-	
-	private boolean cmdWindowMinimize(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.minimizeWindow(handle);
-		return true;
-	}
-
-	private boolean cmdWindowMaximize(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.maximizeWindow(handle);
-		return true;
-	}
-
-	private boolean cmdWindowRestore(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.restoreWindow(handle);
-		return true;
-	}
-	
-	private boolean cmdWindowHide(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.hideWindow(handle);
-		return true;
-	}
-
-	private boolean cmdWindowShow(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.showWindow(handle);
-		return true;
-	}
-
-	private boolean cmdWindowSwitchToThis(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.switchToThisWindow(handle, true);
-		return true;
-	}
-
-	
-	private boolean cmdWindowClose(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.closeWindow(handle);
-		return true;
-	}
-	
-	private boolean cmdSetText(String[] args) {
-		if (!checkArgumentLength(args, 2))
-			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return false;
-		api.sendWmSetText(handle, args[1]);
-		return true;
-	}
-	
-	private String cmdGetText(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return "";
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
-			return "";
-		return api.sendWmGetText(handle);
-	}
-	
-	private boolean cmdSetSpeed(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		long speed = Long.parseLong(args[0]);
-		SPEED = speed;
-		return true;
-	}
-	
-	private boolean cmdSetTimeout(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		long timeout = Long.parseLong(args[0]);
-		WAIT_TIMEOUT_THRESHOLD = timeout;
-		return true;
-	}
-	
-	private boolean cmdWaitForTitle(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		long totalAttempts = (long) (WAIT_TIMEOUT_THRESHOLD / (XML_UPDATE_THRESHOLD * 1000));
-		long attemptCount = 0;
-		String xpath = "/EnumeratedWindows/win[@TEXT='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
-		HWND handle = findHandleWithXpath(xpath, true);
-		if (handle != null)// first test without a timeout
-			return true;
-		while (attemptCount < totalAttempts) {
-			handle = findHandleWithXpath(xpath, true);
-			if (handle != null)
-				break;
-			try {Thread.sleep((long)(XML_UPDATE_THRESHOLD * 1000));} catch (Exception e) {e.printStackTrace();}
-			++attemptCount;
-			if (STOP_PROCESSOR.get())
-				break;
-		}
-		return handle != null;
-	}
-	
-	private boolean cmdWaitForText(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		long totalAttempts = (long) (WAIT_TIMEOUT_THRESHOLD / (XML_UPDATE_THRESHOLD * 1000));
-		long attemptCount = 0;
-		String xpath = "//[@TEXT='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
-		HWND handle = findHandleWithXpath(xpath, true);
-		if (handle != null)// first test without a timeout
-			return true;
-		while (attemptCount < totalAttempts) {
-			handle = findHandleWithXpath(xpath, true);
-			if (handle != null)
-				break;
-			try {Thread.sleep((long)(XML_UPDATE_THRESHOLD * 1000));} catch (Exception e) {e.printStackTrace();}
-			++attemptCount;
-			if (STOP_PROCESSOR.get())
-				break;
-		}
-		return handle != null;
-	}
-	
-	private boolean cmdWaitForClass(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		long totalAttempts = (long) (WAIT_TIMEOUT_THRESHOLD / (XML_UPDATE_THRESHOLD * 1000));
-		long attemptCount = 0;
-		String xpath = "//win[@CLASS='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
-		HWND handle = findHandleWithXpath(xpath, true);
-		if (handle != null)// first test without a timeout
-			return true;
-		while (attemptCount < totalAttempts) {
-			handle = findHandleWithXpath(xpath, true);
-			if (handle != null)
-				break;
-			try {Thread.sleep((long)(XML_UPDATE_THRESHOLD * 1000));} catch (Exception e) {e.printStackTrace();}
-			++attemptCount;
-			if (STOP_PROCESSOR.get())
-				break;
-		}
-		return handle != null;
-	}
-	
-	private boolean cmdWaitForVisible(String[] args) {
-		if (!checkArgumentLength(args, 1))
-			return false;
-		long totalAttempts = (long) (WAIT_TIMEOUT_THRESHOLD / (XML_UPDATE_THRESHOLD * 1000));
-		long attemptCount = 0;
-		HWND handle = findHandleWithXpath(args[0], true);
-		if (handle != null)// first test without a timeout
-			return true;
-		while (attemptCount < totalAttempts) {
-			handle = findHandleWithXpath(args[0], true);
-			if (handle != null)
-				break;
-			try {Thread.sleep((long)(XML_UPDATE_THRESHOLD * 1000));} catch (Exception e) {e.printStackTrace();}
-			++attemptCount;
-			if (STOP_PROCESSOR.get())
-				break;
-		}
-		return handle != null;
-	}
-	
 	
 }
