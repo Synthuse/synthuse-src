@@ -3,3 +3,6 @@ build/
 lib/
 dist/
 synthuse.properties
+native/WpfBridge/x64
+native/WpfBridge/release
+!native/WpfBridge/bin

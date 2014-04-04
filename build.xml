@@ -39,7 +39,7 @@
   
   <target name="compile" depends="init" description="compile the source including jars from lib directory" >
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}" includeantruntime="false">
+    <javac srcdir="${src}" destdir="${build}" includeantruntime="false" source="1.6" target="1.6">
       <classpath>
         <pathelement path="${classpath}"/>
         <fileset dir="${lib}">
@@ -57,6 +57,9 @@
       <zipgroupfileset dir="${lib}" includes="*.jar"/> <!-- includes lib jars -->
       <fileset dir="${src}"> <!-- includes images -->
         <include name="**/*.png" />
+      </fileset>
+      <fileset dir="native/WpfBridge/bin"> <!-- includes native jni dlls -->
+        <include name="**/*.dll" />
       </fileset>
       <manifest>
         <attribute name="Main-Class" value="${main.class}"/>
