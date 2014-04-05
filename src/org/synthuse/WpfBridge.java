@@ -69,22 +69,24 @@ public class WpfBridge {
         System.load(temp.getAbsolutePath());
     }
 
-	native void SetFrameworkId(String propertyValue); //default is WPF, but also accepts Silverlight, Win32	
+	native void setFrameworkId(String propertyValue); //default is WPF, but also accepts Silverlight, Win32	
 	
 	//Descendants will walk the full tree of windows, NOT just one level of children
-	native int CountDescendantWindows();
-	native int CountDescendantWindows(String runtimeIdValue);
+	native int countDescendantWindows();
+	native int countDescendantWindows(String runtimeIdValue);
 	
-	native int CountChildrenWindows();
-	native int CountChildrenWindows(String runtimeIdValue);
+	native int countChildrenWindows();
+	native int countChildrenWindows(String runtimeIdValue);
 	
-	native String[] EnumChildrenWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
-	native String[] EnumDescendantWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
-	native String[] EnumDescendantWindowIds(long processId);
-	native String[] EnumDescendantWindowIdsFromHandle(long windowHandle);
+	native String[] enumChildrenWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
+	native String[] enumDescendantWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
+	native String[] enumDescendantWindowIds(long processId);
+	native String[] enumDescendantWindowIdsFromHandle(long windowHandle);
 	//In all the above Enumerate methods will return a list of Runtime Ids for all related windows.
+	native String[] enumDescendantWindowInfo(String runtimeIdValue, String properties); //returns properties comma separated
 
-	native String GetProperty(String propertyName, String runtimeIdValue);
-	native String[] GetProperties(String runtimeIdValue);
-	native String[] GetPropertiesAndValues(String runtimeIdValue);
+	native String getParentRuntimeId(String runtimeIdValue);
+	native String getProperty(String propertyName, String runtimeIdValue);
+	native String[] getProperties(String runtimeIdValue);
+	native String[] getPropertiesAndValues(String runtimeIdValue);
 }

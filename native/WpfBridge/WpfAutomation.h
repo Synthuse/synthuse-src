@@ -24,13 +24,17 @@ public:
 	array<System::String ^> ^ enumDescendantWindowIds(System::Int32 processId);
 	array<System::String ^> ^ EnumDescendantWindowIdsFromHandle(System::IntPtr windowHandle);
 	//In all the above Enumerate methods will return a list of Runtime Ids for all related windows.
+	array<System::String ^> ^ EnumDescendantWindowInfo(System::String ^runtimeIdValue, System::String ^properties);
 
-	System::String ^getProperty(System::String ^propertyName, System::String ^runtimeIdValue);
+
+	System::String ^ getParentRuntimeId(System::String ^runtimeIdValue);
+	System::String ^ getProperty(System::String ^propertyName, System::String ^runtimeIdValue);
 	array<System::String ^> ^ getProperties(System::String ^runtimeIdValue);
 	array<System::String ^> ^ getPropertiesAndValues(System::String ^runtimeIdValue);
 private:
 	array<System::Int32> ^ convertRuntimeIdString(System::String ^runtimeIdValue);
 	System::Windows::Automation::AutomationElement ^ findAutomationElementById(System::String ^runtimeIdValue);
+	System::String ^ getRuntimeIdFromElement(System::Windows::Automation::AutomationElement ^element);
 	array<System::String ^> ^ getRuntimeIdsFromCollection(System::Windows::Automation::AutomationElementCollection ^collection);
 
 	static System::String ^DEFAULT_FRAMEWORK = L"WPF";

@@ -12,6 +12,7 @@ import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -91,6 +92,10 @@ public class WindowsEnumeratedXml implements Runnable{
 			}
 	    }	    
 	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
+	    
+	    //Enumerate WPF windows and add to list
+	    if (!SynthuseDlg.config.disableWpf.equals("true"))
+	    	infoList.putAll(EnumerateWindowsWithWpfBridge("WPF"));
 
 	    // convert window info list to xml dom
 	    try {
@@ -108,22 +113,30 @@ public class WindowsEnumeratedXml implements Runnable{
 		    	WindowInfo w = infoList.get(handle);
 		    	//System.out.println(w);
 		    	// create new win xml element
-		    	Element win = doc.createElement("win");
+		    	Element win = null;
+		    	if (w.framework.equals("win32"))
+		    		win = doc.createElement("win");
+		    	else
+		    		win = doc.createElement("wpf");
 				win.setAttribute("hwnd", w.hwndStr);
 				win.setAttribute("text", w.text);
-				win.setAttribute("TEXT", w.text.toUpperCase());
+				if (w.text != null)
+					win.setAttribute("TEXT", w.text.toUpperCase());
 				win.setAttribute("class", w.className);
-				win.setAttribute("CLASS", w.className.toUpperCase());
+				if (w.className != null)
+					win.setAttribute("CLASS", w.className.toUpperCase());
 				if (!w.isChild) {
 					parentCount++;
 					if (w.processName != null && !w.processName.isEmpty()) {
 						if (!processList.containsKey(w.pid+""))
 							processList.put(w.pid+"", w.hwndStr);
 						win.setAttribute("process", w.processName);
-						win.setAttribute("PROCESS", w.processName.toUpperCase());
-						win.setAttribute("pid", w.pid+"");
+						if (w.processName != null)
+							win.setAttribute("PROCESS", w.processName.toUpperCase());
 					}
 				}
+				if (w.pid != 0)
+					win.setAttribute("pid", w.pid+"");
 				//else
 					//win.setAttribute("parent", w.parent + ""); // not really needed since child node is append to parent node
 				
@@ -157,6 +170,28 @@ public class WindowsEnumeratedXml implements Runnable{
 	    	lastException = e;
 	    }
 	    return "";
+	}
+	
+	public static Map<String, WindowInfo> EnumerateWindowsWithWpfBridge(String frameworkType) {
+		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
+    	WpfBridge wb = new WpfBridge();
+    	wb.setFrameworkId(frameworkType);
+    	List<String> parentIds = new ArrayList<String>(Arrays.asList(wb.enumChildrenWindowIds("")));
+		//System.out.println("enumChildrenWindowIds");
+    	String[] allIds = wb.enumDescendantWindowInfo("", WindowInfo.WPF_PROPERTY_LIST);
+		//System.out.println("enumDescendantWindowIds " + allIds.length);
+    	for(String runtimeIdAndInfo : allIds) {
+    		//System.out.println("getting window info for: " + runtimeIdAndInfo);
+    		String onlyRuntimeId = runtimeIdAndInfo;
+    		if (runtimeIdAndInfo.contains(","))
+    			onlyRuntimeId = runtimeIdAndInfo.substring(0, runtimeIdAndInfo.indexOf(","));
+    		//System.out.println("is parent? " + onlyRuntimeId);
+    		if (parentIds.contains(onlyRuntimeId)) //is Parent?
+    			infoList.put(onlyRuntimeId, new WindowInfo(runtimeIdAndInfo, false));
+    		else// must be child
+    			infoList.put(onlyRuntimeId, new WindowInfo(runtimeIdAndInfo, true));
+    	}
+		return infoList;
 	}
 	
 	public static String escapeXmlAttributeValue(String unescapedStr) {

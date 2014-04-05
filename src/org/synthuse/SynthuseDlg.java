@@ -162,9 +162,9 @@ public class SynthuseDlg extends JFrame {
 		btnRefresh.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				//lblStatus.setText("Loading Windows Enumerated Xml...");
+				//WindowsEnumeratedXml wex = new WindowsEnumeratedXml(textPane, lblStatus);
+				//wex.run();
 				WindowsEnumeratedXml.getXmlThreaded(textPane, lblStatus);
-				//appendToPane(WindowsEnumeratedXml.getXml());
-				//lblStatus.setText("Windows Enumerated Xml loaded");
 			} 
 		});
 		btnRefresh.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_REFRESH_IMG)));

@@ -5,4 +5,5 @@ dist/
 synthuse.properties
 native/WpfBridge/x64
 native/WpfBridge/release
+native/WpfBridge/Debug
 !native/WpfBridge/bin

@@ -15,7 +15,7 @@ using namespace System::Windows::Automation;
 using namespace msclr::interop;
 using namespace Globals;
 
-JNIEXPORT void JNICALL Java_org_synthuse_WpfBridge_SetFrameworkId(JNIEnv *env, jobject obj, jstring jpropertyValue)
+JNIEXPORT void JNICALL Java_org_synthuse_WpfBridge_setFrameworkId(JNIEnv *env, jobject obj, jstring jpropertyValue)
 {
 	const char *propertyValue = env->GetStringUTFChars(jpropertyValue, 0);//convert string
 	Global::WPF_AUTO->setFrameworkId(marshal_as<String ^>(propertyValue));
@@ -27,7 +27,7 @@ JNIEXPORT void JNICALL Java_org_synthuse_WpfBridge_SetFrameworkId(JNIEnv *env, j
  * Method:    CountDescendantWindows
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_CountDescendantWindows__(JNIEnv *env, jobject obj)
+JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_countDescendantWindows__(JNIEnv *env, jobject obj)
 {
 	return Global::WPF_AUTO->countDescendantWindows();
 }
@@ -37,7 +37,7 @@ JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_CountDescendantWindows__(JNIE
  * Method:    CountDescendantWindows
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_CountDescendantWindows__Ljava_lang_String_2(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
+JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_countDescendantWindows__Ljava_lang_String_2(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	jint result = Global::WPF_AUTO->countDescendantWindows(marshal_as<String ^>(runtimeIdValue));
@@ -51,7 +51,7 @@ JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_CountDescendantWindows__Ljava
  * Method:    CountChildrenWindows
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_CountChildrenWindows__(JNIEnv *env, jobject obj)
+JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_countChildrenWindows__(JNIEnv *env, jobject obj)
 {
 	return Global::WPF_AUTO->countChildrenWindows();
 }
@@ -62,7 +62,7 @@ JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_CountChildrenWindows__(JNIEnv
  * Method:    CountChildrenWindows
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_CountChildrenWindows__Ljava_lang_String_2(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
+JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_countChildrenWindows__Ljava_lang_String_2(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	jint result = Global::WPF_AUTO->countChildrenWindows(marshal_as<String ^>(runtimeIdValue));
@@ -76,7 +76,7 @@ JNIEXPORT jint JNICALL Java_org_synthuse_WpfBridge_CountChildrenWindows__Ljava_l
  * Method:    EnumChildrenWindowIds
  * Signature: (Ljava/lang/String;)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_EnumChildrenWindowIds(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
+JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumChildrenWindowIds(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	array<System::String ^> ^mchildrenIds = Global::WPF_AUTO->enumChildrenWindowIds(marshal_as<String ^>(runtimeIdValue));
@@ -103,7 +103,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_EnumChildrenWindowIds
  * Method:    EnumDescendantWindowIds
  * Signature: (Ljava/lang/String;)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_EnumDescendantWindowIds__Ljava_lang_String_2(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
+JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowIds__Ljava_lang_String_2(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	array<System::String ^> ^mchildrenIds = Global::WPF_AUTO->enumDescendantWindowIds(marshal_as<String ^>(runtimeIdValue));
@@ -130,7 +130,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_EnumDescendantWindowI
  * Method:    EnumDescendantWindowIds
  * Signature: (J)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_EnumDescendantWindowIds__J(JNIEnv *env, jobject obj, jlong jprocessId)
+JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowIds__J(JNIEnv *env, jobject obj, jlong jprocessId)
 {
 	array<System::String ^> ^mchildrenIds = Global::WPF_AUTO->enumDescendantWindowIds((System::Int32)jprocessId);
 	
@@ -151,7 +151,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_EnumDescendantWindowI
  * Method:    EnumDescendantWindowIdsFromHandle
  * Signature: (J)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_EnumDescendantWindowIdsFromHandle(JNIEnv *env, jobject obj, jlong jwindowHandle)
+JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowIdsFromHandle(JNIEnv *env, jobject obj, jlong jwindowHandle)
 {
 	array<System::String ^> ^mchildrenIds = Global::WPF_AUTO->EnumDescendantWindowIdsFromHandle(System::IntPtr(jwindowHandle));
 	
@@ -168,10 +168,49 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_EnumDescendantWindowI
 
 /*
  * Class:     org_synthuse_WpfBridge
+ * Method:    enumDescendantWindowInfo
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowInfo(JNIEnv *env, jobject obj, jstring jruntimeIdValue, jstring jproperties)
+{
+	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
+	const char *properties = env->GetStringUTFChars(jproperties, 0);//convert string
+	array<System::String ^> ^mwinInfo = Global::WPF_AUTO->EnumDescendantWindowInfo(marshal_as<String ^>(runtimeIdValue), marshal_as<String ^>(properties));
+	//create result object array to the same size as the managed window info string array
+	jclass stringClass = env->FindClass("java/lang/String");
+	jobjectArray results = env->NewObjectArray(mwinInfo->Length, stringClass, 0);
+	marshal_context context; //lets you marshal managed classes to unmanaged types
+	for(int i = 0 ; i < mwinInfo->Length ; i++)
+	{
+		env->SetObjectArrayElement(results, i, env->NewStringUTF(context.marshal_as<const char *>(mwinInfo[i])));
+	}
+	env->ReleaseStringUTFChars(jproperties, properties); //release string
+	env->ReleaseStringUTFChars(jruntimeIdValue, runtimeIdValue); //release string
+	return results;
+}
+
+
+/*
+ * Class:     org_synthuse_WpfBridge
+ * Method:    getParentRuntimeId
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_getParentRuntimeId(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
+{
+	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
+	System::String ^mresult = Global::WPF_AUTO->getParentRuntimeId(marshal_as<String ^>(runtimeIdValue));
+	marshal_context context; //lets you marshal managed classes to unmanaged types
+	jstring result = env->NewStringUTF(context.marshal_as<const char *>(mresult));
+	env->ReleaseStringUTFChars(jruntimeIdValue, runtimeIdValue); //release string
+	return result;
+}
+
+/*
+ * Class:     org_synthuse_WpfBridge
  * Method:    GetProperty
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_GetProperty(JNIEnv *env, jobject obj, jstring jpropertyName, jstring jruntimeIdValue)
+JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_getProperty(JNIEnv *env, jobject obj, jstring jpropertyName, jstring jruntimeIdValue)
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	const char *propertyName = env->GetStringUTFChars(jpropertyName, 0);//convert string
@@ -189,7 +228,7 @@ JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_GetProperty(JNIEnv *env, j
  * Method:    GetProperties
  * Signature: (Ljava/lang/String;)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_GetProperties(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
+JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_getProperties(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	array<System::String ^> ^mprops = Global::WPF_AUTO->getProperties(marshal_as<String ^>(runtimeIdValue));
@@ -212,7 +251,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_GetProperties(JNIEnv 
  * Method:    GetPropertiesAndValues
  * Signature: (Ljava/lang/String;)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_GetPropertiesAndValues(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
+JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_getPropertiesAndValues(JNIEnv *env, jobject obj, jstring jruntimeIdValue)
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	array<System::String ^> ^mprops = Global::WPF_AUTO->getPropertiesAndValues(marshal_as<String ^>(runtimeIdValue));

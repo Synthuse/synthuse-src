@@ -11,6 +11,7 @@ public class Config extends PropertiesSerializer {
 
 	public static String DEFAULT_PROP_FILENAME = "synthuse.properties";
 	
+	public String disableWpf = "false";
 	public String urlList = "";
 	public String xpathList = "";
 	public String xpathHightlight = ".*process=\"([^\"]*)\".*";

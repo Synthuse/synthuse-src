@@ -17,6 +17,8 @@ import com.sun.jna.ptr.PointerByReference;
 
 public class WindowInfo {
 	
+	public static String WPF_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,ClassNameProperty,NameProperty";
+	
 	public HWND hwnd;
 	public String hwndStr = "";
 	public HWND parent = null;
@@ -28,8 +30,12 @@ public class WindowInfo {
 	public String processName = "";
 	public long pid = 0;
 	public Object xmlObj = null;
+	public String framework = "win32";//default as win32
+	public String runtimeId = "";
     
+	//Default Win32 support
     public WindowInfo(HWND hWnd, boolean isChild) {
+    	this.framework = "win32";
         byte[] buffer = new byte[1024];
         User32.instance.GetWindowTextA(hWnd, buffer, buffer.length);
         text = Native.toString(buffer);
@@ -61,7 +67,39 @@ public class WindowInfo {
 		}
 		this.hwnd = hWnd;
 		hwndStr = Api.GetHandleAsString(hWnd);
-		
+    }
+    
+    //support for WPF and Silverlight
+    public WindowInfo(String enumProperties, boolean isChild) {
+    	//WPF_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,ClassNameProperty,NameProperty";
+    	String[] spltProperties = enumProperties.split(",");
+    	if (spltProperties.length > 0)
+    		this.runtimeId = spltProperties[0];
+    	this.hwndStr = this.runtimeId;
+    	if (spltProperties.length > 1 && isChild)
+    		this.parentStr = spltProperties[1];
+    	this.isChild = isChild;
+    	if (spltProperties.length > 2)
+    		this.pid = Long.parseLong(spltProperties[2]);
+    	if (spltProperties.length > 3)
+    		this.framework = spltProperties[3];
+    	if (spltProperties.length > 4)
+    		this.className = spltProperties[4];
+    	if (spltProperties.length > 5)
+    		this.text = spltProperties[5];
+    	/*
+    	this.rect = new RECT();
+    	try {
+	    	String rectStr = wb.getProperty("BoundingRectangleProperty", runtimeId);
+	    	String[] rectSplt = rectStr.split(",");
+	    	this.rect.right = Integer.parseInt(rectSplt[0]);
+	    	this.rect.bottom = Integer.parseInt(rectSplt[1]);
+	    	this.rect.left = Integer.parseInt(rectSplt[2]);
+	    	this.rect.top = Integer.parseInt(rectSplt[3]);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	*/
     }
     
     public String toString() {
