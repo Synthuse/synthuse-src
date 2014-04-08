@@ -2,8 +2,6 @@ package org.synthuse.commands;
 
 import org.synthuse.*;
 
-import com.sun.jna.platform.win32.WinDef.HWND;
-
 public class WindowsCommands extends BaseCommand {
 
 	public WindowsCommands(CommandProcessor cp) {
@@ -13,10 +11,10 @@ public class WindowsCommands extends BaseCommand {
 	public boolean cmdWindowFocus(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.activateWindow(handle);
+		api.activateWindow(handle.hWnd);
 		//api.showWindow(handle);
 		return true;
 	}
@@ -24,60 +22,60 @@ public class WindowsCommands extends BaseCommand {
 	public boolean cmdWindowMinimize(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.minimizeWindow(handle);
+		api.minimizeWindow(handle.hWnd);
 		return true;
 	}
 
 	public boolean cmdWindowMaximize(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.maximizeWindow(handle);
+		api.maximizeWindow(handle.hWnd);
 		return true;
 	}
 
 	public boolean cmdWindowRestore(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.restoreWindow(handle);
+		api.restoreWindow(handle.hWnd);
 		return true;
 	}
 	
 	public boolean cmdWindowHide(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.hideWindow(handle);
+		api.hideWindow(handle.hWnd);
 		return true;
 	}
 
 	public boolean cmdWindowShow(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.showWindow(handle);
+		api.showWindow(handle.hWnd);
 		return true;
 	}
 
 	public boolean cmdWindowSwitchToThis(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.switchToThisWindow(handle, true);
+		api.switchToThisWindow(handle.hWnd, true);
 		return true;
 	}
 
@@ -85,29 +83,29 @@ public class WindowsCommands extends BaseCommand {
 	public boolean cmdWindowClose(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.closeWindow(handle);
+		api.closeWindow(handle.hWnd);
 		return true;
 	}
 	
 	public boolean cmdSetText(String[] args) {
 		if (!checkArgumentLength(args, 2))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.sendWmSetText(handle, args[1]);
+		api.sendWmSetText(handle.hWnd, args[1]);
 		return true;
 	}
 	
 	public String cmdGetText(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return "";
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return "";
-		return api.sendWmGetText(handle);
+		return api.sendWmGetText(handle.hWnd);
 	}
 }

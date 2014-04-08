@@ -12,7 +12,6 @@ import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,11 +73,16 @@ public class WindowsEnumeratedXml implements Runnable{
 	public static String getXml() {
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
 		final Map<String, String> processList = new LinkedHashMap<String, String>(); 
+		final Map<String, WindowInfo> wpfParentList = new LinkedHashMap<String, WindowInfo>();
+		int wpfCount = 0;
 		
 	    class ChildWindowCallback implements WinUser.WNDENUMPROC {
 			@Override
 			public boolean callback(HWND hWnd, Pointer lParam) {
-				infoList.put(Api.GetHandleAsString(hWnd), new WindowInfo(hWnd, true));
+				WindowInfo wi = new WindowInfo(hWnd, true);
+				infoList.put(wi.hwndStr, wi);
+				if (wi.className.startsWith("HwndWrapper"))
+					wpfParentList.put(wi.hwndStr, null);
 				return true;
 			}
 	    }
@@ -86,7 +90,10 @@ public class WindowsEnumeratedXml implements Runnable{
 	    class ParentWindowCallback implements WinUser.WNDENUMPROC {
 			@Override
 			public boolean callback(HWND hWnd, Pointer lParam) {
-				infoList.put(Api.GetHandleAsString(hWnd), new WindowInfo(hWnd, false));
+				WindowInfo wi = new WindowInfo(hWnd, false);
+				infoList.put(wi.hwndStr, wi);
+				if (wi.className.startsWith("HwndWrapper"))
+					wpfParentList.put(wi.hwndStr, null);
 				Api.User32.instance.EnumChildWindows(hWnd, new ChildWindowCallback(), new Pointer(0));
 				return true;
 			}
@@ -94,8 +101,19 @@ public class WindowsEnumeratedXml implements Runnable{
 	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
 	    
 	    //Enumerate WPF windows and add to list
-	    if (!SynthuseDlg.config.disableWpf.equals("true"))
-	    	infoList.putAll(EnumerateWindowsWithWpfBridge("WPF"));
+	    if (!SynthuseDlg.config.isWpfBridgeDisabled())
+	    {
+	    	////win[starts-with(@class,'HwndWrapper')]
+	    	//WpfBridge wb = new WpfBridge();
+	    	//if (wb.countDescendantWindows() > 0)
+		    for (String handle : wpfParentList.keySet()) {
+		    	//WindowInfo w = wpfParentList.get(handle);
+		    	//System.out.println("EnumerateWindowsWithWpfBridge: " + handle);
+		    	Map<String, WindowInfo> wpfInfoList = EnumerateWindowsWithWpfBridge(handle, "WPF");
+		    	wpfCount += wpfInfoList.size();
+		    	infoList.putAll(wpfInfoList);
+		    }
+	    }
 
 	    // convert window info list to xml dom
 	    try {
@@ -159,6 +177,8 @@ public class WindowsEnumeratedXml implements Runnable{
 		    totals.setAttribute("parentCount", parentCount+"");
 		    totals.setAttribute("childCount", childCount+"");
 		    totals.setAttribute("windowCount", infoList.size()+"");
+		    totals.setAttribute("wpfWrapperCount", wpfParentList.size()+"");
+		    totals.setAttribute("wpfCount", wpfCount+"");
 		    totals.setAttribute("processCount", processList.size()+"");
 		    totals.setAttribute("updatedLast", new Timestamp((new Date()).getTime()) + "");
 		    rootElement.appendChild(totals);
@@ -172,24 +192,26 @@ public class WindowsEnumeratedXml implements Runnable{
 	    return "";
 	}
 	
-	public static Map<String, WindowInfo> EnumerateWindowsWithWpfBridge(String frameworkType) {
+	public static Map<String, WindowInfo> EnumerateWindowsWithWpfBridge(String parentHwndStr, String frameworkType) {
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
     	WpfBridge wb = new WpfBridge();
     	wb.setFrameworkId(frameworkType);
-    	List<String> parentIds = new ArrayList<String>(Arrays.asList(wb.enumChildrenWindowIds("")));
-		//System.out.println("enumChildrenWindowIds");
-    	String[] allIds = wb.enumDescendantWindowInfo("", WindowInfo.WPF_PROPERTY_LIST);
+    	long hwnd = Long.parseLong(parentHwndStr);
+    	//List<String> parentIds = new ArrayList<String>(Arrays.asList(wb.enumChildrenWindowIds("")));
+		//System.out.println("getRuntimeIdFromHandle");
+    	String parentRuntimeId = wb.getRuntimeIdFromHandle(hwnd);
+		//System.out.println("runtimeId=" + runtimeId);
+    	String[] allIds = wb.enumDescendantWindowInfo(parentRuntimeId, WindowInfo.WPF_PROPERTY_LIST);
+    	if (allIds == null)
+    		return infoList; //empty list
 		//System.out.println("enumDescendantWindowIds " + allIds.length);
     	for(String runtimeIdAndInfo : allIds) {
     		//System.out.println("getting window info for: " + runtimeIdAndInfo);
-    		String onlyRuntimeId = runtimeIdAndInfo;
-    		if (runtimeIdAndInfo.contains(","))
-    			onlyRuntimeId = runtimeIdAndInfo.substring(0, runtimeIdAndInfo.indexOf(","));
+    		WindowInfo wi = new WindowInfo(runtimeIdAndInfo, true);
+    		if (wi.parentStr.equals(parentRuntimeId))
+    			wi.parentStr = parentHwndStr;
     		//System.out.println("is parent? " + onlyRuntimeId);
-    		if (parentIds.contains(onlyRuntimeId)) //is Parent?
-    			infoList.put(onlyRuntimeId, new WindowInfo(runtimeIdAndInfo, false));
-    		else// must be child
-    			infoList.put(onlyRuntimeId, new WindowInfo(runtimeIdAndInfo, true));
+    		infoList.put(wi.runtimeId, wi);
     	}
 		return infoList;
 	}

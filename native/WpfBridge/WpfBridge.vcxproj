@@ -148,6 +148,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)bin\wpfbridge$(PlatformArchitecture)$(Targ
     <Reference Include="UIAutomationClient" />
     <Reference Include="UIAutomationProvider" />
     <Reference Include="UIAutomationTypes" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Global.h" />

@@ -1,6 +1,7 @@
 package org.synthuse.commands;
 
 
+import java.awt.Point;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Timestamp;
@@ -9,14 +10,13 @@ import java.util.List;
 
 import org.synthuse.*;
 
-import com.sun.jna.platform.win32.WinDef.HWND;
-
 public class BaseCommand {
 	
 	static String WIN_XML = "";
 	static long LAST_UPDATED_XML = 0;
 	
 	protected Api api = new Api();
+	protected WpfBridge wpf = new WpfBridge();
 	protected CommandProcessor parentProcessor = null;
 	
 	protected int getExecuteErrorCount() {
@@ -92,12 +92,12 @@ public class BaseCommand {
 		return cmdResult;
 	}
 
-	public HWND findHandleWithXpath(String xpath) {
+	public WinPtr findHandleWithXpath(String xpath) {
 		return findHandleWithXpath(xpath, false);
 	}
 	
-	public HWND findHandleWithXpath(String xpath, boolean ignoreFailedFind) {
-		HWND result = null;
+	public WinPtr findHandleWithXpath(String xpath, boolean ignoreFailedFind) {
+		WinPtr result = new WinPtr();
 		double secondsFromLastUpdate = ((double)(System.nanoTime() - LAST_UPDATED_XML) / 1000000000);
 		if (secondsFromLastUpdate > CommandProcessor.XML_UPDATE_THRESHOLD) { //default 5 second threshold
 			WIN_XML = WindowsEnumeratedXml.getXml();
@@ -109,16 +109,32 @@ public class BaseCommand {
 		for(String item: resultList) {
 			if (item.contains("hwnd=")) {
 				List<String> hwndList = WindowsEnumeratedXml.evaluateXpathGetValues(item, "//@hwnd");
-				resultStr = hwndList.get(0);
+				if (hwndList.size() > 0)
+					resultStr = hwndList.get(0); //get first hwnd;
 			}
 			else
 				resultStr = item;
 			break;
 		}
-		result = Api.GetHandleFromString(resultStr);
-		if (result == null && !ignoreFailedFind)
+		if (WinPtr.isWpfRuntimeIdFormat(resultStr))
+			result.runtimeId = resultStr;
+		else {
+			result.hWnd = Api.GetHandleFromString(resultStr);
+			if (!api.user32.IsWindow(result.hWnd))
+				appendError("Error: Failed to located HWND(" + resultStr + ") from : " + xpath);
+		}
+		if (result.isEmpty())
 			appendError("Error: Failed to find window handle matching: " + xpath);
 		return result;
+	}
+	
+	public Point getCenterWindowPosition(WinPtr handle) {
+		Point p = null;
+		if (handle.isWin32())
+			p = api.getWindowPosition(handle.hWnd);
+		else
+			p = wpf.getCenterOfElement(handle.runtimeId);
+		return p;
 	}
 	
 	public String convertListToString(List<String> listStr, String delimiter) {

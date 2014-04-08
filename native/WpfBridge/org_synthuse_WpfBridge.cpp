@@ -24,6 +24,16 @@ JNIEXPORT void JNICALL Java_org_synthuse_WpfBridge_setFrameworkId(JNIEnv *env, j
 
 /*
  * Class:     org_synthuse_WpfBridge
+ * Method:    setTouchableOnly
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_org_synthuse_WpfBridge_setTouchableOnly(JNIEnv *env, jobject obj, jboolean jval)
+{
+    Global::WPF_AUTO->setTouchableOnly((bool)(jval == JNI_TRUE));
+}
+
+/*
+ * Class:     org_synthuse_WpfBridge
  * Method:    CountDescendantWindows
  * Signature: ()I
  */
@@ -80,7 +90,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumChildrenWindowIds
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	array<System::String ^> ^mchildrenIds = Global::WPF_AUTO->enumChildrenWindowIds(marshal_as<String ^>(runtimeIdValue));
-	
+	if (mchildrenIds == nullptr)
+		return NULL;
 	//create result object array to the same size as the managed children Ids string array
 	jclass stringClass = env->FindClass("java/lang/String");
 	jobjectArray results = env->NewObjectArray(mchildrenIds->Length, stringClass, 0);
@@ -107,7 +118,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowI
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	array<System::String ^> ^mchildrenIds = Global::WPF_AUTO->enumDescendantWindowIds(marshal_as<String ^>(runtimeIdValue));
-	
+	if (mchildrenIds == nullptr)
+		return NULL;
 	//create result object array to the same size as the managed children Ids string array
 	jclass stringClass = env->FindClass("java/lang/String");
 	jobjectArray results = env->NewObjectArray(mchildrenIds->Length, stringClass, 0);
@@ -133,7 +145,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowI
 JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowIds__J(JNIEnv *env, jobject obj, jlong jprocessId)
 {
 	array<System::String ^> ^mchildrenIds = Global::WPF_AUTO->enumDescendantWindowIds((System::Int32)jprocessId);
-	
+	if (mchildrenIds == nullptr)
+		return NULL;
 	//create result object array to the same size as the managed children Ids string array
 	jclass stringClass = env->FindClass("java/lang/String");
 	jobjectArray results = env->NewObjectArray(mchildrenIds->Length, stringClass, 0);
@@ -148,22 +161,17 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowI
 
 /*
  * Class:     org_synthuse_WpfBridge
- * Method:    EnumDescendantWindowIdsFromHandle
- * Signature: (J)[Ljava/lang/String;
+ * Method:    getRuntimeIdFromHandle
+ * Signature: (J)Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowIdsFromHandle(JNIEnv *env, jobject obj, jlong jwindowHandle)
+JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_getRuntimeIdFromHandle(JNIEnv *env, jobject obj, jlong jwindowHandle)
 {
-	array<System::String ^> ^mchildrenIds = Global::WPF_AUTO->EnumDescendantWindowIdsFromHandle(System::IntPtr(jwindowHandle));
-	
-	//create result object array to the same size as the managed children Ids string array
-	jclass stringClass = env->FindClass("java/lang/String");
-	jobjectArray results = env->NewObjectArray(mchildrenIds->Length, stringClass, 0);
+	System::String ^mrunId = Global::WPF_AUTO->getRuntimeIdFromHandle(System::IntPtr(jwindowHandle));
+	if (mrunId == nullptr)
+		return NULL;
 	marshal_context context; //lets you marshal managed classes to unmanaged types
-	for(int i = 0 ; i < mchildrenIds->Length ; i++)
-	{
-		env->SetObjectArrayElement(results, i, env->NewStringUTF(context.marshal_as<const char *>(mchildrenIds[i])));
-	}
-	return results;
+	jstring result = env->NewStringUTF(context.marshal_as<const char *>(mrunId));
+	return result;
 }
 
 /*
@@ -175,7 +183,9 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowI
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	const char *properties = env->GetStringUTFChars(jproperties, 0);//convert string
-	array<System::String ^> ^mwinInfo = Global::WPF_AUTO->EnumDescendantWindowInfo(marshal_as<String ^>(runtimeIdValue), marshal_as<String ^>(properties));
+	array<System::String ^> ^mwinInfo = Global::WPF_AUTO->enumDescendantWindowInfo(marshal_as<String ^>(runtimeIdValue), marshal_as<String ^>(properties));
+	if (mwinInfo == nullptr)
+		return NULL;
 	//create result object array to the same size as the managed window info string array
 	jclass stringClass = env->FindClass("java/lang/String");
 	jobjectArray results = env->NewObjectArray(mwinInfo->Length, stringClass, 0);
@@ -192,6 +202,21 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowI
 
 /*
  * Class:     org_synthuse_WpfBridge
+ * Method:    getRuntimeIdFromPoint
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_getRuntimeIdFromPoint(JNIEnv *env, jobject obj, jint x, jint y)
+{
+	System::String ^mresult = Global::WPF_AUTO->getRuntimeIdFromPoint(x, y);
+	if (mresult == nullptr)
+		return NULL;
+	marshal_context context; //lets you marshal managed classes to unmanaged types
+	jstring result = env->NewStringUTF(context.marshal_as<const char *>(mresult));
+	return result;
+}
+
+/*
+ * Class:     org_synthuse_WpfBridge
  * Method:    getParentRuntimeId
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
@@ -199,6 +224,8 @@ JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_getParentRuntimeId(JNIEnv 
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	System::String ^mresult = Global::WPF_AUTO->getParentRuntimeId(marshal_as<String ^>(runtimeIdValue));
+	if (mresult == nullptr)
+		return NULL;
 	marshal_context context; //lets you marshal managed classes to unmanaged types
 	jstring result = env->NewStringUTF(context.marshal_as<const char *>(mresult));
 	env->ReleaseStringUTFChars(jruntimeIdValue, runtimeIdValue); //release string
@@ -215,6 +242,8 @@ JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_getProperty(JNIEnv *env, j
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	const char *propertyName = env->GetStringUTFChars(jpropertyName, 0);//convert string
 	System::String ^mresult = Global::WPF_AUTO->getProperty(marshal_as<String ^>(propertyName), marshal_as<String ^>(runtimeIdValue));
+	if (mresult == nullptr)
+		return NULL;
 	marshal_context context; //lets you marshal managed classes to unmanaged types
 	jstring result = env->NewStringUTF(context.marshal_as<const char *>(mresult));
 	env->ReleaseStringUTFChars(jpropertyName, propertyName); //release string
@@ -232,7 +261,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_getProperties(JNIEnv 
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	array<System::String ^> ^mprops = Global::WPF_AUTO->getProperties(marshal_as<String ^>(runtimeIdValue));
-	
+	if (mprops == nullptr)
+		return NULL;
 	//create result object array to the same size as the managed children Ids string array
 	jclass stringClass = env->FindClass("java/lang/String");
 	jobjectArray results = env->NewObjectArray(mprops->Length, stringClass, 0);
@@ -255,7 +285,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_getPropertiesAndValue
 {
 	const char *runtimeIdValue = env->GetStringUTFChars(jruntimeIdValue, 0);//convert string
 	array<System::String ^> ^mprops = Global::WPF_AUTO->getPropertiesAndValues(marshal_as<String ^>(runtimeIdValue));
-	
+	if (mprops == nullptr)
+		return NULL;
 	//create result object array to the same size as the managed children Ids string array
 	jclass stringClass = env->FindClass("java/lang/String");
 	jobjectArray results = env->NewObjectArray(mprops->Length, stringClass, 0);

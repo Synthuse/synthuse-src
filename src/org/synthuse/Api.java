@@ -129,6 +129,7 @@ public class Api {
 		boolean EnumChildWindows(HWND hWnd, WNDENUMPROC lpEnumFunc, Pointer data);
 		HWND GetParent(HWND hWnd);
 		boolean IsWindowVisible(HWND hWnd);
+		boolean IsWindow(HWND hWnd);
 		
 		int GetWindowRect(HWND hWnd, RECT r);
 		int MapWindowPoints(HWND hWndFrom, HWND hWndTo, RECT r, int cPoints);

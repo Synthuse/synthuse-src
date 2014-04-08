@@ -5,7 +5,6 @@ import java.awt.Toolkit;
 import java.io.IOException;
 
 import org.synthuse.*;
-import com.sun.jna.platform.win32.WinDef.HWND;
 
 public class MainCommands extends BaseCommand {
 
@@ -55,12 +54,12 @@ public class MainCommands extends BaseCommand {
 		long totalAttempts = (long) (CommandProcessor.WAIT_TIMEOUT_THRESHOLD / (CommandProcessor.XML_UPDATE_THRESHOLD * 1000));
 		long attemptCount = 0;
 		String xpath = "/EnumeratedWindows/win[@TEXT='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
-		HWND handle = findHandleWithXpath(xpath, true);
-		if (handle != null)// first test without a timeout
+		WinPtr handle = findHandleWithXpath(xpath, true);
+		if (!handle.isEmpty())// first test without a timeout
 			return true;
 		while (attemptCount < totalAttempts) {
 			handle = findHandleWithXpath(xpath, true);
-			if (handle != null)
+			if (!handle.isEmpty())
 				break;
 			try {Thread.sleep((long)(CommandProcessor.XML_UPDATE_THRESHOLD * 1000));} catch (Exception e) {e.printStackTrace();}
 			++attemptCount;
@@ -76,12 +75,12 @@ public class MainCommands extends BaseCommand {
 		long totalAttempts = (long) (CommandProcessor.WAIT_TIMEOUT_THRESHOLD / (CommandProcessor.XML_UPDATE_THRESHOLD * 1000));
 		long attemptCount = 0;
 		String xpath = "//[@TEXT='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
-		HWND handle = findHandleWithXpath(xpath, true);
-		if (handle != null)// first test without a timeout
+		WinPtr handle = findHandleWithXpath(xpath, true);
+		if (!handle.isEmpty())// first test without a timeout
 			return true;
 		while (attemptCount < totalAttempts) {
 			handle = findHandleWithXpath(xpath, true);
-			if (handle != null)
+			if (!handle.isEmpty())
 				break;
 			try {Thread.sleep((long)(CommandProcessor.XML_UPDATE_THRESHOLD * 1000));} catch (Exception e) {e.printStackTrace();}
 			++attemptCount;
@@ -97,12 +96,12 @@ public class MainCommands extends BaseCommand {
 		long totalAttempts = (long) (CommandProcessor.WAIT_TIMEOUT_THRESHOLD / (CommandProcessor.XML_UPDATE_THRESHOLD * 1000));
 		long attemptCount = 0;
 		String xpath = "//win[@CLASS='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
-		HWND handle = findHandleWithXpath(xpath, true);
-		if (handle != null)// first test without a timeout
+		WinPtr handle = findHandleWithXpath(xpath, true);
+		if (!handle.isEmpty())// first test without a timeout
 			return true;
 		while (attemptCount < totalAttempts) {
 			handle = findHandleWithXpath(xpath, true);
-			if (handle != null)
+			if (!handle.isEmpty())
 				break;
 			try {Thread.sleep((long)(CommandProcessor.XML_UPDATE_THRESHOLD * 1000));} catch (Exception e) {e.printStackTrace();}
 			++attemptCount;
@@ -117,12 +116,12 @@ public class MainCommands extends BaseCommand {
 			return false;
 		long totalAttempts = (long) (CommandProcessor.WAIT_TIMEOUT_THRESHOLD / (CommandProcessor.XML_UPDATE_THRESHOLD * 1000));
 		long attemptCount = 0;
-		HWND handle = findHandleWithXpath(args[0], true);
-		if (handle != null)// first test without a timeout
+		WinPtr handle = findHandleWithXpath(args[0], true);
+		if (!handle.isEmpty())// first test without a timeout
 			return true;
 		while (attemptCount < totalAttempts) {
 			handle = findHandleWithXpath(args[0], true);
-			if (handle != null)
+			if (!handle.isEmpty())
 				break;
 			try {Thread.sleep((long)(CommandProcessor.XML_UPDATE_THRESHOLD * 1000));} catch (Exception e) {e.printStackTrace();}
 			++attemptCount;

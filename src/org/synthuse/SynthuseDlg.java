@@ -95,12 +95,14 @@ public class SynthuseDlg extends JFrame {
 	public static Config config = new Config(Config.DEFAULT_PROP_FILENAME);
 	private String dialogResult = "";
 	private String lastDragHwnd = "";
+	private String lastRuntimeId ="";
 	private JComboBox<String> cmbXpath;
 	private JButton btnTestIde;
 	
 	private TestIdeFrame testIde = null;
 	private int targetX;
 	private int targetY;
+	private WpfBridge wpf = new WpfBridge();
 
 	/**
 	 * Launch the application.
@@ -423,16 +425,17 @@ public class SynthuseDlg extends JFrame {
 		String handleStr = Api.GetHandleAsString(hwnd);
 		String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.GetWindowClassName(hwnd));
 		String parentStr = Api.GetHandleAsString(User32.instance.GetParent(hwnd));
-
-		lblStatus.setText("class: " + classStr + " hWnd: " + handleStr + " parent: " + parentStr + "  X,Y: " + targetX + ", " + targetY);
-		if (!lastDragHwnd.equals(handleStr)) {
+		String runtimeId = wpf.getRuntimeIdFromPoint(targetX, targetY);
+		lblStatus.setText("rid:" + runtimeId + " class: " + classStr + " hWnd: " + handleStr + " parent: " + parentStr + "  X,Y: " + targetX + ", " + targetY);
+		if (!lastDragHwnd.equals(handleStr) || !lastRuntimeId.equals(runtimeId)) {
 			if (!lastDragHwnd.isEmpty()) {
 				Api.refreshWindow(Api.GetHandleFromString(lastDragHwnd));
 			}
 			lastDragHwnd = handleStr;
+			lastRuntimeId = runtimeId;
 			//lastDragHwnd = (hwnd + "");
 			Api.highlightWindow(hwnd);
-			XpathManager.buildXpathStatementThreaded(hwnd, textPane, xpathEvents);
+			XpathManager.buildXpathStatementThreaded(hwnd, runtimeId, textPane, xpathEvents);
 		}
 	}
 }

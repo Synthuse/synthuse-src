@@ -25,4 +25,9 @@ public class Config extends PropertiesSerializer {
 		super(propertyFilename);
 		load(propertyFilename);
 	}
+	
+	public boolean isWpfBridgeDisabled()
+	{
+		return disableWpf.equals("true") || disableWpf.equals("True");
+	}
 }

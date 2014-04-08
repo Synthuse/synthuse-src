@@ -7,6 +7,7 @@
 
 package org.synthuse;
 
+import java.awt.Point;
 import java.io.*;
 
 public class WpfBridge {
@@ -69,24 +70,57 @@ public class WpfBridge {
         System.load(temp.getAbsolutePath());
     }
 
-	native void setFrameworkId(String propertyValue); //default is WPF, but also accepts Silverlight, Win32	
+	public native void setFrameworkId(String propertyValue); //default is WPF, but also accepts Silverlight, Win32	
+	public native void setTouchableOnly(boolean val); //default is true
 	
 	//Descendants will walk the full tree of windows, NOT just one level of children
-	native int countDescendantWindows();
-	native int countDescendantWindows(String runtimeIdValue);
+	public native int countDescendantWindows();
+	public native int countDescendantWindows(String runtimeIdValue);
 	
-	native int countChildrenWindows();
-	native int countChildrenWindows(String runtimeIdValue);
+	public native int countChildrenWindows();
+	public native int countChildrenWindows(String runtimeIdValue);
 	
-	native String[] enumChildrenWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
-	native String[] enumDescendantWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
-	native String[] enumDescendantWindowIds(long processId);
-	native String[] enumDescendantWindowIdsFromHandle(long windowHandle);
+	public native String[] enumChildrenWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
+	public native String[] enumDescendantWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
+	public native String[] enumDescendantWindowIds(long processId);
 	//In all the above Enumerate methods will return a list of Runtime Ids for all related windows.
-	native String[] enumDescendantWindowInfo(String runtimeIdValue, String properties); //returns properties comma separated
+	public native String[] enumDescendantWindowInfo(String runtimeIdValue, String properties); //returns properties comma separated
 
-	native String getParentRuntimeId(String runtimeIdValue);
-	native String getProperty(String propertyName, String runtimeIdValue);
-	native String[] getProperties(String runtimeIdValue);
-	native String[] getPropertiesAndValues(String runtimeIdValue);
+	public native String getRuntimeIdFromHandle(long windowHandle);
+	public native String getRuntimeIdFromPoint(int x, int y);
+	public native String getParentRuntimeId(String runtimeIdValue);
+	public native String getProperty(String propertyName, String runtimeIdValue);
+	public native String[] getProperties(String runtimeIdValue);
+	public native String[] getPropertiesAndValues(String runtimeIdValue);
+	
+	public Point getCenterOfElement(String runtimeIdValue) {
+		Point p = new Point();
+    	String boundary = getProperty("BoundingRectangleProperty", runtimeIdValue);
+    	//System.out.println("boundary: " + boundary); //boundary: 841,264,125,29
+    	String[] boundarySplt = boundary.split(",");
+    	int x = Integer.parseInt(boundarySplt[0]);
+    	int y = Integer.parseInt(boundarySplt[1]);
+    	int width = Integer.parseInt(boundarySplt[2]);
+    	int height = Integer.parseInt(boundarySplt[3]);
+    	p.x = ((width) /2) + x;
+    	p.y = ((height) /2) + y;
+		return p;
+	}
+	
+	public String getWindowClass(String runtimeIdValue) {
+		return getProperty("ClassNameProperty", runtimeIdValue);
+	}
+	
+	public String getWindowText(String runtimeIdValue) {
+		return getProperty("NameProperty", runtimeIdValue);
+	}
+
+	public String getWindowAutomationId(String runtimeIdValue) {
+		return getProperty("AutomationIdProperty", runtimeIdValue);
+	}
+
+	public String getWindowFramework(String runtimeIdValue) {
+		return getProperty("FrameworkIdProperty", runtimeIdValue);
+	}
+	
 }

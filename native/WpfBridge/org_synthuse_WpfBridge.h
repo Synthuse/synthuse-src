@@ -17,6 +17,14 @@ JNIEXPORT void JNICALL Java_org_synthuse_WpfBridge_setFrameworkId
 
 /*
  * Class:     org_synthuse_WpfBridge
+ * Method:    setTouchableOnly
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_org_synthuse_WpfBridge_setTouchableOnly
+  (JNIEnv *, jobject, jboolean);
+
+/*
+ * Class:     org_synthuse_WpfBridge
  * Method:    countDescendantWindows
  * Signature: ()I
  */
@@ -73,19 +81,27 @@ JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowI
 
 /*
  * Class:     org_synthuse_WpfBridge
- * Method:    enumDescendantWindowIdsFromHandle
- * Signature: (J)[Ljava/lang/String;
- */
-JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowIdsFromHandle
-  (JNIEnv *, jobject, jlong);
-
-/*
- * Class:     org_synthuse_WpfBridge
  * Method:    enumDescendantWindowInfo
  * Signature: (Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;
  */
 JNIEXPORT jobjectArray JNICALL Java_org_synthuse_WpfBridge_enumDescendantWindowInfo
   (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_synthuse_WpfBridge
+ * Method:    getRuntimeIdFromHandle
+ * Signature: (J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_getRuntimeIdFromHandle
+  (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     org_synthuse_WpfBridge
+ * Method:    getRuntimeIdFromPoint
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_synthuse_WpfBridge_getRuntimeIdFromPoint
+  (JNIEnv *, jobject, jint, jint);
 
 /*
  * Class:     org_synthuse_WpfBridge

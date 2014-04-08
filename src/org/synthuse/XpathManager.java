@@ -21,7 +21,9 @@ import com.sun.jna.platform.win32.WinDef.HWND;
 public class XpathManager implements Runnable{
 
 	private HWND hwnd = null;
+	private String runtimeId = null;
 	private JTextPane windowsXmlTextPane = null;
+	private WpfBridge wpf = null;
 	
 	public static interface Events {
 		void statusChanged(String status);
@@ -42,6 +44,14 @@ public class XpathManager implements Runnable{
 		this.windowsXmlTextPane = windowsXmlTextPane;
 	}
 	
+	public XpathManager(HWND hwnd, String runtimeId, JTextPane windowsXmlTextPane, Events events) {
+		this.events = events;
+		this.hwnd = hwnd;
+		this.runtimeId = runtimeId;
+		this.windowsXmlTextPane = windowsXmlTextPane;
+		this.wpf = new WpfBridge();
+	}
+	
 	@Override
 	public void run() {
 		String results = buildXpathStatement();
@@ -53,14 +63,56 @@ public class XpathManager implements Runnable{
         t.start();
 	}
 	
+	public static void buildXpathStatementThreaded(HWND hwnd, String runtimeId, JTextPane windowsXmlTextPane, Events events) {
+		Thread t = new Thread(new XpathManager(hwnd, runtimeId, windowsXmlTextPane, events));
+        t.start();
+	}
+	
+	public String compareLongTextString(String rawText) {
+		String escapedTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(rawText);
+		if (!escapedTxtStr.isEmpty()) {
+			if (rawText.length() > 20) {// if the raw text is too long only test the first 20 characters
+				escapedTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(rawText.substring(0, 20));
+			}
+		}
+		return escapedTxtStr;
+	}
+	
+	public String buildWpfXpathStatement() {
+		String builtXpath = "";
+		String xml = this.windowsXmlTextPane.getText();
+		String classStr = wpf.getWindowClass(runtimeId);
+		//System.out.println("class: " + classStr);
+		String txtOrig = wpf.getWindowText(runtimeId);
+		if (classStr == null || txtOrig == null)
+			return "";
+		//System.out.println("text: " + txtOrig);
+		String txtStr = compareLongTextString(txtOrig);
+		builtXpath = "//wpf[@class='" + classStr + "' and starts-with(@text,'" + txtStr + "')]";
+		//builtXpath = "//*[@hwnd='" + runtimeId + "']";
+		System.out.println("evaluateXpathGetValues: " + builtXpath);
+		List<String> wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
+		if (wpfResultList.size() == 0)
+			return "";
+		//	return builtXpath;
+		return builtXpath;
+	}
+	
 	public String buildXpathStatement() {
 		String builtXpath = "";
 		try {
+			String xml = this.windowsXmlTextPane.getText();
+			if (runtimeId != null && !SynthuseDlg.config.isWpfBridgeDisabled()) {
+				if (!runtimeId.isEmpty()) {
+					builtXpath = buildWpfXpathStatement();
+				}
+			}
+			if (builtXpath != "")
+				return builtXpath;
 			String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.GetWindowClassName(hwnd));
 			String handleStr = Api.GetHandleAsString(hwnd);
 			String txtOrig = Api.GetWindowText(hwnd);
 			String txtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(txtOrig);
-			String xml = this.windowsXmlTextPane.getText();
 			builtXpath = "//win[@class='" + classStr + "']";
 			List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
 			//int matches = nextXpathMatch(builtXpath, textPane, true);

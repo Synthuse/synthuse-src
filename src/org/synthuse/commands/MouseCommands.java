@@ -4,8 +4,6 @@ import java.awt.Point;
 
 import org.synthuse.*;
 
-import com.sun.jna.platform.win32.WinDef.HWND;
-
 public class MouseCommands extends BaseCommand {
 		
 	public MouseCommands(CommandProcessor commandProcessor) {
@@ -15,10 +13,12 @@ public class MouseCommands extends BaseCommand {
 	public boolean cmdClick(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		//System.out.println("cmdClick1: " + args[0]);
+		if (handle.isEmpty())
 			return false;
-		Point p = api.getWindowPosition(handle);
+		Point p = getCenterWindowPosition(handle);
+		//System.out.println("cmdClick3: " + p.x + "," + p.y);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		RobotMacro.leftClickMouse();
 		return true;
@@ -27,10 +27,10 @@ public class MouseCommands extends BaseCommand {
 	public boolean cmdDoubleClick(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		Point p = api.getWindowPosition(handle);
+		Point p = getCenterWindowPosition(handle);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		RobotMacro.doubleClickMouse();
 		return true;
@@ -39,10 +39,10 @@ public class MouseCommands extends BaseCommand {
 	public boolean cmdRightClick(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		Point p = api.getWindowPosition(handle);
+		Point p = getCenterWindowPosition(handle);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		RobotMacro.rightClickMouse();
 		return true;
@@ -71,10 +71,10 @@ public class MouseCommands extends BaseCommand {
 	public boolean cmdMouseMove(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		Point p = api.getWindowPosition(handle);
+		Point p = getCenterWindowPosition(handle);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		//System.out.println("point " + p.x + "," + p.y);
 		return true;
@@ -101,30 +101,30 @@ public class MouseCommands extends BaseCommand {
 	public boolean cmdWinClick(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.sendClick(handle);
+		api.sendClick(handle.hWnd);
 		return true;
 	}
 
 	public boolean cmdWinDoubleClick(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.sendDoubleClick(handle);
+		api.sendDoubleClick(handle.hWnd);
 		return true;
 	}
 
 	public boolean cmdWinRightClick(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;
-		HWND handle = findHandleWithXpath(args[0]);
-		if (handle == null)
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
 			return false;
-		api.sendRightClick(handle);
+		api.sendRightClick(handle.hWnd);
 		return true;
 	}
 }
