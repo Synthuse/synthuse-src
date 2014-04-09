@@ -25,9 +25,11 @@ Software Requirements:
   
 
 Release Notes:
+  4-8-2014  version 1.0.9
+  - Added Support for automating WPF and Silverlight applications, this requires .Net 4.0 framework
+  - Added better mouse scripting support
   2-17-2014  version 1.0.6
   - fixed Test IDE window
-  
   1-30-2014  version 1.0.5
    - Base version
 
