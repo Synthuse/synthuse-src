@@ -138,8 +138,10 @@ public class WindowsEnumeratedXml implements Runnable{
 		    	Element win = null;
 		    	if (w.framework.equals("win32"))
 		    		win = doc.createElement("win");
-		    	else
+		    	else if (w.framework.equals("WPF"))
 		    		win = doc.createElement("wpf");
+		    	else if (w.framework.equals("Silverlight"))
+		    		win = doc.createElement("silver");
 				win.setAttribute("hwnd", w.hwndStr);
 				win.setAttribute("text", w.text);
 				if (w.value != "" && w.value != null)

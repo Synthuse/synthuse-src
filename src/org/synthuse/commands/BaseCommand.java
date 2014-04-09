@@ -116,15 +116,16 @@ public class BaseCommand {
 				resultStr = item;
 			break;
 		}
-		if (WinPtr.isWpfRuntimeIdFormat(resultStr))
+		if (WinPtr.isWpfRuntimeIdFormat(resultStr)) {
 			result.runtimeId = resultStr;
+			if (!ignoreFailedFind && result.isEmpty())
+				appendError("Error: Failed to find window handle matching: " + xpath);
+		}
 		else {
 			result.hWnd = Api.GetHandleFromString(resultStr);
-			if (!api.user32.IsWindow(result.hWnd))
-				appendError("Error: Failed to located HWND(" + resultStr + ") from : " + xpath);
+			if (!ignoreFailedFind && !api.user32.IsWindow(result.hWnd))
+				appendError("Error: Failed to locate window HWND(" + resultStr + ") from : " + xpath);
 		}
-		if (result.isEmpty())
-			appendError("Error: Failed to find window handle matching: " + xpath);
 		return result;
 	}
 	

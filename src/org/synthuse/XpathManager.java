@@ -95,7 +95,7 @@ public class XpathManager implements Runnable{
 			if (!winValueOrig.isEmpty()) //if value attribute exists then use it too
 				valueStr = " and starts-with(@value,'" + compareLongTextString(winValueOrig) + "')";
 		
-		builtXpath = "//wpf[@class='" + classStr + "' and starts-with(@text,'" + txtStr + "')" + valueStr + "]";
+		builtXpath = "//*[@class='" + classStr + "' and starts-with(@text,'" + txtStr + "')" + valueStr + "]";
 		
 		//builtXpath = "//*[@hwnd='" + runtimeId + "']";
 		//System.out.println("evaluateXpathGetValues: " + builtXpath);
