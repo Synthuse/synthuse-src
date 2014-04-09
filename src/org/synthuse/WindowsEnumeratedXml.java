@@ -72,9 +72,11 @@ public class WindowsEnumeratedXml implements Runnable{
 	
 	public static String getXml() {
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
-		final Map<String, String> processList = new LinkedHashMap<String, String>(); 
-		final Map<String, WindowInfo> wpfParentList = new LinkedHashMap<String, WindowInfo>();
+		final Map<String, String> processList = new LinkedHashMap<String, String>();
+		final List<String> wpfParentList = new ArrayList<String>();//HwndWrapper
+		final List<String> silverlightParentList = new ArrayList<String>();//MicrosoftSilverlight
 		int wpfCount = 0;
+		int silverlightCount = 0;
 		
 	    class ChildWindowCallback implements WinUser.WNDENUMPROC {
 			@Override
@@ -82,7 +84,9 @@ public class WindowsEnumeratedXml implements Runnable{
 				WindowInfo wi = new WindowInfo(hWnd, true);
 				infoList.put(wi.hwndStr, wi);
 				if (wi.className.startsWith("HwndWrapper"))
-					wpfParentList.put(wi.hwndStr, null);
+					wpfParentList.add(wi.hwndStr);
+				if (wi.className.startsWith("MicrosoftSilverlight") || wi.className.startsWith("GeckoPluginWindow"))
+					silverlightParentList.add(wi.hwndStr);
 				return true;
 			}
 	    }
@@ -93,7 +97,7 @@ public class WindowsEnumeratedXml implements Runnable{
 				WindowInfo wi = new WindowInfo(hWnd, false);
 				infoList.put(wi.hwndStr, wi);
 				if (wi.className.startsWith("HwndWrapper"))
-					wpfParentList.put(wi.hwndStr, null);
+					wpfParentList.add(wi.hwndStr);
 				Api.User32.instance.EnumChildWindows(hWnd, new ChildWindowCallback(), new Pointer(0));
 				return true;
 			}
@@ -103,15 +107,15 @@ public class WindowsEnumeratedXml implements Runnable{
 	    //Enumerate WPF windows and add to list
 	    if (!SynthuseDlg.config.isWpfBridgeDisabled())
 	    {
-	    	////win[starts-with(@class,'HwndWrapper')]
-	    	//WpfBridge wb = new WpfBridge();
-	    	//if (wb.countDescendantWindows() > 0)
-		    for (String handle : wpfParentList.keySet()) {
-		    	//WindowInfo w = wpfParentList.get(handle);
-		    	//System.out.println("EnumerateWindowsWithWpfBridge: " + handle);
+		    for (String handle : wpfParentList) {
 		    	Map<String, WindowInfo> wpfInfoList = EnumerateWindowsWithWpfBridge(handle, "WPF");
 		    	wpfCount += wpfInfoList.size();
 		    	infoList.putAll(wpfInfoList);
+		    }
+		    for (String handle : silverlightParentList) {
+		    	Map<String, WindowInfo> slInfoList = EnumerateWindowsWithWpfBridge(handle, "Silverlight");
+		    	silverlightCount += slInfoList.size();
+		    	infoList.putAll(slInfoList);
 		    }
 	    }
 
@@ -138,6 +142,8 @@ public class WindowsEnumeratedXml implements Runnable{
 		    		win = doc.createElement("wpf");
 				win.setAttribute("hwnd", w.hwndStr);
 				win.setAttribute("text", w.text);
+				if (w.value != "" && w.value != null)
+					win.setAttribute("value", w.value);
 				if (w.text != null)
 					win.setAttribute("TEXT", w.text.toUpperCase());
 				win.setAttribute("class", w.className);
@@ -179,6 +185,7 @@ public class WindowsEnumeratedXml implements Runnable{
 		    totals.setAttribute("windowCount", infoList.size()+"");
 		    totals.setAttribute("wpfWrapperCount", wpfParentList.size()+"");
 		    totals.setAttribute("wpfCount", wpfCount+"");
+		    totals.setAttribute("silverlightCount", silverlightCount+"");
 		    totals.setAttribute("processCount", processList.size()+"");
 		    totals.setAttribute("updatedLast", new Timestamp((new Date()).getTime()) + "");
 		    rootElement.appendChild(totals);
@@ -196,6 +203,8 @@ public class WindowsEnumeratedXml implements Runnable{
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
     	WpfBridge wb = new WpfBridge();
     	wb.setFrameworkId(frameworkType);
+    	if (SynthuseDlg.config.isFilterWpfDisabled())
+    		wb.setTouchableOnly(false);
     	long hwnd = Long.parseLong(parentHwndStr);
     	//List<String> parentIds = new ArrayList<String>(Arrays.asList(wb.enumChildrenWindowIds("")));
 		//System.out.println("getRuntimeIdFromHandle");

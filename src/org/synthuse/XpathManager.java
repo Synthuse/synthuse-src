@@ -84,18 +84,29 @@ public class XpathManager implements Runnable{
 		String classStr = wpf.getWindowClass(runtimeId);
 		//System.out.println("class: " + classStr);
 		String txtOrig = wpf.getWindowText(runtimeId);
+		String winValueOrig = wpf.getWindowValue(runtimeId);
 		if (classStr == null || txtOrig == null)
 			return "";
 		//System.out.println("text: " + txtOrig);
 		String txtStr = compareLongTextString(txtOrig);
-		builtXpath = "//wpf[@class='" + classStr + "' and starts-with(@text,'" + txtStr + "')]";
+		
+		String valueStr = ""; 
+		if (winValueOrig != null)
+			if (!winValueOrig.isEmpty()) //if value attribute exists then use it too
+				valueStr = " and starts-with(@value,'" + compareLongTextString(winValueOrig) + "')";
+		
+		builtXpath = "//wpf[@class='" + classStr + "' and starts-with(@text,'" + txtStr + "')" + valueStr + "]";
+		
 		//builtXpath = "//*[@hwnd='" + runtimeId + "']";
-		System.out.println("evaluateXpathGetValues: " + builtXpath);
+		//System.out.println("evaluateXpathGetValues: " + builtXpath);
 		List<String> wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
-		if (wpfResultList.size() == 0)
-			return "";
-		//	return builtXpath;
-		return builtXpath;
+		if (wpfResultList.size() > 0)
+			return builtXpath;
+		builtXpath = "//*[@hwnd='" + runtimeId + "']";
+		wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
+		if (wpfResultList.size() > 0)
+			return builtXpath;
+		return "";
 	}
 	
 	public String buildXpathStatement() {

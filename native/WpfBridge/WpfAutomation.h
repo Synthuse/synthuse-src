@@ -34,7 +34,7 @@ public:
 	array<System::String ^> ^ getPropertiesAndValues(System::String ^runtimeIdValue);
 private:
 	array<System::Int32> ^ convertRuntimeIdString(System::String ^runtimeIdValue);
-	System::Windows::Automation::AutomationElement ^ findAutomationElementById(System::String ^runtimeIdValue);
+	System::Windows::Automation::AutomationElement ^ findAutomationElementById(System::String ^runtimeIdValue, System::Boolean unfiltered);
 	System::String ^ getRuntimeIdFromElement(System::Windows::Automation::AutomationElement ^element);
 	array<System::String ^> ^ getRuntimeIdsFromCollection(System::Windows::Automation::AutomationElementCollection ^collection);
 	System::Windows::Automation::Condition ^ getSearchConditions();

@@ -28,12 +28,21 @@ void WpfAutomation::setTouchableOnly(System::Boolean val)
 
 System::Windows::Automation::Condition ^ WpfAutomation::getSearchConditions()
 {
-    array<System::Windows::Automation::Condition ^> ^cons = gcnew array<System::Windows::Automation::Condition ^>(3);
-    cons[0] = gcnew PropertyCondition(AutomationElement::FrameworkIdProperty, this->frameworkId);//is WPF framework
-    cons[1] = gcnew PropertyCondition(AutomationElement::IsEnabledProperty, this->touchableOnly);//is enabled
-    cons[2] = gcnew PropertyCondition(AutomationElement::IsOffscreenProperty, !this->touchableOnly);// is off screen
-    System::Windows::Automation::Condition ^result = gcnew System::Windows::Automation::AndCondition(cons);
-    return result;
+	array<System::Windows::Automation::Condition ^> ^cons = nullptr;
+	if (this->touchableOnly) 
+	{
+		cons = gcnew array<System::Windows::Automation::Condition ^>(3);
+		cons[0] = gcnew PropertyCondition(AutomationElement::FrameworkIdProperty, this->frameworkId);//is WPF framework
+		cons[1] = gcnew PropertyCondition(AutomationElement::IsEnabledProperty, true);//is enabled
+		cons[2] = gcnew PropertyCondition(AutomationElement::IsOffscreenProperty, false);// is off screen
+	}
+	else
+	{
+		cons = gcnew array<System::Windows::Automation::Condition ^>(1);
+		cons[0] = gcnew PropertyCondition(AutomationElement::FrameworkIdProperty, this->frameworkId);//is WPF framework
+	}
+	System::Windows::Automation::Condition ^result = gcnew System::Windows::Automation::AndCondition(cons);
+	return result;
 }
 
 array<System::Int32> ^ WpfAutomation::convertRuntimeIdString(System::String ^runtimeIdValue)
@@ -48,11 +57,13 @@ array<System::Int32> ^ WpfAutomation::convertRuntimeIdString(System::String ^run
 	return idArray;
 }
 
-AutomationElement ^ WpfAutomation::findAutomationElementById(System::String ^runtimeIdValue)
+AutomationElement ^ WpfAutomation::findAutomationElementById(System::String ^runtimeIdValue, System::Boolean unfiltered)
 {
 	if (runtimeIdValue == nullptr || runtimeIdValue->Equals(L""))
 		return AutomationElement::RootElement;
 	array<System::Int32> ^idArray = this->convertRuntimeIdString(runtimeIdValue);
+    if (unfiltered)
+        return AutomationElement::RootElement->FindFirst(TreeScope::Descendants, gcnew PropertyCondition(AutomationElement::RuntimeIdProperty, idArray));
 	//Condition ^pcFramework = gcnew PropertyCondition(AutomationElement::FrameworkIdProperty, this->frameworkId);
 	Condition ^pcRunId = gcnew PropertyCondition(AutomationElement::RuntimeIdProperty, idArray);
 	Condition ^frameworkAndRuntimeId = gcnew AndCondition(getSearchConditions(), pcRunId);
@@ -102,7 +113,7 @@ System::Int32 WpfAutomation::countDescendantWindows()
 
 System::Int32 WpfAutomation::countDescendantWindows(System::String ^runtimeIdValue)
 {
-	AutomationElement ^parent = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
 	AutomationElementCollection ^aec = parent->FindAll(TreeScope::Descendants, getSearchConditions());
 	if (aec == nullptr)
 		return 0;
@@ -125,7 +136,7 @@ System::Int32 WpfAutomation::countChildrenWindows()
 
 System::Int32 WpfAutomation::countChildrenWindows(System::String ^runtimeIdValue)
 {
-	AutomationElement ^parent = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
 	AutomationElementCollection ^aec = parent->FindAll(TreeScope::Children, getSearchConditions());
 	if (aec == nullptr)
 		return 0;
@@ -137,7 +148,7 @@ System::Int32 WpfAutomation::countChildrenWindows(System::String ^runtimeIdValue
 	
 array<System::String ^> ^ WpfAutomation::enumChildrenWindowIds(System::String ^runtimeIdValue)
 {
-	AutomationElement ^parent = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
 	AutomationElementCollection ^aec = parent->FindAll(TreeScope::Children, getSearchConditions());
 	if (aec == nullptr)
 		return nullptr;
@@ -146,7 +157,7 @@ array<System::String ^> ^ WpfAutomation::enumChildrenWindowIds(System::String ^r
 
 array<System::String ^> ^ WpfAutomation::enumDescendantWindowIds(System::String ^runtimeIdValue)
 {
-	AutomationElement ^parent = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
 	AutomationElementCollection ^aec = parent->FindAll(TreeScope::Descendants, getSearchConditions());
 	if (aec == nullptr)
 		return nullptr;
@@ -176,7 +187,7 @@ System::String ^ WpfAutomation::getRuntimeIdFromHandle(System::IntPtr windowHand
 
 array<System::String ^> ^ WpfAutomation::enumDescendantWindowInfo(System::String ^runtimeIdValue, System::String ^properties)
 {
-	AutomationElement ^parent = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
     if (parent == nullptr)
         return nullptr;
 	AutomationElementCollection ^aec = parent->FindAll(TreeScope::Descendants, getSearchConditions());
@@ -226,6 +237,7 @@ array<System::String ^> ^ WpfAutomation::enumDescendantWindowInfo(System::String
 				else//not runtimeId which is an Int32[]
 				{
 					currentPropertyStr = currentVal->ToString();
+                    currentPropertyStr = currentPropertyStr->Replace(",","&#44;");
 				}
 			}
 			if (currentPropertyStr->Equals(L"")) //if there isn't a value skip
@@ -256,7 +268,7 @@ System::String ^ WpfAutomation::getRuntimeIdFromPoint(System::Int32 x, System::I
 
 System::String ^ WpfAutomation::getParentRuntimeId(System::String ^runtimeIdValue)
 {
-	AutomationElement ^target = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^target = findAutomationElementById(runtimeIdValue, true);
 	if (target == nullptr)
 		return nullptr;
 	TreeWalker ^tw = TreeWalker::ControlViewWalker;
@@ -266,7 +278,7 @@ System::String ^ WpfAutomation::getParentRuntimeId(System::String ^runtimeIdValu
 
 System::String ^ WpfAutomation::getProperty(System::String ^propertyName, System::String ^runtimeIdValue)
 {
-	AutomationElement ^parent = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
 	if (parent == nullptr)
 		return nullptr;
 	//System::Object ^currentVal = parent->GetCurrentPropertyValue(AutomationElement::RuntimeIdProperty);
@@ -286,7 +298,7 @@ System::String ^ WpfAutomation::getProperty(System::String ^propertyName, System
 
 array<System::String ^> ^ WpfAutomation::getProperties(System::String ^runtimeIdValue)
 {
-	AutomationElement ^parent = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
 	if (parent == nullptr)
 		return nullptr;
 	array<AutomationProperty^> ^aps = parent->GetSupportedProperties();
@@ -305,7 +317,7 @@ array<System::String ^> ^ WpfAutomation::getProperties(System::String ^runtimeId
 
 array<System::String ^> ^ WpfAutomation::getPropertiesAndValues(System::String ^runtimeIdValue)
 {
-	AutomationElement ^parent = findAutomationElementById(runtimeIdValue);
+	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
 	if (parent == nullptr)
 		return nullptr;
 	array<AutomationProperty^> ^aps = parent->GetSupportedProperties();

@@ -19,41 +19,86 @@ public class WpfBridgeTest {
 	}
 	
 	@Test
-	public void countChildren() {
+	public void countChildrenWin32() {
 		WpfBridge wb = new WpfBridge();
 		wb.setFrameworkId("Win32");//We should find some Win32 windows, maybe not WPF
 		int win32Cnt = wb.countChildrenWindows(); 
-		assertTrue(win32Cnt > 0);
 		System.out.println("win32 countChildrenWindows: " + win32Cnt);
-		wb.setFrameworkId("WPF");// maybe not WPF
-		//System.out.println("wpf countChildrenWindows: " + wb.countChildrenWindows());
+		assertTrue(win32Cnt > 0);
+		wb.setTouchableOnly(false);//disable filter
+		int ufwin32Cnt = wb.countChildrenWindows(); 
+		System.out.println("win32 unfiltered countChildrenWindows: " + ufwin32Cnt);
+		assertTrue(ufwin32Cnt >= win32Cnt);		
 	}
 	
 	@Test
+	public void countChildrenWpf() {
+		WpfBridge wb = new WpfBridge();
+		wb.setFrameworkId("WPF");// maybe not WPF
+		wb.setTouchableOnly(true);//enable filter
+		System.out.println("wpf countChildrenWindows: " + wb.countChildrenWindows());
+		wb.setTouchableOnly(false);//disable filter
+		System.out.println("wpf unfiltered countChildrenWindows: " + wb.countChildrenWindows());
+	}
+	
+	@Test
+	public void countDescendantsWin32() {
+		WpfBridge wb = new WpfBridge();
+		wb.setFrameworkId("Win32");//We should find some Win32 windows, maybe not WPF
+		int win32Cnt = wb.countDescendantWindows(); 
+		System.out.println("win32 countDescendantWindows: " + win32Cnt);
+		assertTrue(win32Cnt > 0);
+		wb.setTouchableOnly(false);//disable filter
+		int ufwin32Cnt = wb.countDescendantWindows(); 
+		System.out.println("win32 unfiltered countDescendantWindows: " + ufwin32Cnt);
+		assertTrue(ufwin32Cnt >= win32Cnt);
+	}
+	
+	@Test
+	public void countDescendantsWpf() {
+		WpfBridge wb = new WpfBridge();
+		wb.setFrameworkId("WPF");// maybe not WPF
+		wb.setTouchableOnly(true);//enable filter
+		System.out.println("wpf countDescendantWindows: " + wb.countDescendantWindows());
+		wb.setTouchableOnly(false);//disable filter
+		System.out.println("wpf unfiltered countDescendantWindows: " + wb.countDescendantWindows());
+	}
+
+	
+	@Test
 	public void getRuntimeFromHandle() {
-		long handle = 1639790;
-		//String rid = wb.getRuntimeIdFromHandle(handle);
-		//System.out.println("getRuntimeIdFromHandle: " + rid);
-		handle = 984416;
-		//rid = wb.getRuntimeIdFromHandle(handle);
-		//System.out.println("getRuntimeIdFromHandle: " + rid);
+		WpfBridge wb = new WpfBridge();
+		Api api = new Api();
+		wb.setFrameworkId("WPF");
+		WinPtr wp = new WinPtr(api.user32.FindWindow(null, "MainWindow"));//find WpfMockTestApp.exe
+		long handle = Long.parseLong(wp.hWndStr);
+		String rid = wb.getRuntimeIdFromHandle(handle);
+		System.out.println(wp.hWndStr + " getRuntimeIdFromHandle: " + rid);
+		assertTrue(rid != null);
+		
+		String[] props = wb.getPropertiesAndValues(rid);
+		assertTrue(props != null);
+		
+		//for(String p : props)
+		//	System.out.println(p);
 	}
 	
 	@Test
 	public void enumerateWindowInfo() {
 		WpfBridge wb = new WpfBridge();
-		/*
-		EnumerateWindowsWithWpfBridge: 1639790
-		getRuntimeIdFromHandle
-		runtimeId=42-1639790
-		enumDescendantWindowIds 18
-		EnumerateWindowsWithWpfBridge: 984416
-		getRuntimeIdFromHandle
-		runtimeId=42-984416
-		*/
-		//int count = wb.countDescendantWindows("42-984416");
-		String[] wInfo = wb.enumDescendantWindowInfo("42-984416", WindowInfo.WPF_PROPERTY_LIST);
-		if (wInfo != null)
-			System.out.println("enumDescendantWindowInfo: " + wInfo.length);
+		Api api = new Api();
+		wb.setFrameworkId("WPF");
+		wb.setTouchableOnly(false);
+		WinPtr wp = new WinPtr(api.user32.FindWindow(null, "MainWindow"));//find WpfMockTestApp.exe
+		long handle = Long.parseLong(wp.hWndStr);
+		String rid = wb.getRuntimeIdFromHandle(handle);
+		System.out.println(wp.hWndStr + " getRuntimeIdFromHandle: " + rid);
+		if (rid == null)
+			return;
+		String[] wInfo = wb.enumDescendantWindowInfo(rid, WindowInfo.WPF_PROPERTY_LIST);
+		System.out.println("enumDescendantWindowInfo length: " + wInfo.length);
+		System.out.println(WindowInfo.WPF_PROPERTY_LIST);
+		for(String w : wInfo)
+			System.out.println(w);
 	}
 }

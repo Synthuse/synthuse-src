@@ -114,7 +114,11 @@ public class WpfBridge {
 	public String getWindowText(String runtimeIdValue) {
 		return getProperty("NameProperty", runtimeIdValue);
 	}
-
+	
+	public String getWindowValue(String runtimeIdValue) {
+		return getProperty("ValueProperty", runtimeIdValue);
+	}
+	
 	public String getWindowAutomationId(String runtimeIdValue) {
 		return getProperty("AutomationIdProperty", runtimeIdValue);
 	}
