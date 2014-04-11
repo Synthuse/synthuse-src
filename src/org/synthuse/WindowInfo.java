@@ -56,15 +56,14 @@ public class WindowInfo {
 			parentStr = Api.GetHandleAsString(parent);
 		}
 		else {
-			//User32.instance.GetWindowModuleFileName(hWnd, path, 512);
+			
 			PointerByReference pointer = new PointerByReference();
 			User32.instance.GetWindowThreadProcessId(hWnd, pointer);
-			Pointer p = pointer.getPointer();
-			pid = p.getLong(0);
+			pid = pointer.getPointer().getInt(0);
 		    Pointer process = Kernel32.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, pointer.getValue());
 		    Psapi.instance.GetModuleBaseNameW(process, null, buffer2, 512);
 		    processName = Native.toString(buffer2);
-			//processName = Native.toString(path);
+		    
 		}
 		this.hwnd = hWnd;
 		hwndStr = Api.GetHandleAsString(hWnd);

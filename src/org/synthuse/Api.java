@@ -147,6 +147,8 @@ public class Api {
 		int GetClassName(HWND hWnd, char[] buffer2, int i);
 		int GetWindowModuleFileName(HWND hWnd, char[] buffer2, int i);
 		int GetWindowThreadProcessId(HWND hWnd, PointerByReference pref);
+		//int GetWindowThreadProcessId(HWND hWnd, IntByReference lpdwProcessId);
+		
 		
 		boolean GetCursorPos(long[] lpPoint); //use macros POINT_X() and POINT_Y() on long lpPoint[0]
 

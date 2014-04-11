@@ -163,7 +163,6 @@ public class SynthuseDlg extends JFrame {
 		btnRefresh = new JButton(" Refresh ");
 		btnRefresh.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				//lblStatus.setText("Loading Windows Enumerated Xml...");
 				//WindowsEnumeratedXml wex = new WindowsEnumeratedXml(textPane, lblStatus);
 				//wex.run();
 				WindowsEnumeratedXml.getXmlThreaded(textPane, lblStatus);
@@ -199,7 +198,20 @@ public class SynthuseDlg extends JFrame {
 		helpBtn.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_HELP_IMG)));
 		helpBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				JOptionPane.showMessageDialog(null, "Version " + VERSION_STR + " create by Edward Jakubowski ejakubowski7@gmail.com", "About", JOptionPane.QUESTION_MESSAGE);
+				String about = "";
+				about += "Synthuse Version " + VERSION_STR + " create by Edward Jakubowski ejakubowski7@gmail.com\n\n";
+				
+				about += "System information: \n";
+				about += " Java version - " + System.getProperty("java.version") + "\n";
+				about += " Java home - " + System.getProperty("java.home") + "\n";
+				about += " OS Name - " + System.getProperty("os.name") + "\n";
+				about += " OS Arch - " + System.getProperty("os.arch") + "\n";
+				String jclasspath = System.getProperty("java.class.path");
+				jclasspath = jclasspath.replaceAll(";", ";\n   ");
+				if (!System.getProperty("os.name").startsWith("Windows"))
+					jclasspath = jclasspath.replaceAll(":", ":\n   ");
+				about += " Java class path - " + jclasspath + "\n\n";
+				JOptionPane.showMessageDialog(null, about , "About", JOptionPane.QUESTION_MESSAGE);
 			}
 		});
 		toolBar.add(helpBtn);
