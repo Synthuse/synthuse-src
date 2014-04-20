@@ -129,6 +129,36 @@ public class BaseCommand {
 		return result;
 	}
 	
+	public int findMenuIdWithXpath(String xpath) {
+		int result = 0;
+		double secondsFromLastUpdate = ((double)(System.nanoTime() - LAST_UPDATED_XML) / 1000000000);
+		if (secondsFromLastUpdate > CommandProcessor.XML_UPDATE_THRESHOLD) { //default 5 second threshold
+			WIN_XML = WindowsEnumeratedXml.getXml();
+			LAST_UPDATED_XML = System.nanoTime();
+		}
+		WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
+		String resultStr =  "";
+		List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
+		for(String item: resultList) {
+			if (item.contains("hmenu=")) {
+				List<String> list = WindowsEnumeratedXml.evaluateXpathGetValues(item, "//@id");
+				if (list.size() > 0)
+					resultStr = list.get(0); //get first id;
+			}
+			else
+				resultStr = item;
+			break;
+		}
+		resultStr = resultStr.replaceAll("[^\\d.]", ""); //remove all non-numeric values
+		//System.out.println("findMenuIdWithXpath: " + resultStr);
+		if (resultStr.isEmpty())
+			appendError("Error: Failed to find window handle matching: " + xpath);
+		else
+			result = Integer.parseInt(resultStr);
+		return result;
+	}
+
+	
 	public Point getCenterWindowPosition(WinPtr handle) {
 		Point p = null;
 		if (handle.isWin32())

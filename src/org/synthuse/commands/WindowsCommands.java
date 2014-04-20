@@ -2,6 +2,9 @@ package org.synthuse.commands;
 
 import org.synthuse.*;
 
+import com.sun.jna.platform.win32.WinDef.LPARAM;
+import com.sun.jna.platform.win32.WinDef.WPARAM;
+
 public class WindowsCommands extends BaseCommand {
 
 	public WindowsCommands(CommandProcessor cp) {
@@ -107,5 +110,18 @@ public class WindowsCommands extends BaseCommand {
 		if (handle.isEmpty())
 			return "";
 		return api.sendWmGetText(handle.hWnd);
+	}
+
+	public boolean cmdSelectMenu(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		WinPtr handle = findHandleWithXpath(args[0]);
+		if (handle.isEmpty())
+			return false;
+		int id = findMenuIdWithXpath(args[0]);
+		//LRESULT result = 
+		//System.out.println("PostMessage to " + handle.hWndStr + " for id " + id);
+		api.user32.PostMessage(handle.hWnd, Api.WM_COMMAND, new WPARAM(id), new LPARAM(0));
+		return true;
 	}
 }

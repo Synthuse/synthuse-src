@@ -100,7 +100,7 @@ public class XpathManager implements Runnable{
 		//builtXpath = "//*[@hwnd='" + runtimeId + "']";
 		//System.out.println("evaluateXpathGetValues: " + builtXpath);
 		List<String> wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
-		if (wpfResultList.size() > 0)
+		if (wpfResultList.size() == 1)
 			return builtXpath;
 		builtXpath = "//*[@hwnd='" + runtimeId + "']";
 		wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
@@ -181,7 +181,12 @@ public class XpathManager implements Runnable{
 			if (targetText instanceof JTextPane) {
 				final JTextPane target = (JTextPane)targetText;
 				target.requestFocus();
-				int cPos = target.getCaretPosition();
+				int cPos = 0;
+				try {
+					cPos = target.getCaretPosition();
+				} catch(Exception ex) {
+					//return 0;//something is throwing nullpointer exception
+				}
 				if (alwaysFromTop)
 					cPos = 0;
 				int len = target.getStyledDocument().getLength();

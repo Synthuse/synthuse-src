@@ -106,6 +106,9 @@ public class CommandPopupMenu extends JPopupMenu {
 		
 		CommandMenuItem mntmWindowSwitchToThis = new CommandMenuItem("windowSwitchToThis", 2);
 		mnWinMessages.add(mntmWindowSwitchToThis);
+
+		CommandMenuItem mntmSelectMenu = new CommandMenuItem("selectMenu", 2);
+		mnWinMessages.add(mntmSelectMenu);
 		
 		CommandMenuItem mntmSetcursorposition = new CommandMenuItem("setCursorPosition", 3);
 		mnWinMessages.add(mntmSetcursorposition);

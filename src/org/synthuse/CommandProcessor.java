@@ -203,6 +203,8 @@ public class CommandProcessor implements Runnable{
 			//Windows Api Commands
 			if (command.equals("windowFocus")) 
 				return win.cmdWindowFocus(args);
+			if (command.equals("selectMenu")) 
+				return win.cmdSelectMenu(args);
 			if (command.equals("windowMinimize")) 
 				return win.cmdWindowMinimize(args);
 			if (command.equals("windowMaximize")) 

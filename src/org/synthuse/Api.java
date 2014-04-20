@@ -8,24 +8,25 @@
 package org.synthuse;
 
 import java.awt.Point;
+import java.util.Arrays;
+import java.util.List;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-import com.sun.jna.platform.win32.WinDef.HDC;
-import com.sun.jna.platform.win32.WinDef.HPEN;
+import com.sun.jna.Structure;
+import com.sun.jna.platform.win32.WinDef.*;
+import com.sun.jna.platform.win32.BaseTSD.ULONG_PTR;
+import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.platform.win32.WinUser;
-import com.sun.jna.platform.win32.WinDef.HWND;
-import com.sun.jna.platform.win32.WinDef.LPARAM;
-import com.sun.jna.platform.win32.WinDef.LRESULT;
-import com.sun.jna.platform.win32.WinDef.RECT;
-import com.sun.jna.platform.win32.WinDef.WPARAM;
 import com.sun.jna.platform.win32.WinNT.LARGE_INTEGER;
 import com.sun.jna.platform.win32.WinUser.WNDENUMPROC;
 import com.sun.jna.ptr.PointerByReference;
 import com.sun.jna.win32.W32APIOptions;
 
 public class Api {
+	
+	// Constants
 	
     public static int WM_SETTEXT = 0x000c;
     public static int WM_GETTEXT = 0x000D;
@@ -84,6 +85,24 @@ public class Api {
     public static int RDW_INVALIDATE = 0x0001;
     public static int RDW_UPDATENOW = 0x0100;
     public static int RDW_ALLCHILDREN = 0x0080;
+    
+    public static int TB_GETBUTTONTEXTA = (0x0400 + 45);
+    public static int TB_GETBUTTONTEXTW = (0x0400 + 75);
+    public static int TB_GETRECT = (0x0400 + 51);
+    public static int TB_GETTOOLTIPS = (0x0400 + 35);
+    public static int TB_BUTTONCOUNT = 0x0418;
+    
+    public static int LVM_FIRST = 0x1000;
+    public static int LVM_GETITEMCOUNT = LVM_FIRST + 4;
+    public static int LVM_GETITEM = LVM_FIRST + 75;
+    public static int LVIF_TEXT = 0x0001;
+    
+    public static int LB_GETCOUNT = 0x18B;
+    
+    public static int CB_GETCOUNT = 0x146;
+    
+    public static int TV_FIRST = 0x1100;
+    public static int TVM_GETCOUNT = TV_FIRST + 5;
 
     public static int VK_SHIFT = 16;
     public static int VK_LSHIFT = 0xA0;
@@ -94,6 +113,8 @@ public class Api {
     public static int VK_MENU = 18;
     public static int VK_LMENU = 0xA4;
     public static int VK_RMENU = 0xA5;
+    
+    public static int WM_COMMAND = 0x111;
     
     public static int CWP_ALL = 0x0000; //    Does not skip any child windows
 	
@@ -109,7 +130,60 @@ public class Api {
     public static final int POINT_X(long i)
     {
         return (int) (i & 0xFFFF);
-    }    
+    }
+    
+    public interface WinDefExt extends WinDef {
+        //Structures
+        public class MENUITEMINFO extends Structure {
+            public static final int MFS_CHECKED = 0x00000008;
+            public static final int MFS_DEFAULT = 0x00001000;
+            public static final int MFS_DISABLED = 0x00000003;
+            public static final int MFS_ENABLED = 0x00000000;
+            public static final int MFS_GRAYED = 0x00000003;
+            public static final int MFS_HILITE = 0x00000080;
+            public static final int MFS_UNCHECKED = 0x00000000;
+            public static final int MFS_UNHILITE = 0x00000000;
+            public static final int MFT_STRING = 0x0000;
+            public static final int MIIM_DATA = 0x00000020;
+            public static final int MIIM_STRING = 0x0040;
+            public static final int MIIM_SUBMENU = 0x0004;
+            public static final int MIIM_TYPE = 0x0010;
+
+            public static class ByValue extends MENUITEMINFO implements Structure.ByValue {
+            }
+
+            public static class ByReference extends MENUITEMINFO implements Structure.ByReference {
+            }
+
+            public MENUITEMINFO() {
+                cbSize = size();
+            }
+
+            public MENUITEMINFO(Pointer p) {
+                super(p);
+            }
+
+            @Override
+            protected List<?> getFieldOrder() {
+                return Arrays.asList(new String[] { "cbSize", "fMask", "fType", "fState", "wID", "hSubMenu", "hbmpChecked",
+                        "hbmpUnchecked", "dwItemData", "dwTypeData", "cch", "hbmpItem" });
+            }
+
+            public int cbSize; //The size of the structure, in bytes. The caller must set this member to sizeof(MENUITEMINFO).
+            public int fMask; //Indicates the members to be retrieved or set.  MIIM_STRING or MIIM_SUBMENU or ...
+            public int fType; //The menu item type. fType is used only if fMask has a value of MIIM_FTYPE.
+            public int fState; //The menu item state. This member can be one or more of these values. Set fMask to MIIM_STATE to use fState.
+            public int wID; //An application-defined value that identifies the menu item. Set fMask to MIIM_ID to use wID.
+            public HMENU hSubMenu; //A handle to the drop-down menu or submenu associated with the menu item. Or NULL
+            public HBITMAP hbmpChecked; //A handle to the bitmap to display next to the item if it is selected.
+            public HBITMAP hbmpUnchecked; //A handle to the bitmap to display next to the item if it is not selected.
+            public ULONG_PTR dwItemData; //An application-defined value associated with the menu item. Set fMask to MIIM_DATA
+            //public byte[] dwTypeData = new byte[256];
+            public String dwTypeData; //The contents of the menu item, depends on the value of fType and is used only if the MIIM_TYPE flag is set in the fMask member
+            public int cch; //The length of the menu item text, in characters, when information is received about a menu item of the MFT_STRING type.
+            public HBITMAP hbmpItem; //A handle to the bitmap to be displayed, or it can be one of the values in the following table.
+        }
+    }
 	
 	public interface User32 extends W32APIOptions {  
 		User32 instance = (User32) Native.loadLibrary("user32", User32.class, DEFAULT_OPTIONS);  
@@ -158,6 +232,20 @@ public class Api {
 		boolean ScreenToClient(HWND hWnd, long[] lpPoint);//use macros POINT_X() and POINT_Y() on long lpPoint[0]
 		//HWND WindowFromPoint(int xPoint, int yPoint);
 		//HWND WindowFromPoint(POINT point);
+		
+		HMENU GetMenu(HWND hWnd);
+		boolean IsMenu(HMENU hMenu);
+		int GetMenuString(HMENU hMenu, int uIDItem, char[] buffer, int nMaxCount, int uFlag);
+		HMENU GetSubMenu(HMENU hMenu, int nPos);
+		int GetMenuItemCount(HMENU hMenu);
+		int GetMenuItemID(HMENU hMenu, int nPos);
+		//BOOL WINAPI GetMenuItemInfo(_In_ HMENU hMenu, _In_ UINT uItem, _In_ BOOL fByPosition, _Inout_ LPMENUITEMINFO lpmii);
+		boolean GetMenuItemInfoA(HMENU hMenu, int uItem, boolean fByPosition, WinDefExt.MENUITEMINFO mii); //MENUITEMINFO
+		boolean TrackPopupMenu(HMENU hMenu, int uFlags, int x, int y, int nReserved, HWND hWnd, long prcRect);
+		//
+		
+		int GetDlgCtrlID(HWND hwndCtl);
+		int GetDlgItemText(HWND hDlg, int nIDDlgItem, byte[] buffer, int nMaxCount);
 	}  
 	
 	public interface Gdi32 extends W32APIOptions {  
@@ -344,6 +432,32 @@ public class Api {
 	public void sendKeyUp(HWND handle, int keyCode) {
 		//user32.SendMessageA(handle, WM_KEYDOWN, keyCode, null);
 		user32.SendMessageA(handle, WM_KEYUP, keyCode, null);
+	}
+	
+	public String GetMenuItemText(HMENU hmenu, int position) {
+		if (user32.IsMenu(hmenu) == false)
+			return "";
+        char[] buffer = new char[256];
+		user32.GetMenuString(hmenu, position, buffer, 256, 0x0400);
+		return Native.toString(buffer);
+		/*
+		Api.WinDefExt.MENUITEMINFO mii = new Api.WinDefExt.MENUITEMINFO(); // = (MENUITEMINFO)Api.MENUITEMINFO.newInstance(Api.MENUITEMINFO.class);
+		mii.fMask = Api.WinDefExt.MENUITEMINFO.MIIM_TYPE;
+		mii.fType = Api.WinDefExt.MENUITEMINFO.MFT_STRING;
+		mii.cch = 0;
+		mii.dwTypeData = "";
+		@SuppressWarnings("unused")
+		boolean result = Api.User32.instance.GetMenuItemInfoA(hmenu, position, true, mii);
+		//System.out.println(position + " GetMenuItemInfo (" + result + ") : " + mii.cch + " " + mii.dwTypeData);
+		mii.fMask = Api.WinDefExt.MENUITEMINFO.MIIM_TYPE;
+		mii.fType = Api.WinDefExt.MENUITEMINFO.MFT_STRING;
+		mii.cch += 1;
+		mii.dwTypeData = "";//new String(new char[mii.cch]).replace("\0", " "); //buffer string with spaces
+		result = Api.User32.instance.GetMenuItemInfoA(hmenu, position, true, mii);
+		//System.out.println(position + " GetMenuItemInfo2 (" + result + ") Text: " + mii.dwTypeData + " " + mii.cch + " " + mii.wID);
+		//System.out.println("last error: "  + Api.Kernel32.instance.GetLastError());
+		return mii.dwTypeData;
+		*/
 	}
 	
 	public Point getWindowPosition(HWND handle) {

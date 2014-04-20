@@ -188,9 +188,14 @@ System::String ^ WpfAutomation::getRuntimeIdFromHandle(System::IntPtr windowHand
 array<System::String ^> ^ WpfAutomation::enumDescendantWindowInfo(System::String ^runtimeIdValue, System::String ^properties)
 {
 	AutomationElement ^parent = findAutomationElementById(runtimeIdValue, true);
-    if (parent == nullptr)
-        return nullptr;
+	if (parent == nullptr)
+		return nullptr;
 	AutomationElementCollection ^aec = parent->FindAll(TreeScope::Descendants, getSearchConditions());
+    
+    //when wildcard is enabled it will pull all property names & values
+    System::Boolean wildcardEnabled = false;
+    if (properties->Equals(L"*"))
+        wildcardEnabled = true;
     
     //create array for keeping order of properties
 	System::String ^delim = L",";
@@ -203,6 +208,11 @@ array<System::String ^> ^ WpfAutomation::enumDescendantWindowInfo(System::String
 	{
 		array<AutomationProperty^> ^aps = child->GetSupportedProperties();
 		array<System::String ^> ^propValues = gcnew array<System::String ^>(propSpltArray->Length);//keep order
+        System::String ^wildcardProperties = L"";
+        if (wildcardEnabled) {
+            wildcardProperties += "ParentRuntimeIdProperty:" + getRuntimeIdFromElement(tw->GetParent(child)) + ",";
+            //propValues = gcnew array<System::String ^>(aps->Length +1 );//add one for parent property since it doesn't exist
+        }
 		for(int i=0 ; i < propValues->Length ; i++)
 		{
 			propValues[i] = L"";
@@ -218,7 +228,7 @@ array<System::String ^> ^ WpfAutomation::enumDescendantWindowInfo(System::String
 			System::String ^shortPropName = L" null ";
 			if (ap->ProgrammaticName->Contains(L"."))
 				shortPropName = ap->ProgrammaticName->Substring(ap->ProgrammaticName->IndexOf(L".") + 1);
-			if (properties->Contains(shortPropName) || properties->Contains(ap->ProgrammaticName) || ap->ProgrammaticName->Equals(properties))
+			if (properties->Contains(shortPropName) || properties->Contains(ap->ProgrammaticName) || ap->ProgrammaticName->Equals(properties) || wildcardEnabled)
 			{
 				//System::Console::WriteLine("shortPropName: {0}", shortPropName);
 				System::Object ^currentVal = child->GetCurrentPropertyValue(ap);
@@ -242,17 +252,23 @@ array<System::String ^> ^ WpfAutomation::enumDescendantWindowInfo(System::String
 			}
 			if (currentPropertyStr->Equals(L"")) //if there isn't a value skip
 			    continue;
+			if (wildcardEnabled) {
+				wildcardProperties += shortPropName + ":" +currentPropertyStr + ",";
+				continue;
+			}
 			//System::Console::WriteLine("currentPropertyStr: {0}", currentPropertyStr);
 			//find the correct order to return this property
 			for(int i=0 ; i < propSpltArray->Length ; i++)
 			{
-			    if (propSpltArray[i]->Equals(shortPropName) || propSpltArray[i]->Equals(ap->ProgrammaticName))
-			        propValues[i] = currentPropertyStr;
+				if (propSpltArray[i]->Equals(shortPropName) || propSpltArray[i]->Equals(ap->ProgrammaticName))
+					propValues[i] = currentPropertyStr;
 			}
 		}
 		//output properties in the correct order
 		for(int i=0 ; i < propSpltArray->Length ; i++)
 			winInfoList[count] += propValues[i] + L",";
+		if (wildcardEnabled)
+			winInfoList[count] += wildcardProperties;
 		++count;
 	}
 	return winInfoList;

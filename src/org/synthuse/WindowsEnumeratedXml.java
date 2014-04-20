@@ -39,6 +39,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.WinDef.HMENU;
 import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.WinDef.HWND;
 
@@ -77,6 +78,7 @@ public class WindowsEnumeratedXml implements Runnable{
 		final List<String> silverlightParentList = new ArrayList<String>();//MicrosoftSilverlight
 		int wpfCount = 0;
 		int silverlightCount = 0;
+		int menuCount = 0;
 		
 	    class ChildWindowCallback implements WinUser.WNDENUMPROC {
 			@Override
@@ -142,6 +144,7 @@ public class WindowsEnumeratedXml implements Runnable{
 		    		win = doc.createElement("wpf");
 		    	else if (w.framework.equals("Silverlight"))
 		    		win = doc.createElement("silver");
+		    	
 				win.setAttribute("hwnd", w.hwndStr);
 				win.setAttribute("text", w.text);
 				if (w.value != "" && w.value != null)
@@ -165,6 +168,18 @@ public class WindowsEnumeratedXml implements Runnable{
 					win.setAttribute("pid", w.pid+"");
 				//else
 					//win.setAttribute("parent", w.parent + ""); // not really needed since child node is append to parent node
+				if (w.extra != null) {
+					for(String extraName: w.extra.keySet()) {
+						win.setAttribute(extraName, w.extra.get(extraName)+"");
+					}
+				}
+				
+				if (w.menus > 0) {
+					win.setAttribute("menus", w.menus+"");
+					//String menuStr = MenuInfo.GetHandleMenuAsString(w.menu);
+					buildMenuXmlElements(doc, win, w.menu, w.hwndStr);
+					++menuCount;
+				}
 				
 				if (w.isChild && infoList.containsKey(w.parentStr)) {
 					childCount++;
@@ -188,6 +203,7 @@ public class WindowsEnumeratedXml implements Runnable{
 		    totals.setAttribute("wpfWrapperCount", wpfParentList.size()+"");
 		    totals.setAttribute("wpfCount", wpfCount+"");
 		    totals.setAttribute("silverlightCount", silverlightCount+"");
+		    totals.setAttribute("menuCount", menuCount+"");
 		    totals.setAttribute("processCount", processList.size()+"");
 		    totals.setAttribute("updatedLast", new Timestamp((new Date()).getTime()) + "");
 		    rootElement.appendChild(totals);
@@ -201,6 +217,26 @@ public class WindowsEnumeratedXml implements Runnable{
 	    return "";
 	}
 	
+	public static Element buildMenuXmlElements(Document xmlDoc, Element xmlElement, HMENU targetMenu, String targetWin)
+	{
+		MenuInfo firstMi = new MenuInfo(targetMenu);
+		for (int i = 0 ; i < firstMi.menuCount ; i++ ) {
+			MenuInfo menuInfo = new MenuInfo(targetMenu, i);
+			Element menuElement = xmlDoc.createElement("menu");
+			menuElement.setAttribute("unaltered", menuInfo.unaltered + "");
+			menuElement.setAttribute("text", menuInfo.text + "");
+			menuElement.setAttribute("id", menuInfo.id + "");
+			menuElement.setAttribute("position", menuInfo.position + "");
+			menuElement.setAttribute("hmenu", menuInfo.hmenuStr + "");
+			menuElement.setAttribute("hwnd", targetWin + "");
+			if (menuInfo.hasSubMenu) {
+				buildMenuXmlElements(xmlDoc, menuElement, menuInfo.submenu, targetWin);
+			}
+			xmlElement.appendChild(menuElement);
+		}
+		return xmlElement;
+	}
+	
 	public static Map<String, WindowInfo> EnumerateWindowsWithWpfBridge(String parentHwndStr, String frameworkType) {
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
     	WpfBridge wb = new WpfBridge();
@@ -212,7 +248,11 @@ public class WindowsEnumeratedXml implements Runnable{
 		//System.out.println("getRuntimeIdFromHandle");
     	String parentRuntimeId = wb.getRuntimeIdFromHandle(hwnd);
 		//System.out.println("runtimeId=" + runtimeId);
-    	String[] allIds = wb.enumDescendantWindowInfo(parentRuntimeId, WindowInfo.WPF_PROPERTY_LIST);
+    	String[] allIds = null;
+    	if (SynthuseDlg.config.isFilterWpfDisabled())
+    		allIds = wb.enumDescendantWindowInfo(parentRuntimeId, "*");
+    	else
+    		allIds = wb.enumDescendantWindowInfo(parentRuntimeId, WindowInfo.WPF_PROPERTY_LIST);
     	if (allIds == null)
     		return infoList; //empty list
 		//System.out.println("enumDescendantWindowIds " + allIds.length);

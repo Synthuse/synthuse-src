@@ -20,11 +20,13 @@ import org.synthuse.Api.User32;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinUser;
+import com.sun.jna.platform.win32.WinDef.HMENU;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.ptr.PointerByReference;
 
 public class WinApiTest {
+	Api api = new Api();
 
 	@Before
 	public void setUp() throws Exception {
@@ -37,7 +39,7 @@ public class WinApiTest {
 	}
 	
 	public static void output(String val) {
-		System.out.println(val);
+		//System.out.println(val);
 	}
 	
 	//copied and modified slightly from WindowInfo class
@@ -50,6 +52,8 @@ public class WinApiTest {
 		String className = "";
 		String processName = "";
 		long pid = 0;
+		
+		Map<String, String> extra = null;
 
         byte[] buffer = new byte[1024];
         output("Calling GetWindowTextA");
@@ -67,6 +71,32 @@ public class WinApiTest {
 		User32.instance.GetClassName(hWnd, buffer2, 1026);
 		className = Native.toString(buffer2);
 		output("GetClassName returned: " + className);
+		
+    	HMENU hmenu = Api.User32.instance.GetMenu(hWnd);
+		//hmenu = Api.User32.instance.GetSubMenu(hmenu, 0);
+		if (hmenu != null) { //menu item count
+	    	int menuCount = Api.User32.instance.GetMenuItemCount(hmenu);
+	    	if (menuCount > 0) {
+				if (extra == null)
+					extra = new LinkedHashMap<String, String>(); 
+				extra.put("menuCount", menuCount + "");
+				System.out.println("className: " + className);
+				System.out.println("text: " + text);
+				System.out.println("menuCount: " + menuCount);
+
+				for (int m = 0 ; m < menuCount ; m++) {
+					String menuTxt = api.GetMenuItemText(hmenu, m);
+					System.out.println("Menu Text: " + menuTxt);
+				}
+				/*
+				if (menuCount == 5) {
+					HMENU smenu = Api.User32.instance.GetSubMenu(hmenu, 0);
+					boolean result = Api.User32.instance.TrackPopupMenu(smenu, 0, 1, 1, 0, hWnd, 0);
+					System.out.println("TrackPopupMenu: " + result);
+					System.out.println("last error: "  + Api.Kernel32.instance.GetLastError());
+				}*/
+	    	}
+		}
 		
 		rect = new RECT();
         output("Calling GetWindowRect");
