@@ -88,13 +88,6 @@ public class WinApiTest {
 					String menuTxt = api.GetMenuItemText(hmenu, m);
 					System.out.println("Menu Text: " + menuTxt);
 				}
-				/*
-				if (menuCount == 5) {
-					HMENU smenu = Api.User32.instance.GetSubMenu(hmenu, 0);
-					boolean result = Api.User32.instance.TrackPopupMenu(smenu, 0, 1, 1, 0, hWnd, 0);
-					System.out.println("TrackPopupMenu: " + result);
-					System.out.println("last error: "  + Api.Kernel32.instance.GetLastError());
-				}*/
 	    	}
 		}
 		

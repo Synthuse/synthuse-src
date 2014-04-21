@@ -115,6 +115,7 @@ public class Api {
     public static int VK_RMENU = 0xA5;
     
     public static int WM_COMMAND = 0x111;
+    public static int MN_GETHMENU = 0x01E1;
     
     public static int CWP_ALL = 0x0000; //    Does not skip any child windows
 	

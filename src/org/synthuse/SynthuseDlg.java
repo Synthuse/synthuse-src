@@ -321,7 +321,7 @@ public class SynthuseDlg extends JFrame {
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				dialogResult = "";
-				SynthuseDlg.this.dispose();
+				SynthuseDlg.this.disposeWindow();
 			}
 		});
 		btnCancel.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_CANCEL_IMG)));
@@ -383,9 +383,21 @@ public class SynthuseDlg extends JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				
+				KeyboardHook.stopGlobalKeyboardHook(); //stop keyboard hook
 				config.save();
 				SynthuseDlg.this.dispose(); // force app to close
+			}
+		});
+		
+		KeyboardHook.addKeyEvent(KeyEvent.VK_3, true, true, false);// refresh xml when CTRL+SHIFT+3 is pressed
+		//add global hook and event
+		KeyboardHook.StartGlobalKeyboardHookThreaded(new KeyboardHook.KeyboardEvents() {
+			@Override
+			public void keyPressed(KeyboardHook.TargetKeyPress target) {
+				//System.out.println("target key pressed " + target.targetKeyCode);
+				if (target.targetKeyCode == KeyEvent.VK_3){ 
+					btnRefresh.doClick();
+				}
 			}
 		});
 		
@@ -450,4 +462,10 @@ public class SynthuseDlg extends JFrame {
 			XpathManager.buildXpathStatementThreaded(hwnd, runtimeId, textPane, xpathEvents);
 		}
 	}
+	
+	public void disposeWindow()
+    {
+        WindowEvent closingEvent = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
+        Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(closingEvent);
+    }
 }

@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JLabel;
 import javax.swing.JTextPane;
@@ -45,7 +46,7 @@ import com.sun.jna.platform.win32.WinDef.HWND;
 
 public class WindowsEnumeratedXml implements Runnable{
 	public static Exception lastException = null;
-
+	public static AtomicBoolean enumeratingXmlFlag = new AtomicBoolean(false);
 	public JTextPane outputPane = null;
 	public JLabel lblStatus = null;
 	public WindowsEnumeratedXml() {
@@ -64,9 +65,13 @@ public class WindowsEnumeratedXml implements Runnable{
 		outputPane.setCaretPosition(0);
 		double seconds = ((double)(System.nanoTime() - startTime) / 1000000000);
 		lblStatus.setText("Windows Enumerated Xml loaded in " + new DecimalFormat("#.###").format(seconds) + " seconds");
+		enumeratingXmlFlag.set(false);
 	}
 	
 	public static void getXmlThreaded(JTextPane outputPane, JLabel lblStatus) {
+		if (enumeratingXmlFlag.get())
+			return; //something is already running
+		enumeratingXmlFlag.set(true); //if we don't do this the multiple xml's could get combined on the textpane
 		Thread t = new Thread(new WindowsEnumeratedXml(outputPane, lblStatus));
         t.start();
 	}

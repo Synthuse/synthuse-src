@@ -91,6 +91,7 @@ public class WindowInfo {
 				extra = new LinkedHashMap<String, String>(); 
 			extra.put("tvCount", tvCount.intValue() + "");
 		}
+		
 		//check if window has a menu
     	HMENU hmenu = Api.User32.instance.GetMenu(hWnd);
 		if (hmenu != null) { //menu item count
@@ -98,6 +99,12 @@ public class WindowInfo {
 	    	if (menuCount > 0) {
 				this.menus = menuCount;
 				this.menu = hmenu;
+	    	}
+	    	else
+	    	{
+	    		LRESULT result = Api.User32.instance.PostMessage(hWnd, Api.MN_GETHMENU, new WPARAM(0), new LPARAM());
+	    		if (result.longValue() != 1)
+	    			System.out.println("MN_GETHMENU: " + result.longValue());
 	    	}
 		}
 		
