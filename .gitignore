@@ -3,7 +3,7 @@ build/
 lib/
 dist/
 synthuse.properties
-native/WpfBridge/x64
-native/WpfBridge/release
-native/WpfBridge/Debug
-!native/WpfBridge/bin
+native/uiabridge/x64
+native/uiabridge/release
+native/uiabridge/Debug
+!native/uiabridge/bin
