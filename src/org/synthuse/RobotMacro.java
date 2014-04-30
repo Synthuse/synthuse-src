@@ -195,14 +195,142 @@ public class RobotMacro {
 			lastException = e;
 		}
 	}
+/*	 SendKeys Special Keys List
+{BACKSPACE}, {BS}, or {BKSP}
+{BREAK}
+{CAPSLOCK}
+{DELETE} or {DEL}
+{DOWN}
+{END}
+{ENTER} or ~
+{ESC}
+{HELP}
+{HOME}
+{INSERT} or {INS}
+{LEFT}
+{NUMLOCK}
+{PGDN}
+{PGUP}
+{PRTSC} (reserved for future use)
+{RIGHT}
+{SCROLLLOCK}
+{TAB}
+{UP}
+{F1}
+{F2}
+{F3}
+{F4}
+{F5}
+{F6}
+{F7}
+{F8}
+{F9}
+{F10}
+{F11}
+{F12}
+{F13}
+{F14}
+{F15}
+{F16}
+{ADD}
+{SUBTRACT}
+{MULTIPLY}
+{DIVIDE}
+{{}
+{}}
+SHIFT +
+CTRL ^
+ALT %  
+	 
+	 */
 	
 	public static boolean sendKeys(String keyCommands) {
 		try {
 			Robot robot = new Robot();
+			boolean specialKeyFlag = false;
+			String specialKey = "";
+			boolean modifierKeyFlag = false;
+			String modifierKeys = "";
 			for (int i = 0; i < keyCommands.length(); i++) {
 	    		char key = keyCommands.charAt(i);
-				int[] keyCode = getKeyCode(key);
-				pressKeyCodes(robot, keyCode);
+	    		if (specialKeyFlag)
+	    			specialKey += key;
+				if (key == '{' && specialKeyFlag == false) {
+					specialKeyFlag = true;
+					specialKey = "{";
+				}
+				
+				if (!specialKeyFlag) { //not special key(tab,enter,...) just press normal keys and modifiers
+					// Modifier key logic
+					if (key == '+' || key == '^' || key == '%') { //shift alt or ctrl
+						if (!modifierKeyFlag) {
+							modifierKeys = key + "";
+							modifierKeyFlag = true;
+						}
+						else
+							modifierKeys += key + ""; //append multiple modifiers
+						if (key == '+')
+							robot.keyPress(KeyEvent.VK_SHIFT);
+						if (key == '^')
+							robot.keyPress(KeyEvent.VK_CONTROL);
+						if (key == '%')
+							robot.keyPress(KeyEvent.VK_ALT);
+						continue; //skip to next key
+					}
+		    		pressKeyCodes(robot, getKeyCode(key));
+				}
+				if (specialKeyFlag) {
+		    		if (specialKey.equals("{ENTER}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_ENTER} );
+		    		}
+		    		else if (specialKey.equals("{ESC}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_ESCAPE} );
+		    		}
+		    		else if (specialKey.equals("{HOME}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_HOME} );
+		    		}
+		    		else if (specialKey.equals("{END}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_END} );
+		    		}
+		    		else if (specialKey.equals("{PGDN}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_PAGE_DOWN} );
+		    		}
+		    		else if (specialKey.equals("{PGUP}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_PAGE_UP} );
+		    		}
+		    		else if (specialKey.equals("{TAB}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_TAB} );
+		    		}
+		    		else if (specialKey.equals("{UP}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_UP} );
+		    		}
+		    		else if (specialKey.equals("{DOWN}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_DOWN} );
+		    		}
+		    	}
+	    		
+	    		if (modifierKeyFlag) { //time to release all the modifier keys
+	    			modifierKeyFlag = false;
+	    			for (int m = 0; m < modifierKeys.length(); m++) {
+	    				char mkey = modifierKeys.charAt(m);
+						if (mkey == '+')
+							robot.keyRelease(KeyEvent.VK_SHIFT);
+						if (mkey == '^')
+							robot.keyRelease(KeyEvent.VK_CONTROL);
+						if (mkey == '%')
+							robot.keyRelease(KeyEvent.VK_ALT);
+	    			}
+	    			modifierKeys = "";
+	    		}
 	    	}
 		} catch (Exception e) {
 			lastException = e;

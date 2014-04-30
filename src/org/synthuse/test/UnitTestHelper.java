@@ -54,7 +54,7 @@ public class UnitTestHelper {
         byte[] buffer = new byte[1024];
         int readBytes;
         // Open and check input stream
-        InputStream is = WpfBridgeTest.class.getResourceAsStream(path);
+        InputStream is = UnitTestHelper.class.getResourceAsStream(path);
         if (is == null) { //check if valid
             System.out.println("File " + path + " was not found inside JAR.");
             return null;

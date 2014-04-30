@@ -21,9 +21,8 @@ import com.sun.jna.platform.win32.WinDef.HWND;
 public class XpathManager implements Runnable{
 
 	private HWND hwnd = null;
-	private String runtimeId = null;
+	private String enumProperties = null;
 	private JTextPane windowsXmlTextPane = null;
-	private WpfBridge wpf = null;
 	
 	public static interface Events {
 		void statusChanged(String status);
@@ -44,12 +43,11 @@ public class XpathManager implements Runnable{
 		this.windowsXmlTextPane = windowsXmlTextPane;
 	}
 	
-	public XpathManager(HWND hwnd, String runtimeId, JTextPane windowsXmlTextPane, Events events) {
+	public XpathManager(HWND hwnd, String enumProperties, JTextPane windowsXmlTextPane, Events events) {
 		this.events = events;
 		this.hwnd = hwnd;
-		this.runtimeId = runtimeId;
+		this.enumProperties = enumProperties;
 		this.windowsXmlTextPane = windowsXmlTextPane;
-		this.wpf = new WpfBridge();
 	}
 	
 	@Override
@@ -78,44 +76,46 @@ public class XpathManager implements Runnable{
 		return escapedTxtStr;
 	}
 	
-	public String buildWpfXpathStatement() {
+	public String buildUiaXpathStatement() {
+		if (enumProperties == null)
+			return "";
+		if (enumProperties.isEmpty())
+			return "";
 		String builtXpath = "";
 		String xml = this.windowsXmlTextPane.getText();
-		String classStr = wpf.getWindowClass(runtimeId);
-		//System.out.println("class: " + classStr);
-		String txtOrig = wpf.getWindowText(runtimeId);
-		String winValueOrig = wpf.getWindowValue(runtimeId);
-		if (classStr == null || txtOrig == null)
+		
+		WindowInfo wi = new WindowInfo(enumProperties, true);
+		String onlyRuntimeIdXpath = "//*[@hwnd='" + wi.runtimeId + "']";
+		List<String> wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, onlyRuntimeIdXpath);
+		//System.out.println("evaluateXpathGetValues1: " + onlyRuntimeIdXpath + " = " + wpfResultList.size());
+		if (wpfResultList.size() == 0)
+			return"";
+		//System.out.println("enumProperties: " + enumProperties);
+		String typeStr = wi.controlType;
+		String txtOrig = wi.text;
+		//String winValueOrig = wpf.getWindowValue(runtimeId);
+		if (typeStr == null || txtOrig == null)
 			return "";
 		//System.out.println("text: " + txtOrig);
 		String txtStr = compareLongTextString(txtOrig);
 		
-		String valueStr = ""; 
-		if (winValueOrig != null)
-			if (!winValueOrig.isEmpty()) //if value attribute exists then use it too
-				valueStr = " and starts-with(@value,'" + compareLongTextString(winValueOrig) + "')";
-		
-		builtXpath = "//*[@class='" + classStr + "' and starts-with(@text,'" + txtStr + "')" + valueStr + "]";
+		builtXpath = "//*[@type='" + typeStr + "' and starts-with(@text,'" + txtStr + "')" + "]";
 		
 		//builtXpath = "//*[@hwnd='" + runtimeId + "']";
-		//System.out.println("evaluateXpathGetValues: " + builtXpath);
-		List<String> wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
+		wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
+		//System.out.println("evaluateXpathGetValues2: " + builtXpath + " = " + wpfResultList.size());
 		if (wpfResultList.size() == 1)
 			return builtXpath;
-		builtXpath = "//*[@hwnd='" + runtimeId + "']";
-		wpfResultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
-		if (wpfResultList.size() > 0)
-			return builtXpath;
-		return "";
+		return onlyRuntimeIdXpath;
 	}
 	
 	public String buildXpathStatement() {
 		String builtXpath = "";
 		try {
 			String xml = this.windowsXmlTextPane.getText();
-			if (runtimeId != null && !SynthuseDlg.config.isWpfBridgeDisabled()) {
-				if (!runtimeId.isEmpty()) {
-					builtXpath = buildWpfXpathStatement();
+			if (enumProperties != null && !SynthuseDlg.config.isWpfBridgeDisabled()) {
+				if (!enumProperties.isEmpty()) {
+					builtXpath = buildUiaXpathStatement();
 				}
 			}
 			if (builtXpath != "")
@@ -164,6 +164,9 @@ public class XpathManager implements Runnable{
 					}
 					builtXpath = "//win[@class='" + classStr + "'" + txtStr + "]";
 				}
+				resultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
+				if (resultList.size() > 1) //still too many matched, only use hwnd
+					builtXpath = "//win[@hwnd='" + handleStr + "']";
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

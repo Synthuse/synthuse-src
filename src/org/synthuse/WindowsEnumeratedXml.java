@@ -45,6 +45,7 @@ import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.WinDef.HWND;
 
 public class WindowsEnumeratedXml implements Runnable{
+
 	public static Exception lastException = null;
 	public static AtomicBoolean enumeratingXmlFlag = new AtomicBoolean(false);
 	public JTextPane outputPane = null;
@@ -81,9 +82,15 @@ public class WindowsEnumeratedXml implements Runnable{
 		final Map<String, String> processList = new LinkedHashMap<String, String>();
 		final List<String> wpfParentList = new ArrayList<String>();//HwndWrapper
 		final List<String> silverlightParentList = new ArrayList<String>();//MicrosoftSilverlight
+		final List<String> winFormParentList = new ArrayList<String>();//class="WindowsForms*"
 		int wpfCount = 0;
+		int winFormCount = 0;
 		int silverlightCount = 0;
 		int menuCount = 0;
+		
+		//wpf.setTouchableOnly(false);
+    	//wpf.countChildrenWindows();//fix for missing cached elements
+
 		
 	    class ChildWindowCallback implements WinUser.WNDENUMPROC {
 			@Override
@@ -105,22 +112,31 @@ public class WindowsEnumeratedXml implements Runnable{
 				infoList.put(wi.hwndStr, wi);
 				if (wi.className.startsWith("HwndWrapper"))
 					wpfParentList.add(wi.hwndStr);
+				if (wi.className.startsWith("WindowsForms"))
+					winFormParentList.add(wi.hwndStr);
 				Api.User32.instance.EnumChildWindows(hWnd, new ChildWindowCallback(), new Pointer(0));
 				return true;
 			}
 	    }	    
 	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
 	    
-	    //Enumerate WPF windows and add to list
+	    //Enumerate WPF, WinForm, Silverlight windows and add to list
 	    if (!SynthuseDlg.config.isWpfBridgeDisabled())
 	    {
+	    	UiaBridge uiabridge = new UiaBridge();
 		    for (String handle : wpfParentList) {
-		    	Map<String, WindowInfo> wpfInfoList = EnumerateWindowsWithWpfBridge(handle, "WPF");
+		    	Map<String, WindowInfo> wpfInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "*");
 		    	wpfCount += wpfInfoList.size();
 		    	infoList.putAll(wpfInfoList);
 		    }
+		    for (String handle : winFormParentList) {
+		    	//System.out.println("winform parent " + handle);
+		    	Map<String, WindowInfo> winFormInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "*");
+		    	winFormCount += winFormInfoList.size();
+		    	infoList.putAll(winFormInfoList);
+		    }
 		    for (String handle : silverlightParentList) {
-		    	Map<String, WindowInfo> slInfoList = EnumerateWindowsWithWpfBridge(handle, "Silverlight");
+		    	Map<String, WindowInfo> slInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "Silverlight");
 		    	silverlightCount += slInfoList.size();
 		    	infoList.putAll(slInfoList);
 		    }
@@ -147,8 +163,13 @@ public class WindowsEnumeratedXml implements Runnable{
 		    		win = doc.createElement("win");
 		    	else if (w.framework.equals("WPF"))
 		    		win = doc.createElement("wpf");
+		    	else if (w.framework.equals("WinForm"))
+		    		win = doc.createElement("winfrm");
 		    	else if (w.framework.equals("Silverlight"))
 		    		win = doc.createElement("silver");
+		    	else
+		    		win = doc.createElement("win");
+		    	//System.out.println(w.toString());
 		    	
 				win.setAttribute("hwnd", w.hwndStr);
 				win.setAttribute("text", w.text);
@@ -159,6 +180,9 @@ public class WindowsEnumeratedXml implements Runnable{
 				win.setAttribute("class", w.className);
 				if (w.className != null)
 					win.setAttribute("CLASS", w.className.toUpperCase());
+				if (w.controlType != null)
+					if (!w.controlType.isEmpty())
+						win.setAttribute("type", w.controlType);
 				if (!w.isChild) {
 					parentCount++;
 					if (w.processName != null && !w.processName.isEmpty()) {
@@ -207,6 +231,7 @@ public class WindowsEnumeratedXml implements Runnable{
 		    totals.setAttribute("windowCount", infoList.size()+"");
 		    totals.setAttribute("wpfWrapperCount", wpfParentList.size()+"");
 		    totals.setAttribute("wpfCount", wpfCount+"");
+		    totals.setAttribute("winFormCount", winFormCount+"");
 		    totals.setAttribute("silverlightCount", silverlightCount+"");
 		    totals.setAttribute("menuCount", menuCount+"");
 		    totals.setAttribute("processCount", processList.size()+"");
@@ -242,22 +267,19 @@ public class WindowsEnumeratedXml implements Runnable{
 		return xmlElement;
 	}
 	
-	public static Map<String, WindowInfo> EnumerateWindowsWithWpfBridge(String parentHwndStr, String frameworkType) {
+	public static Map<String, WindowInfo> EnumerateWindowsWithUiaBridge(UiaBridge uiabridge, String parentHwndStr, String frameworkType) {
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
-    	WpfBridge wb = new WpfBridge();
-    	wb.setFrameworkId(frameworkType);
-    	if (SynthuseDlg.config.isFilterWpfDisabled())
-    		wb.setTouchableOnly(false);
+    	//WpfBridge wb = new WpfBridge();
+		//wpf.setFrameworkId(frameworkType);
     	long hwnd = Long.parseLong(parentHwndStr);
-    	//List<String> parentIds = new ArrayList<String>(Arrays.asList(wb.enumChildrenWindowIds("")));
-		//System.out.println("getRuntimeIdFromHandle");
-    	String parentRuntimeId = wb.getRuntimeIdFromHandle(hwnd);
+		//System.out.println("getRuntimeIdFromHandle of " + hwnd);
+    	String parentRuntimeId = uiabridge.getWindowInfo((int) hwnd, WindowInfo.UIA_RUNTIME_ID);
 		//System.out.println("runtimeId=" + runtimeId);
     	String[] allIds = null;
     	if (SynthuseDlg.config.isFilterWpfDisabled())
-    		allIds = wb.enumDescendantWindowInfo(parentRuntimeId, "*");
+    		allIds = uiabridge.enumWindowInfo((int) hwnd, "*");
     	else
-    		allIds = wb.enumDescendantWindowInfo(parentRuntimeId, WindowInfo.WPF_PROPERTY_LIST);
+    		allIds = uiabridge.enumWindowInfo((int) hwnd, WindowInfo.UIA_PROPERTY_LIST);
     	if (allIds == null)
     		return infoList; //empty list
 		//System.out.println("enumDescendantWindowIds " + allIds.length);

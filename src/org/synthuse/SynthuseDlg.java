@@ -71,7 +71,7 @@ public class SynthuseDlg extends JFrame {
 	/**
 	 * 
 	 */
-	public static String VERSION_STR = "1.1.0";
+	public static String VERSION_STR = "1.1.2";
 
 	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/gnome-robots.png";
 	public static String RES_STR_REFRESH_IMG = "/org/synthuse/img/rapidsvn.png";
@@ -102,7 +102,7 @@ public class SynthuseDlg extends JFrame {
 	private TestIdeFrame testIde = null;
 	private int targetX;
 	private int targetY;
-	private WpfBridge wpf = new WpfBridge();
+	private UiaBridge uiabridge = new UiaBridge();
 
 	/**
 	 * Launch the application.
@@ -449,7 +449,8 @@ public class SynthuseDlg extends JFrame {
 		String handleStr = Api.GetHandleAsString(hwnd);
 		String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.GetWindowClassName(hwnd));
 		String parentStr = Api.GetHandleAsString(User32.instance.GetParent(hwnd));
-		String runtimeId = wpf.getRuntimeIdFromPoint(targetX, targetY);
+		String enumProperties = uiabridge.getWindowInfo(targetX, targetY, WindowInfo.UIA_PROPERTY_LIST);
+		String runtimeId = WindowInfo.getRuntimeIdFromProperties(enumProperties);
 		lblStatus.setText("rid:" + runtimeId + " class: " + classStr + " hWnd: " + handleStr + " parent: " + parentStr + "  X,Y: " + targetX + ", " + targetY);
 		if (!lastDragHwnd.equals(handleStr) || !lastRuntimeId.equals(runtimeId)) {
 			if (!lastDragHwnd.isEmpty()) {
@@ -459,7 +460,7 @@ public class SynthuseDlg extends JFrame {
 			lastRuntimeId = runtimeId;
 			//lastDragHwnd = (hwnd + "");
 			Api.highlightWindow(hwnd);
-			XpathManager.buildXpathStatementThreaded(hwnd, runtimeId, textPane, xpathEvents);
+			XpathManager.buildXpathStatementThreaded(hwnd, enumProperties, textPane, xpathEvents);
 		}
 	}
 	

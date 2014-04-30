@@ -58,7 +58,7 @@
       <fileset dir="${src}"> <!-- includes images -->
         <include name="**/*.png" />
       </fileset>
-      <fileset dir="native/WpfBridge/bin"> <!-- includes native jni dlls -->
+      <fileset dir="native/uiabridge/bin"> <!-- includes native jni dlls -->
         <include name="**/*.dll" />
       </fileset>
       <manifest>
@@ -69,7 +69,13 @@
   </target>
 
   <target name="run" depends="dist" description="runs our generated jar file">
-    <java jar="dist/${jarname}" fork="true"/>
+    <java jar="${dist}/${jarname}" fork="true"/>
   </target>
-
+  
+  <target name="jni" depends="dist" description="compile the source including jars from lib directory" >
+    <!-- makes a JNI header of the named class -->
+    <javah destdir="${build}" verbose="yes" classpath="${dist}/${jarname}">
+      <class name="org.synthuse.UiaBridge"/>
+    </javah>
+  </target>
 </project>

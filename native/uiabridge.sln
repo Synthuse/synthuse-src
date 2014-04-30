@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "uiabridge", "uiabridge\uiabridge.vcxproj", "{BAC1B079-7B87-4396-B17F-91A86DF1AE29}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "uiabtest", "uiabtest\uiabtest.vcxproj", "{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BAC1B079-7B87-4396-B17F-91A86DF1AE29}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BAC1B079-7B87-4396-B17F-91A86DF1AE29}.Debug|Win32.Build.0 = Debug|Win32
+		{BAC1B079-7B87-4396-B17F-91A86DF1AE29}.Debug|x64.ActiveCfg = Debug|x64
+		{BAC1B079-7B87-4396-B17F-91A86DF1AE29}.Debug|x64.Build.0 = Debug|x64
+		{BAC1B079-7B87-4396-B17F-91A86DF1AE29}.Release|Win32.ActiveCfg = Release|Win32
+		{BAC1B079-7B87-4396-B17F-91A86DF1AE29}.Release|Win32.Build.0 = Release|Win32
+		{BAC1B079-7B87-4396-B17F-91A86DF1AE29}.Release|x64.ActiveCfg = Release|x64
+		{BAC1B079-7B87-4396-B17F-91A86DF1AE29}.Release|x64.Build.0 = Release|x64
+		{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}.Debug|Win32.Build.0 = Debug|Win32
+		{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}.Debug|x64.ActiveCfg = Debug|x64
+		{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}.Debug|x64.Build.0 = Debug|x64
+		{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}.Release|Win32.ActiveCfg = Release|Win32
+		{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}.Release|Win32.Build.0 = Release|Win32
+		{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}.Release|x64.ActiveCfg = Release|x64
+		{7958D1B7-F169-40FA-A7A0-10E8E0F90CDA}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -24,7 +24,9 @@ import com.sun.jna.ptr.PointerByReference;
 
 public class WindowInfo {
 	
-	public static String WPF_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,ClassNameProperty,NameProperty,ValueProperty";
+	public static String UIA_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty";
+	public static String UIA_RUNTIME_ID = "RuntimeIdProperty";
+	public static int MAX_TEXT_SIZE = 200;
 	
 	public HWND hwnd;
 	public String hwndStr = "";
@@ -33,6 +35,7 @@ public class WindowInfo {
 	public RECT rect;
 	public String text;
 	public String value;
+	public String controlType = "";
 	public String className = "";
 	public boolean isChild = false;
 	public String processName = "";
@@ -53,9 +56,11 @@ public class WindowInfo {
         text = Native.toString(buffer);
         if (text.isEmpty())
         	text = new Api().sendWmGetText(hWnd);
-        if (text.isEmpty()) {
+        //if (text.isEmpty()) {
         	//System.out.println("getting toolbar text");
-        }
+        //}
+        if (text.length() > MAX_TEXT_SIZE) //if text is too large it will slow down xml display
+        	text = text.substring(0, MAX_TEXT_SIZE);
         
         //Get item count depending on what type of control it is
     	LRESULT tbCount = Api.User32.instance.SendMessage(hWnd, Api.TB_BUTTONCOUNT, new WPARAM(0), new LPARAM(0));
@@ -146,9 +151,11 @@ public class WindowInfo {
 		}
 		this.hwnd = hWnd;
 		hwndStr = Api.GetHandleAsString(hWnd);
+    	if (this.hwndStr == null)
+    		this.hwndStr = "";
     }
     
-    public String replaceEscapedCodes(String input) {
+    public static String replaceEscapedCodes(String input) {
     	//&#44; is a comma ,
     	String result = input;
     	result = result.replaceAll("&#44;", ",");
@@ -160,9 +167,9 @@ public class WindowInfo {
     	return result;
     }
     
-    //support for WPF and Silverlight
+    //support for WPF, Silverlight, WinForms
     public WindowInfo(String enumProperties, boolean isChild) {
-    	//WPF_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,ClassNameProperty,NameProperty";
+    	//WPF_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty";
     	String[] spltProperties = enumProperties.split(",");
     	this.isChild = isChild;
     	if (SynthuseDlg.config.isFilterWpfDisabled()) { //use wildcard mode
@@ -180,6 +187,8 @@ public class WindowInfo {
     				this.pid = Long.parseLong(propertyNameAndValue[1]);
     			else if (propertyNameAndValue[0].equals("FrameworkIdProperty"))
     				this.framework = propertyNameAndValue[1];
+    			else if (propertyNameAndValue[0].equals("LocalizedControlTypeProperty"))
+    				this.controlType = propertyNameAndValue[1];
     			else if (propertyNameAndValue[0].equals("ClassNameProperty"))
     				this.className = propertyNameAndValue[1];
     			else if (propertyNameAndValue[0].equals("NameProperty"))
@@ -191,6 +200,13 @@ public class WindowInfo {
     			}
     		}
         	this.hwndStr = this.runtimeId;
+        	if (text != null)
+        		if (text.length() > MAX_TEXT_SIZE)
+        			text = text.substring(0, MAX_TEXT_SIZE);
+        	if (this.hwndStr == null)
+        		this.hwndStr = "";
+        	//if (this.framework == null)
+        	//	this.framework = "na";
     		return;
     	}
     	// non-wildcard mode
@@ -204,11 +220,21 @@ public class WindowInfo {
     	if (spltProperties.length > 3)
     		this.framework = spltProperties[3];
     	if (spltProperties.length > 4)
-    		this.className = replaceEscapedCodes(spltProperties[4]);
+    		this.controlType = replaceEscapedCodes(spltProperties[4]);
     	if (spltProperties.length > 5)
-    		this.text = replaceEscapedCodes(spltProperties[5]);
+    		this.className = replaceEscapedCodes(spltProperties[5]);
     	if (spltProperties.length > 6)
-    		this.value = replaceEscapedCodes(spltProperties[6]);
+    		this.text = replaceEscapedCodes(spltProperties[6]);
+    	if (spltProperties.length > 7)
+    		this.value = replaceEscapedCodes(spltProperties[7]);
+    	if (this.className == "")
+    		this.className = this.controlType;
+    	if (text != null)
+    		if (text.length() > MAX_TEXT_SIZE)
+    			text = text.substring(0, MAX_TEXT_SIZE);
+    	if (this.hwndStr == null)
+    		this.hwndStr = "";
+    	
     	/*
     	this.rect = new RECT();
     	try {
@@ -224,8 +250,16 @@ public class WindowInfo {
     	*/
     }
     
+    public static String getRuntimeIdFromProperties(String enumProperties)
+    {
+    	String[] spltProperties = enumProperties.split(",");
+    	if (spltProperties.length > 0)
+    		return spltProperties[0];
+    	return "";
+    }
+    
     public String toString() {
-        return String.format("(%d,%d)-(%d,%d) : \"%s\" [%s] {%s}", rect.left,rect.top,rect.right,rect.bottom,text,className,hwnd.toString());
+        return String.format("%s \"%s\" [%s] (%s) {%s}", framework, text, className, controlType, hwndStr);
     }
 
 }

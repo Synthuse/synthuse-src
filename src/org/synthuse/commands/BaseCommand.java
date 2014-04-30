@@ -16,7 +16,7 @@ public class BaseCommand {
 	static long LAST_UPDATED_XML = 0;
 	
 	protected Api api = new Api();
-	protected WpfBridge wpf = new WpfBridge();
+	protected UiaBridge wpf = new UiaBridge();
 	protected CommandProcessor parentProcessor = null;
 	
 	protected int getExecuteErrorCount() {
@@ -116,6 +116,7 @@ public class BaseCommand {
 				resultStr = item;
 			break;
 		}
+		resultStr = resultStr.replaceAll("[^\\d-.]", ""); //remove all non-numeric values (except dash -)
 		if (WinPtr.isWpfRuntimeIdFormat(resultStr)) {
 			result.runtimeId = resultStr;
 			if (!ignoreFailedFind && result.isEmpty())
@@ -143,7 +144,7 @@ public class BaseCommand {
 			if (item.contains("hmenu=")) {
 				List<String> list = WindowsEnumeratedXml.evaluateXpathGetValues(item, "//@id");
 				if (list.size() > 0)
-					resultStr = list.get(0); //get first id;
+					resultStr = list.get(0); //get first id
 			}
 			else
 				resultStr = item;

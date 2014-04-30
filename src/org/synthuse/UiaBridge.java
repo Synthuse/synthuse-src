@@ -1,23 +1,14 @@
-/*
- * Copyright 2014, Synthuse.org
- * Released under the Apache Version 2.0 License.
- *
- * last modified by ejakubowski7@gmail.com
-*/
-
 package org.synthuse;
 
 import java.awt.Point;
 import java.io.*;
 
-public class WpfBridge {
-
+public class UiaBridge {
 	static
 	{
 	    String archDataModel = System.getProperty("sun.arch.data.model");//32 or 64 bit
-	    
 		//System.loadLibrary("native/WpfBridge" + archDataModel); // WpfBridge32.dll (Windows) or WpfBridge32.so (Unixes)
-	    loadNativeLibraryFromJar("/wpfbridge" + archDataModel + ".dll");
+	    loadNativeLibraryFromJar("/uiabridge" + archDataModel + ".dll");
 	}
 	
     public static void loadNativeLibraryFromJar(String path) {
@@ -49,7 +40,7 @@ public class WpfBridge {
         byte[] buffer = new byte[1024];
         int readBytes;
         // Open and check input stream
-        InputStream is = WpfBridge.class.getResourceAsStream(path);
+        InputStream is = UiaBridge.class.getResourceAsStream(path);
         if (is == null) { //check if valid
             System.out.println("File " + path + " was not found inside JAR.");
             return;
@@ -69,7 +60,27 @@ public class WpfBridge {
         // Finally, load the library
         System.load(temp.getAbsolutePath());
     }
+    
+    public UiaBridge ()
+    {
+    	initialize("");
+    }
+    
+    public native void initialize(String properties);
+    public native void shutdown();
+    public native int addEnumFilter(String propertyName, String propertyValue);
+    public native void clearEnumFilters();
+    public native String[] enumWindowInfo(String properties);
+    public native String[] enumWindowInfo(int windowHandle, String properties);
+    //native String[] enumWindowInfo(AutomationElement ^element, String properties);
+    //native String[] enumWindowInfo(AutomationElement ^element, String properties, String[] filterModifierList);
+    //native String getWindowInfo(AutomationElement ^element, String properties);
+    public native String getWindowInfo(int x, int y, String properties);
+    public native String getWindowInfo(int windowHandle, String properties);
+    public native String getWindowInfo(String runtimeId, String properties);
 
+    
+    /*
 	public native void setFrameworkId(String propertyValue); //default is WPF, but also accepts Silverlight, Win32	
 	public native void setTouchableOnly(boolean val); //default is true
 	
@@ -80,7 +91,7 @@ public class WpfBridge {
 	public native int countChildrenWindows();
 	public native int countChildrenWindows(String runtimeIdValue);
 	
-	public native String[] enumChildrenWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
+	public String[] enumChildrenWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
 	public native String[] enumDescendantWindowIds(String runtimeIdValue); //if runtimeIdValue is null will start at desktop
 	public native String[] enumDescendantWindowIds(long processId);
 	//In all the above Enumerate methods will return a list of Runtime Ids for all related windows.
@@ -92,11 +103,12 @@ public class WpfBridge {
 	public native String getProperty(String propertyName, String runtimeIdValue);
 	public native String[] getProperties(String runtimeIdValue);
 	public native String[] getPropertiesAndValues(String runtimeIdValue);
-	
+	*/
 	public Point getCenterOfElement(String runtimeIdValue) {
 		Point p = new Point();
-    	String boundary = getProperty("BoundingRectangleProperty", runtimeIdValue);
-    	//System.out.println("boundary: " + boundary); //boundary: 841,264,125,29
+    	String boundary = getWindowInfo(runtimeIdValue, "BoundingRectangleProperty");
+    	boundary = WindowInfo.replaceEscapedCodes(boundary);
+    	//System.out.println("runtimeId: " + runtimeIdValue + ", boundary: " + boundary); //boundary: 841,264,125,29
     	String[] boundarySplt = boundary.split(",");
     	int x = Integer.parseInt(boundarySplt[0]);
     	int y = Integer.parseInt(boundarySplt[1]);
@@ -106,25 +118,4 @@ public class WpfBridge {
     	p.y = ((height) /2) + y;
 		return p;
 	}
-	
-	public String getWindowClass(String runtimeIdValue) {
-		return getProperty("ClassNameProperty", runtimeIdValue);
-	}
-	
-	public String getWindowText(String runtimeIdValue) {
-		return getProperty("NameProperty", runtimeIdValue);
-	}
-	
-	public String getWindowValue(String runtimeIdValue) {
-		return getProperty("ValueProperty", runtimeIdValue);
-	}
-	
-	public String getWindowAutomationId(String runtimeIdValue) {
-		return getProperty("AutomationIdProperty", runtimeIdValue);
-	}
-
-	public String getWindowFramework(String runtimeIdValue) {
-		return getProperty("FrameworkIdProperty", runtimeIdValue);
-	}
-	
 }

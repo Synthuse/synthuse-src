@@ -5,7 +5,8 @@
  * last modified by ejakubowski7@gmail.com
 */
 #pragma once
-#include "WpfAutomation.h"
+#include "uiabridge.h"
+using namespace uiabridge;
 namespace Globals
 {
 	using namespace System;
@@ -13,7 +14,7 @@ namespace Globals
 	public ref class Global
 	{
 	public:
-		static WpfAutomation ^WPF_AUTO = gcnew WpfAutomation();
+		static AutomationBridge ^AUTO_BRIDGE = nullptr;
 	};
 
 }

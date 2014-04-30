@@ -1,9 +1,3 @@
-/*
- * Copyright 2014, Synthuse.org
- * Released under the Apache Version 2.0 License.
- *
- * last modified by ejakubowski7@gmail.com
-*/
 #include "stdafx.h"
 
 using namespace System;
@@ -17,12 +11,12 @@ using namespace System::Security::Permissions;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-[assembly:AssemblyTitleAttribute("WpfBridge")];
+[assembly:AssemblyTitleAttribute("uiabridge")];
 [assembly:AssemblyDescriptionAttribute("")];
 [assembly:AssemblyConfigurationAttribute("")];
-[assembly:AssemblyCompanyAttribute("Synthuse")];
-[assembly:AssemblyProductAttribute("WpfBridge")];
-[assembly:AssemblyCopyrightAttribute("Copyright (c) Synthuse 2014")];
+[assembly:AssemblyCompanyAttribute("na")];
+[assembly:AssemblyProductAttribute("uiabridge")];
+[assembly:AssemblyCopyrightAttribute("Copyright (c) na 2014")];
 [assembly:AssemblyTrademarkAttribute("")];
 [assembly:AssemblyCultureAttribute("")];
 
@@ -37,7 +31,7 @@ using namespace System::Security::Permissions;
 // You can specify all the value or you can default the Revision and Build Numbers
 // by using the '*' as shown below:
 
-[assembly:AssemblyVersionAttribute("1.1.*")];
+[assembly:AssemblyVersionAttribute("1.0.*")];
 
 [assembly:ComVisible(false)];
 

@@ -4,7 +4,7 @@
  *
  * last modified by ejakubowski7@gmail.com
 */
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "Global.h"
-#include "WpfAutomation.h"
-
+#include "uiabridge.h"
+using namespace uiabridge;
