@@ -299,13 +299,13 @@ public class Api {
     	return null;
     }
     
-    public static String GetWindowClassName(HWND hWnd) {
+    public static String getWindowClassName(HWND hWnd) {
         char[] buffer = new char[1026];
 		User32.instance.GetClassName(hWnd, buffer, 1026);
 		return Native.toString(buffer);
     }
     
-    public static String GetWindowText(HWND hWnd) {
+    public static String getWindowText(HWND hWnd) {
     	String text = "";
         byte[] buffer = new byte[1024];
         User32.instance.GetWindowTextA(hWnd, buffer, buffer.length);
@@ -315,19 +315,26 @@ public class Api {
         return text;
     }
     
-    public static HWND GetWindowFromPoint(Point p) {
+    public static Point getCursorPos() {
+    	
+    	long[] getPos = new long [1];
+    	User32.instance.GetCursorPos(getPos);
+    	return new Point(POINT_X(getPos[0]), POINT_Y(getPos[0]));
+    }
+    
+    public static HWND getWindowFromCursorPos() {
     	
     	long[] getPos = new long [1];
     	User32.instance.GetCursorPos(getPos);
     	HWND hwnd = User32.instance.WindowFromPoint(getPos[0]);
-    	HWND childHwnd = GetHiddenChildWindowFromPoint(hwnd, getPos[0]);
+    	HWND childHwnd = getHiddenChildWindowFromPoint(hwnd, getPos[0]);
     	hwnd = childHwnd;
     	//System.out.println(getPos[0] + "," + getPos[1] + " int: " + x + ", " + y);
     	//System.out.println("child: " + GetHandleAsString(childHwnd)  + " " + POINT_X(getPos[0]) +", " + POINT_Y(getPos[0]));
     	return hwnd;
     }
     
-    public static HWND GetHiddenChildWindowFromPoint(HWND inHwnd, long point)
+    public static HWND getHiddenChildWindowFromPoint(HWND inHwnd, long point)
     {
     	//int x = POINT_X(point);int y = POINT_Y(point);
 

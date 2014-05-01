@@ -172,7 +172,7 @@ public class WindowInfo {
     	//WPF_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty";
     	String[] spltProperties = enumProperties.split(",");
     	this.isChild = isChild;
-    	if (SynthuseDlg.config.isFilterWpfDisabled()) { //use wildcard mode
+    	if (SynthuseDlg.config.isFilterUiaDisabled()) { //use wildcard mode
     		extra = new LinkedHashMap<String, String>();
     		for(String prop: spltProperties) {
     			String[] propertyNameAndValue = prop.split(":", 2);

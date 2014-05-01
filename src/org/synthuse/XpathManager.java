@@ -94,8 +94,6 @@ public class XpathManager implements Runnable{
 		String typeStr = wi.controlType;
 		String txtOrig = wi.text;
 		//String winValueOrig = wpf.getWindowValue(runtimeId);
-		if (typeStr == null || txtOrig == null)
-			return "";
 		//System.out.println("text: " + txtOrig);
 		String txtStr = compareLongTextString(txtOrig);
 		
@@ -113,24 +111,24 @@ public class XpathManager implements Runnable{
 		String builtXpath = "";
 		try {
 			String xml = this.windowsXmlTextPane.getText();
-			if (enumProperties != null && !SynthuseDlg.config.isWpfBridgeDisabled()) {
+			if (enumProperties != null && !SynthuseDlg.config.isUiaBridgeDisabled()) {
 				if (!enumProperties.isEmpty()) {
 					builtXpath = buildUiaXpathStatement();
 				}
 			}
 			if (builtXpath != "")
 				return builtXpath;
-			String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.GetWindowClassName(hwnd));
+			String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.getWindowClassName(hwnd));
 			String handleStr = Api.GetHandleAsString(hwnd);
-			String txtOrig = Api.GetWindowText(hwnd);
+			String txtOrig = Api.getWindowText(hwnd);
 			String txtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(txtOrig);
 			builtXpath = "//win[@class='" + classStr + "']";
 			List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
 			//int matches = nextXpathMatch(builtXpath, textPane, true);
 			if (resultList.size() > 1) { // if there are multiple results with the simple xpath then include parent class and text with the xpath statement.
 				HWND parent = User32.instance.GetParent(hwnd);
-				String parentClassStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.GetWindowClassName(parent));
-				String parentTxtOrig = Api.GetWindowText(parent);
+				String parentClassStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.getWindowClassName(parent));
+				String parentTxtOrig = Api.getWindowText(parent);
 				String parentTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(parentTxtOrig);
 				if (!parentTxtStr.isEmpty()) {
 					if (parentTxtOrig.length() > 20) {// if the parent text is too long only test the first 20 characters

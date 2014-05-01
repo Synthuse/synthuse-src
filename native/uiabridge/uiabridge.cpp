@@ -45,13 +45,18 @@ void AutomationBridge::initializeCache()
 	cacheRequest->Add(AutomationElement::NameProperty);
 	cacheRequest->Add(AutomationElement::BoundingRectangleProperty);
 	*/
-	System::String ^cachedPropStr = L"RuntimeIdProperty,ParentRuntimeIdProperty,NativeWindowHandleProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ControlTypeProperty,ClassNameProperty,NameProperty,BoundingRectangleProperty";
+	System::String ^cachedPropStr = L"RuntimeIdProperty,ParentRuntimeIdProperty,NativeWindowHandleProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ControlTypeProperty,ClassNameProperty,NameProperty,BoundingRectangleProperty,ValueProperty";
 	array<AutomationProperty^> ^rootProperties = AutomationElement::RootElement->GetSupportedProperties();
 	List<AutomationProperty^> ^cacheList = gcnew List<AutomationProperty^>();
 	if (cachedPropStr->Contains(L"NativeWindowHandleProperty")) //special property not in the root property list
 	{
 		cacheList->Add(AutomationElement::NativeWindowHandleProperty);
 		cacheRequest->Add(AutomationElement::NativeWindowHandleProperty);
+	}
+	if (cachedPropStr->Contains(L"ValueProperty")) //special property not in the root property list
+	{
+		cacheList->Add(ValuePattern::ValueProperty);
+		cacheRequest->Add(ValuePattern::ValueProperty);
 	}
 	for each(AutomationProperty ^ap in rootProperties) //loop through all supported Properties for a child
 	{

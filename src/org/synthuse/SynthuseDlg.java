@@ -71,7 +71,7 @@ public class SynthuseDlg extends JFrame {
 	/**
 	 * 
 	 */
-	public static String VERSION_STR = "1.1.2";
+	public static String VERSION_STR = "1.1.3";
 
 	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/gnome-robots.png";
 	public static String RES_STR_REFRESH_IMG = "/org/synthuse/img/rapidsvn.png";
@@ -249,7 +249,7 @@ public class SynthuseDlg extends JFrame {
 		c.gridy = 0;
 		c.insets = new Insets(3,3,3,3); // add padding around objects
 		
-		DragTarget lblTarget = new DragTarget();
+		final DragTarget lblTarget = new DragTarget();
 		
 		lblTarget.setHorizontalAlignment(SwingConstants.CENTER);
 		lblTarget.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_TARGET_IMG)));
@@ -389,14 +389,23 @@ public class SynthuseDlg extends JFrame {
 			}
 		});
 		
-		KeyboardHook.addKeyEvent(KeyEvent.VK_3, true, true, false);// refresh xml when CTRL+SHIFT+3 is pressed
+		KeyboardHook.addKeyEvent(config.getRefreshKeyCode(), true, true, false);// refresh xml when CTRL+SHIFT+3 is pressed
+		KeyboardHook.addKeyEvent(config.getTargetKeyCode(), true, true, false);// target window when CTRL+SHIFT+~ is pressed
 		//add global hook and event
 		KeyboardHook.StartGlobalKeyboardHookThreaded(new KeyboardHook.KeyboardEvents() {
 			@Override
 			public void keyPressed(KeyboardHook.TargetKeyPress target) {
 				//System.out.println("target key pressed " + target.targetKeyCode);
-				if (target.targetKeyCode == KeyEvent.VK_3){ 
+				if (target.targetKeyCode == config.getRefreshKeyCode()){ 
 					btnRefresh.doClick();
+				}
+				if (target.targetKeyCode == config.getTargetKeyCode()){
+			    	if (!SynthuseDlg.config.isUiaBridgeDisabled())
+			    		uiabridge.initialize("");//need to re-initialize because it might be in a different thread.
+					Point p = Api.getCursorPos();
+					targetX = p.x;
+					targetY = p.y;
+					targetDragged();
 				}
 			}
 		});
@@ -445,11 +454,13 @@ public class SynthuseDlg extends JFrame {
 	}
 	
 	public void targetDragged() {
-		HWND hwnd = Api.GetWindowFromPoint(new Point(targetX,targetY));
+		HWND hwnd = Api.getWindowFromCursorPos();//new Point(targetX,targetY)
 		String handleStr = Api.GetHandleAsString(hwnd);
-		String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.GetWindowClassName(hwnd));
+		String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.getWindowClassName(hwnd));
 		String parentStr = Api.GetHandleAsString(User32.instance.GetParent(hwnd));
-		String enumProperties = uiabridge.getWindowInfo(targetX, targetY, WindowInfo.UIA_PROPERTY_LIST);
+		String enumProperties = "";
+    	if (!SynthuseDlg.config.isUiaBridgeDisabled())
+    		enumProperties = uiabridge.getWindowInfo(targetX, targetY, WindowInfo.UIA_PROPERTY_LIST);
 		String runtimeId = WindowInfo.getRuntimeIdFromProperties(enumProperties);
 		lblStatus.setText("rid:" + runtimeId + " class: " + classStr + " hWnd: " + handleStr + " parent: " + parentStr + "  X,Y: " + targetX + ", " + targetY);
 		if (!lastDragHwnd.equals(handleStr) || !lastRuntimeId.equals(runtimeId)) {

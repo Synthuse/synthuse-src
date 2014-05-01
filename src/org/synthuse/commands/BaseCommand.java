@@ -16,7 +16,7 @@ public class BaseCommand {
 	static long LAST_UPDATED_XML = 0;
 	
 	protected Api api = new Api();
-	protected UiaBridge wpf = new UiaBridge();
+	protected UiaBridge uiabridge = new UiaBridge();
 	protected CommandProcessor parentProcessor = null;
 	
 	protected int getExecuteErrorCount() {
@@ -165,7 +165,7 @@ public class BaseCommand {
 		if (handle.isWin32())
 			p = api.getWindowPosition(handle.hWnd);
 		else
-			p = wpf.getCenterOfElement(handle.runtimeId);
+			p = uiabridge.getCenterOfElement(handle.runtimeId);
 		return p;
 	}
 	

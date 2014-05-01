@@ -121,7 +121,7 @@ public class WindowsEnumeratedXml implements Runnable{
 	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
 	    
 	    //Enumerate WPF, WinForm, Silverlight windows and add to list
-	    if (!SynthuseDlg.config.isWpfBridgeDisabled())
+	    if (!SynthuseDlg.config.isUiaBridgeDisabled())
 	    {
 	    	UiaBridge uiabridge = new UiaBridge();
 		    for (String handle : wpfParentList) {
@@ -276,7 +276,7 @@ public class WindowsEnumeratedXml implements Runnable{
     	String parentRuntimeId = uiabridge.getWindowInfo((int) hwnd, WindowInfo.UIA_RUNTIME_ID);
 		//System.out.println("runtimeId=" + runtimeId);
     	String[] allIds = null;
-    	if (SynthuseDlg.config.isFilterWpfDisabled())
+    	if (SynthuseDlg.config.isFilterUiaDisabled())
     		allIds = uiabridge.enumWindowInfo((int) hwnd, "*");
     	else
     		allIds = uiabridge.enumWindowInfo((int) hwnd, WindowInfo.UIA_PROPERTY_LIST);

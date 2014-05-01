@@ -3,12 +3,26 @@ package org.synthuse;
 import java.awt.Point;
 import java.io.*;
 
+import javax.swing.JOptionPane;
+
 public class UiaBridge {
 	static
 	{
-	    String archDataModel = System.getProperty("sun.arch.data.model");//32 or 64 bit
-		//System.loadLibrary("native/WpfBridge" + archDataModel); // WpfBridge32.dll (Windows) or WpfBridge32.so (Unixes)
-	    loadNativeLibraryFromJar("/uiabridge" + archDataModel + ".dll");
+		if (!SynthuseDlg.config.isUiaBridgeDisabled()) {
+			//System.out.println("SynthuseDlg.config.disableUiaBridge: " + SynthuseDlg.config.disableUiaBridge);
+		    String archDataModel = System.getProperty("sun.arch.data.model");//32 or 64 bit
+		    try {
+		    	//System.loadLibrary("native/WpfBridge" + archDataModel); // WpfBridge32.dll (Windows) or WpfBridge32.so (Unixes)
+		    	loadNativeLibraryFromJar("/uiabridge" + archDataModel + ".dll");
+		    } catch (Exception ex) {
+		    	StringWriter sw = new StringWriter();
+		    	PrintWriter pw = new PrintWriter(sw);
+		    	ex.printStackTrace(pw);
+		    	System.out.println(sw.toString());
+		    	JOptionPane.showMessageDialog(null, "Failed to load uiabridge library, make sure you have .Net 4.0 already installed.\n" + sw.toString() , "Native Library Load Error", JOptionPane.ERROR_MESSAGE);
+		    	SynthuseDlg.config.disableUiaBridge = "true";
+		    }
+		}
 	}
 	
     public static void loadNativeLibraryFromJar(String path) {
@@ -63,7 +77,8 @@ public class UiaBridge {
     
     public UiaBridge ()
     {
-    	initialize("");
+    	if (!SynthuseDlg.config.isUiaBridgeDisabled())
+    		initialize("");
     }
     
     public native void initialize(String properties);
