@@ -68,7 +68,7 @@ public class RobotMacro {
 
 	public static void rightClickMouse() {
 		try {
-			System.out.println("rightClickMouse");
+			//System.out.println("rightClickMouse");
 			Robot robot = new Robot();
 			//robot.mouseMove(200, 200);
 			//robot.delay(1000);

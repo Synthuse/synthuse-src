@@ -10,7 +10,7 @@ package org.synthuse;
 import java.math.BigInteger;
 
 import com.sun.jna.Pointer;
-import com.sun.jna.platform.win32.WinDef.HMENU;
+import com.sun.jna.platform.win32.WinDef.*;
 
 public class MenuInfo {
 	public HMENU hmenu = null;
@@ -25,12 +25,15 @@ public class MenuInfo {
 	public HMENU submenu = null;
 	public String submenuStr = "";
 	public int submenuCount = 0;
+	public String center = "";
 	
-	public MenuInfo(HMENU hmenu) {
+	public MenuInfo(String hwndStr, HMENU hmenu) {
+		this.hwndStr = hwndStr;
 		loadMenuBase(hmenu);
 	}
 	
-	public MenuInfo(HMENU hmenu, int position) {
+	public MenuInfo(String hwndStr, HMENU hmenu, int position) {
+		this.hwndStr = hwndStr;
 		loadMenuBase(hmenu);
 		if (this.menuCount > 0)
 			loadMenuDetails(hmenu, position);
@@ -52,6 +55,14 @@ public class MenuInfo {
 			this.text = this.text.substring(0, this.text.indexOf("\t"));
 		this.text = text.replaceAll("[^a-zA-Z0-9.,\\+ ]", "");
 		this.id = api.user32.GetMenuItemID(hmenu, position);
+		/*
+		HWND hWnd = Api.GetHandleFromString(hwndStr);
+		RECT rect = new RECT();
+		api.user32.GetMenuItemRect(hWnd, hmenu, position, rect);
+		int centerX = ((rect.right - rect.left) / 2) + rect.left;
+		int centerY = ((rect.bottom - rect.top) / 2) + rect.top;
+		this.center = centerX + "," + centerY;
+		*/
 		HMENU submenu = api.user32.GetSubMenu(hmenu, position);
 		if (submenu != null) {
 			int subCount = api.user32.GetMenuItemCount(submenu);

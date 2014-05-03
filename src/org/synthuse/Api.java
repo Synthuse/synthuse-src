@@ -15,9 +15,11 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.platform.win32.WinDef.*;
+import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.BaseTSD.ULONG_PTR;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
+import com.sun.jna.platform.win32.WinReg;
 import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.WinNT.LARGE_INTEGER;
 import com.sun.jna.platform.win32.WinUser.WNDENUMPROC;
@@ -133,6 +135,11 @@ public class Api {
         return (int) (i & 0xFFFF);
     }
     
+	public static long MAKELONG(int low, int high) 
+	{
+		return ((long)(((short)((int)(low) & 0xffff)) | ((int)((short)((int)(high) & 0xffff))) << 16));
+	}
+    
     public interface WinDefExt extends WinDef {
         //Structures
         public class MENUITEMINFO extends Structure {
@@ -235,6 +242,7 @@ public class Api {
 		//HWND WindowFromPoint(POINT point);
 		
 		HMENU GetMenu(HWND hWnd);
+		HMENU GetSystemMenu(HWND hWnd, boolean bRevert);
 		boolean IsMenu(HMENU hMenu);
 		int GetMenuString(HMENU hMenu, int uIDItem, char[] buffer, int nMaxCount, int uFlag);
 		HMENU GetSubMenu(HMENU hMenu, int nPos);
@@ -243,7 +251,7 @@ public class Api {
 		//BOOL WINAPI GetMenuItemInfo(_In_ HMENU hMenu, _In_ UINT uItem, _In_ BOOL fByPosition, _Inout_ LPMENUITEMINFO lpmii);
 		boolean GetMenuItemInfoA(HMENU hMenu, int uItem, boolean fByPosition, WinDefExt.MENUITEMINFO mii); //MENUITEMINFO
 		boolean TrackPopupMenu(HMENU hMenu, int uFlags, int x, int y, int nReserved, HWND hWnd, long prcRect);
-		//
+		boolean GetMenuItemRect(HWND hWnd, HMENU hMenu, int uItem, RECT rect);
 		
 		int GetDlgCtrlID(HWND hwndCtl);
 		int GetDlgItemText(HWND hDlg, int nIDDlgItem, byte[] buffer, int nMaxCount);
@@ -534,6 +542,12 @@ public class Api {
 		User32.instance.InvalidateRect(hwnd, 0, true);
 		User32.instance.UpdateWindow(hwnd);
 		User32.instance.RedrawWindow(hwnd, 0, 0, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+	}
+	
+	public static boolean isDotNet4Installed() {
+		int installed = Advapi32Util.registryGetIntValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4.0\\Client", "Install");
+		//System.out.println("isDotNet4Installed: " + installed);
+		return (installed == 1);
 	}
 	
 }

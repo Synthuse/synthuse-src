@@ -131,7 +131,7 @@ public class KeyboardHook implements Runnable{
 	}
 	
 	// search target keyboard event list for a match and return it otherwise return null if no match
-	public TargetKeyPress getTargetKeyPressed(int keyCode) {
+	private TargetKeyPress getTargetKeyPressed(int keyCode) {
 		TargetKeyPress target = null;
 		for (TargetKeyPress tkp : KeyboardHook.targetList) {
 			if (tkp.targetKeyCode != keyCode)
@@ -159,6 +159,7 @@ public class KeyboardHook implements Runnable{
 	@Override
 	public void run() {
 		createGlobalKeyboardHook();
+		System.out.println("Unhooking Global Keyboard Hook");
 		unhook();//wait for quit == true then unhook
 	}
 	

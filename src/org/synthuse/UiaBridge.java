@@ -6,8 +6,13 @@ import java.io.*;
 import javax.swing.JOptionPane;
 
 public class UiaBridge {
+	
+	public static String CACHED_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty,BoundingRectangleProperty";
+	
 	static
 	{
+		if (!Api.isDotNet4Installed()) //if .net 4.0 isn't installed don't use uiabridge
+			SynthuseDlg.config.disableUiaBridge = "true";
 		if (!SynthuseDlg.config.isUiaBridgeDisabled()) {
 			//System.out.println("SynthuseDlg.config.disableUiaBridge: " + SynthuseDlg.config.disableUiaBridge);
 		    String archDataModel = System.getProperty("sun.arch.data.model");//32 or 64 bit
@@ -78,7 +83,7 @@ public class UiaBridge {
     public UiaBridge ()
     {
     	if (!SynthuseDlg.config.isUiaBridgeDisabled())
-    		initialize("");
+    		initialize(CACHED_PROPERTY_LIST);
     }
     
     public native void initialize(String properties);

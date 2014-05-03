@@ -24,7 +24,8 @@ using namespace uiabridge;
  */
 JNIEXPORT void JNICALL Java_org_synthuse_UiaBridge_initialize(JNIEnv *env, jobject obj, jstring jproperties)
 {
-	Global::AUTO_BRIDGE = gcnew AutomationBridge();
+	const char *properties = env->GetStringUTFChars(jproperties, 0);//convert string
+	Global::AUTO_BRIDGE = gcnew AutomationBridge(marshal_as<String ^>(properties));
 }
 
 /*

@@ -18,6 +18,7 @@ namespace uiabridge {
 	{
 	public:
 		AutomationBridge(void);
+		AutomationBridge(System::String ^cachedProperties);
 		~AutomationBridge();
 		int addEnumFilter(System::String ^propertyName, System::String ^propertyValue);
 		void clearEnumFilters();
@@ -28,7 +29,7 @@ namespace uiabridge {
 		array<System::String ^> ^ enumWindowInfo(System::IntPtr windowHandle, System::String ^properties);
 		array<System::String ^> ^ enumWindowInfo(AutomationElement ^element, System::String ^properties);
 		array<System::String ^> ^ enumWindowInfo(AutomationElement ^element, System::String ^properties, List<System::String ^> ^filterModifierList);
-		System::String ^ getWindowInfo(AutomationElement ^element, System::String ^properties);
+		System::String ^ getWindowInfo(AutomationElement ^element, System::String ^properties, AutomationElement ^optionalParentElement);
 		System::String ^ getWindowInfo(System::Int32 x, System::Int32 y, System::String ^properties);
 		System::String ^ getWindowInfo(System::IntPtr windowHandle, System::String ^properties);
 		System::String ^ getWindowInfo(System::String ^runtimeIdStr, System::String ^properties);
@@ -36,8 +37,9 @@ namespace uiabridge {
 		static System::String ^ALL_MODIFIER = L"All";// find all matching elements of this filter
 		static System::String ^PARENT_MODIFIER = L"Parent";//find all children of this matching parent filter
 		static System::String ^FIRST_MODIFIER = L"First"; //find first element matching this filter then stop
+		static System::String ^DEFAULT_CACHED_PROPS = L"RuntimeIdProperty,ParentRuntimeIdProperty,NativeWindowHandleProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ControlTypeProperty,ClassNameProperty,NameProperty,BoundingRectangleProperty,ValueProperty";
 	private:
-		void initializeCache();
+		void initializeCache(System::String ^cachedProperties);
 		Dictionary<System::String ^, System::String ^> ^enumFilters;
 		void AutomationBridge::processFilterModifier(Boolean filtered, Boolean modifierChanged, List<System::String ^> ^filterModifierList);
 		CacheRequest ^cacheRequest;

@@ -249,16 +249,18 @@ public class WindowsEnumeratedXml implements Runnable{
 	
 	public static Element buildMenuXmlElements(Document xmlDoc, Element xmlElement, HMENU targetMenu, String targetWin)
 	{
-		MenuInfo firstMi = new MenuInfo(targetMenu);
+		MenuInfo firstMi = new MenuInfo(targetWin, targetMenu);
 		for (int i = 0 ; i < firstMi.menuCount ; i++ ) {
-			MenuInfo menuInfo = new MenuInfo(targetMenu, i);
+			MenuInfo menuInfo = new MenuInfo(targetWin, targetMenu, i);
 			Element menuElement = xmlDoc.createElement("menu");
 			menuElement.setAttribute("unaltered", menuInfo.unaltered + "");
 			menuElement.setAttribute("text", menuInfo.text + "");
 			menuElement.setAttribute("id", menuInfo.id + "");
 			menuElement.setAttribute("position", menuInfo.position + "");
 			menuElement.setAttribute("hmenu", menuInfo.hmenuStr + "");
-			menuElement.setAttribute("hwnd", targetWin + "");
+			menuElement.setAttribute("hwnd", menuInfo.hwndStr + "");
+			if (!menuInfo.center.isEmpty())
+				menuElement.setAttribute("center", menuInfo.center + "");
 			if (menuInfo.hasSubMenu) {
 				buildMenuXmlElements(xmlDoc, menuElement, menuInfo.submenu, targetWin);
 			}

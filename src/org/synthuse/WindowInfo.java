@@ -26,6 +26,7 @@ public class WindowInfo {
 	
 	public static String UIA_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty";
 	public static String UIA_RUNTIME_ID = "RuntimeIdProperty";
+	public static String UIA_BOUNDING_RECT = "BoundingRectangleProperty";
 	public static int MAX_TEXT_SIZE = 200;
 	
 	public HWND hwnd;
@@ -96,23 +97,7 @@ public class WindowInfo {
 				extra = new LinkedHashMap<String, String>(); 
 			extra.put("tvCount", tvCount.intValue() + "");
 		}
-		
-		//check if window has a menu
-    	HMENU hmenu = Api.User32.instance.GetMenu(hWnd);
-		if (hmenu != null) { //menu item count
-	    	int menuCount = Api.User32.instance.GetMenuItemCount(hmenu);
-	    	if (menuCount > 0) {
-				this.menus = menuCount;
-				this.menu = hmenu;
-	    	}
-	    	else
-	    	{
-	    		LRESULT result = Api.User32.instance.PostMessage(hWnd, Api.MN_GETHMENU, new WPARAM(0), new LPARAM());
-	    		if (result.longValue() != 1)
-	    			System.out.println("MN_GETHMENU: " + result.longValue());
-	    	}
-		}
-		
+		/*
 		if (isChild) {
 			int ctrlID =  Api.User32.instance.GetDlgCtrlID(hWnd);
 			if (ctrlID > 0){
@@ -125,11 +110,39 @@ public class WindowInfo {
 					extra.put("dgText", dgText + "");
 				}
 			}
-		}
+		}*/
 		
         char[] buffer2 = new char[1026];
 		User32.instance.GetClassName(hWnd, buffer2, 1026);
 		className = Native.toString(buffer2);
+		
+		//check if window has a menu
+    	HMENU hmenu = Api.User32.instance.GetMenu(hWnd);
+		if (hmenu != null) { //menu item count
+	    	int menuCount = Api.User32.instance.GetMenuItemCount(hmenu);
+	    	if (menuCount > 0) {
+				this.menus = menuCount;
+				this.menu = hmenu;
+	    	}
+		}
+		else // if (className.equals("#32768")) //check if its a popup menu window
+		{
+    		//LRESULT result = Api.User32.instance.PostMessage(hWnd, Api.MN_GETHMENU, new WPARAM(0), new LPARAM(0));
+			LRESULT result = Api.User32.instance.SendMessage(hWnd, Api.MN_GETHMENU, new WPARAM(0), new LPARAM(0));
+    		if (result.longValue() != 1)
+    		{
+    			//System.out.println("MN_GETHMENU: " + result.longValue());
+    			hmenu = new HMENU(new Pointer(result.longValue()));
+    			int menuCount = Api.User32.instance.GetMenuItemCount(hmenu);
+    			if (menuCount > 0)
+    			{
+        			//System.out.println("Popup Win: " + menuCount);
+    				this.menus = menuCount;
+    				this.menu = hmenu;
+    			}
+    		}
+		}
+
 		
 		rect = new RECT();
 		User32.instance.GetWindowRect(hWnd, rect);

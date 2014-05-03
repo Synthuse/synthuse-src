@@ -18,7 +18,14 @@ AutomationBridge::AutomationBridge()
 {
 	enumFilters = gcnew Dictionary<System::String ^, System::String ^>();
 	cacheRequest = nullptr;
-	initializeCache();
+	initializeCache("");
+}
+
+AutomationBridge::AutomationBridge(System::String ^cachedProperties)
+{
+	enumFilters = gcnew Dictionary<System::String ^, System::String ^>();
+	cacheRequest = nullptr;
+	initializeCache(cachedProperties);
 }
 
 AutomationBridge::~AutomationBridge()
@@ -29,7 +36,7 @@ AutomationBridge::~AutomationBridge()
 	//Console::WriteLine("disposing of AutomationBridge");
 }
 
-void AutomationBridge::initializeCache()
+void AutomationBridge::initializeCache(System::String ^cachedProperties)
 {
 	cacheRequest = gcnew CacheRequest();
 	//cacheRequest->AutomationElementMode = AutomationElementMode::Full;
@@ -45,7 +52,11 @@ void AutomationBridge::initializeCache()
 	cacheRequest->Add(AutomationElement::NameProperty);
 	cacheRequest->Add(AutomationElement::BoundingRectangleProperty);
 	*/
-	System::String ^cachedPropStr = L"RuntimeIdProperty,ParentRuntimeIdProperty,NativeWindowHandleProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ControlTypeProperty,ClassNameProperty,NameProperty,BoundingRectangleProperty,ValueProperty";
+	System::String ^cachedPropStr = cachedProperties;
+	if (cachedPropStr == nullptr) // check if blank/null we need to use DEFAULT_CACHED_PROPS;
+		cachedPropStr = DEFAULT_CACHED_PROPS;
+	else if (cachedPropStr->Equals(""))
+		cachedPropStr = DEFAULT_CACHED_PROPS;
 	array<AutomationProperty^> ^rootProperties = AutomationElement::RootElement->GetSupportedProperties();
 	List<AutomationProperty^> ^cacheList = gcnew List<AutomationProperty^>();
 	if (cachedPropStr->Contains(L"NativeWindowHandleProperty")) //special property not in the root property list
@@ -244,7 +255,7 @@ array<System::String ^> ^ AutomationBridge::enumWindowInfo(System::IntPtr window
 	AutomationElement ^element = AutomationElement::FromHandle(windowHandle);
 	List<System::String ^> ^winInfoList = gcnew List<System::String ^>();
 	if (!isElementFiltered(element)) //test parent should be filtered
-		winInfoList->Add(getWindowInfo(element, properties));
+		winInfoList->Add(getWindowInfo(element, properties, nullptr));
 	winInfoList->AddRange(enumWindowInfo(element, properties));
 	return winInfoList->ToArray();
 }
@@ -255,25 +266,16 @@ array<System::String ^> ^ AutomationBridge::enumWindowInfo(AutomationElement ^el
 	return enumWindowInfo(element, properties, filterModifierList);
 }
 
-array<System::String ^> ^ AutomationBridge::enumWindowInfo(AutomationElement ^element, System::String ^properties, List<System::String ^> ^filterModifierList)
+array<System::String ^> ^ AutomationBridge::enumWindowInfo(AutomationElement ^parentElement, System::String ^properties, List<System::String ^> ^filterModifierList)
 {
 	List<System::String ^> ^winInfoList = gcnew List<System::String ^>();
-	if (element == nullptr)
+	if (parentElement == nullptr)
 		return winInfoList->ToArray();
 	TreeWalker ^tw = TreeWalker::RawViewWalker;
 	//System::Console::WriteLine("get info: {0}", getWindowInfo(element, properties));
 	//AutomationElement ^currentElement = tw->GetFirstChild(element, cacheRequest);
 	AutomationElement ^currentElement = nullptr;
-	/*if (element->CachedChildren != nullptr) 
-	{
-		System::Console::WriteLine("using cached child");
-		currentElement = element->CachedChildren[0];
-	}
-	else*/
-	{
-		//System::Console::WriteLine("not cached child");
-		currentElement = tw->GetFirstChild(element, cacheRequest);
-	}
+	currentElement = tw->GetFirstChild(parentElement, cacheRequest);
 	if (currentElement == nullptr)
 	{
 		//System::Console::WriteLine("no children {0}", element->CachedChildren->Count);
@@ -292,7 +294,7 @@ array<System::String ^> ^ AutomationBridge::enumWindowInfo(AutomationElement ^el
 			Boolean modifierChanged = fmlOriginalSize != filterModifierList->Count;
 			if (!filtered) //not filtered so return element
 			{
-				winInfoList->Add(getWindowInfo(currentElement, properties));
+				winInfoList->Add(getWindowInfo(currentElement, properties, parentElement));
 				winInfoList->AddRange(enumWindowInfo(currentElement, properties, filterModifierList));
 			}
 			else //filtered, but if modifier used keep searching children
@@ -303,16 +305,16 @@ array<System::String ^> ^ AutomationBridge::enumWindowInfo(AutomationElement ^el
 			processFilterModifier(filtered, modifierChanged, filterModifierList); //cleans filterModifierList
 			//System::Console::WriteLine("element: {0}", currentElement);
 			//currentElement->
-			currentElement = tw->GetNextSibling(currentElement, cacheRequest);
 		} catch (Exception ^ex)
 		{
 			System::Console::WriteLine("Exception: {0} {1}",  ex->Message, ex->StackTrace);
 		}
+		currentElement = tw->GetNextSibling(currentElement, cacheRequest);
     }
 	return winInfoList->ToArray();
 }
 
-System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, System::String ^properties)
+System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, System::String ^properties, AutomationElement ^optionalParentElement)
 {
 	System::String ^resultProperties = L"";
 	System::String ^propertyNameErrorCheck = L"";
@@ -323,16 +325,28 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 		if (properties->Equals(L"*"))
 			wildcardEnabled = true;
 
+		//setup parentElement
+		System::String ^parentRuntimeId = L"";
+		if (wildcardEnabled || properties->Contains(L"ParentRuntimeIdProperty"))
+		{
+			if (optionalParentElement == nullptr)
+			{
+				TreeWalker ^tw = TreeWalker::ControlViewWalker;
+				parentRuntimeId = getRuntimeIdFromElement(tw->GetParent(element, cacheRequest));
+			}
+			else
+				parentRuntimeId = getRuntimeIdFromElement(optionalParentElement);
+		}
+
 		//create array for keeping order of properties
 		System::String ^delim = L",";
 		array<System::String ^> ^propSpltArray = properties->Split(delim->ToCharArray());
-		TreeWalker ^tw = TreeWalker::ControlViewWalker;
 		System::Int32 count = 0;
 		array<AutomationProperty^> ^aps = cachedRootProperties;//element->GetSupportedProperties();
 		array<System::String ^> ^propValues = gcnew array<System::String ^>(propSpltArray->Length);//keep order
 		System::String ^wildcardProperties = L"";
 		if (wildcardEnabled) {
-			wildcardProperties += "ParentRuntimeIdProperty:" + getRuntimeIdFromElement(tw->GetParent(element, cacheRequest)) + ",";
+			wildcardProperties += "ParentRuntimeIdProperty:" + parentRuntimeId + ",";
 			//propValues = gcnew array<System::String ^>(aps->Length +1 );//add one for parent property since it doesn't exist
 		}
 		for(int i=0 ; i < propValues->Length ; i++)
@@ -340,7 +354,7 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 			propValues[i] = L"";
 			if (propSpltArray[i]->Equals("ParentRuntimeIdProperty"))//custom property for getting parent
 			{
-				propValues[i] = getRuntimeIdFromElement(tw->GetParent(element, cacheRequest));
+				propValues[i] = parentRuntimeId;
 			}
 		}
 		for each(AutomationProperty ^ap in aps) //loop through all supported Properties for a child
@@ -404,13 +418,13 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 System::String ^ AutomationBridge::getWindowInfo(System::Int32 x, System::Int32 y, System::String ^properties)
 {
 	AutomationElement ^element = AutomationElement::FromPoint(System::Windows::Point(x, y));
-	return getWindowInfo(element, properties);
+	return getWindowInfo(element, properties, nullptr);
 }
 
 System::String ^ AutomationBridge::getWindowInfo(System::IntPtr windowHandle, System::String ^properties)
 {
 	AutomationElement ^element = AutomationElement::FromHandle(windowHandle);
-	return getWindowInfo(element, properties);
+	return getWindowInfo(element, properties, nullptr);
 }
 
 System::String ^ AutomationBridge::getWindowInfo(System::String ^runtimeIdStr, System::String ^properties)
