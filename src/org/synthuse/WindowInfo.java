@@ -245,6 +245,9 @@ public class WindowInfo {
     	if (text != null)
     		if (text.length() > MAX_TEXT_SIZE)
     			text = text.substring(0, MAX_TEXT_SIZE);
+    	if (value != null)
+    		if (value.length() > MAX_TEXT_SIZE)
+    			value = value.substring(0, MAX_TEXT_SIZE);
     	if (this.hwndStr == null)
     		this.hwndStr = "";
     	

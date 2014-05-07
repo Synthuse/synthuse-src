@@ -133,6 +133,7 @@ public class TestIdeFrame extends JFrame {
 				TestIdeFrame.this.dispose();
 			}
 		});
+		super.setAlwaysOnTop(SynthuseDlg.config.isAlwaysOnTop());
 	}
 
 }

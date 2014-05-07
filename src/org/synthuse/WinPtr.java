@@ -15,6 +15,9 @@ public class WinPtr {
 	public String hWndStr = "";
 	public String runtimeId = "";
 	
+	public String hmenuStr = "";//store menu handle
+	public int hmenuPos = -1;//store menu position or id
+	
 	public WinPtr() {
 	}
 	

@@ -13,6 +13,7 @@ public class Config extends PropertiesSerializer {
 	
 	public String disableUiaBridge = "false";
 	public String disableFiltersUia = "false";
+	public String alwaysOnTop = "true";
 	public String refreshKey = "3";
 	public String targetKey = "`";
 	public String urlList = "";
@@ -41,6 +42,13 @@ public class Config extends PropertiesSerializer {
 		if (disableFiltersUia == null)
 			return false;
 		return disableFiltersUia.equals("true") || disableFiltersUia.equals("True");
+	}
+	
+	public boolean isAlwaysOnTop()
+	{
+		if (alwaysOnTop == null)
+			return new Config().alwaysOnTop.equals("true") || new Config().alwaysOnTop.equals("True");
+		return alwaysOnTop.equals("true") || alwaysOnTop.equals("True");
 	}
 	
 	public int getRefreshKeyCode()

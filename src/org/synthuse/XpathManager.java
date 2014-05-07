@@ -196,7 +196,7 @@ public class XpathManager implements Runnable{
 				List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, xpathExpr);
 				if (resultList.size() == 0 && WindowsEnumeratedXml.lastException != null) {
 					String errMsg = WindowsEnumeratedXml.lastException.getCause().getMessage();
-					JOptionPane.showMessageDialog(null, "Exception: " + errMsg, "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(target.getTopLevelAncestor(), "Exception: " + errMsg, "Error", JOptionPane.ERROR_MESSAGE);
 					return -1;
 				}
 				results = resultList.size();
@@ -237,7 +237,7 @@ public class XpathManager implements Runnable{
 				}
 				lblStatus.setText(results + " matches");
 				if (cPos > 0  && matches == 0 && !alwaysFromTop) { //ask if user wants to search from top
-					int result = JOptionPane.showConfirmDialog(null, "No more matches found.  Do you want to search from the top of the document?", "Find", JOptionPane.YES_NO_OPTION);
+					int result = JOptionPane.showConfirmDialog(target.getTopLevelAncestor(), "No more matches found.  Do you want to search from the top of the document?", "Find", JOptionPane.YES_NO_OPTION);
 					if (result == JOptionPane.YES_OPTION) {
 						target.setCaretPosition(0);
 						nextXpathMatch(xpathExpr, targetText, lblStatus, alwaysFromTop);

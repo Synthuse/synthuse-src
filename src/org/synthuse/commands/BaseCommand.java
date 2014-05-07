@@ -91,6 +91,39 @@ public class BaseCommand {
 			appendError("Error: command '" + getCurrentCommand() + "' failed");
 		return cmdResult;
 	}
+	
+	public void forceXmlRefresh() {
+		WIN_XML = WindowsEnumeratedXml.getXml();
+		LAST_UPDATED_XML = System.nanoTime();
+	}
+	
+	public String getWindowTypeWithXpath(String xpath) {
+		String result = "";
+		double secondsFromLastUpdate = ((double)(System.nanoTime() - LAST_UPDATED_XML) / 1000000000);
+		if (secondsFromLastUpdate > CommandProcessor.XML_UPDATE_THRESHOLD) { //default 5 second threshold
+			WIN_XML = WindowsEnumeratedXml.getXml();
+			LAST_UPDATED_XML = System.nanoTime();
+		}
+		String resultStr =  "";
+		List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
+		if (resultList.size() > 0)
+		{
+			resultStr = resultList.get(0).trim();
+			if (resultStr.startsWith("<winfrm "))
+				result = "winfrm";
+			else if(resultStr.startsWith("<win "))
+				result = "win";
+			else if(resultStr.startsWith("<wpf "))
+				result = "wpf";
+			else if(resultStr.startsWith("<silver "))
+				result = "silver";
+			else if(resultStr.startsWith("<menu "))
+				result = "menu";
+			else
+				result = "other";
+		}
+		return result;
+	}
 
 	public WinPtr findHandleWithXpath(String xpath) {
 		return findHandleWithXpath(xpath, false);
@@ -103,10 +136,11 @@ public class BaseCommand {
 			WIN_XML = WindowsEnumeratedXml.getXml();
 			LAST_UPDATED_XML = System.nanoTime();
 		}
-		WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
+		//WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
 		String resultStr =  "";
 		List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
 		for(String item: resultList) {
+			//System.out.println("xpath result item: " + item);
 			if (item.contains("hwnd=")) {
 				List<String> hwndList = WindowsEnumeratedXml.evaluateXpathGetValues(item, "//@hwnd");
 				if (hwndList.size() > 0)
@@ -114,8 +148,19 @@ public class BaseCommand {
 			}
 			else
 				resultStr = item;
-			break;
+			if (item.contains("hmenu=")) { //get menu information, useful for getting center of menu
+				List<String> hmenuList = WindowsEnumeratedXml.evaluateXpathGetValues(item, "//@hmenu");
+				if (hmenuList.size() > 0)
+					result.hmenuStr = hmenuList.get(0).replaceAll("[^\\d-.]", ""); //get first hmenu;
+				if (item.contains("id=")) {
+					List<String> menuidList = WindowsEnumeratedXml.evaluateXpathGetValues(item, "//@position");
+					if (menuidList.size() > 0)
+						result.hmenuPos = Integer.parseInt(menuidList.get(0).replaceAll("[^\\d-.]", "")); //get first id;
+				}
+			}
+			break;// we only care about the first item
 		}
+		
 		resultStr = resultStr.replaceAll("[^\\d-.]", ""); //remove all non-numeric values (except dash -)
 		if (WinPtr.isWpfRuntimeIdFormat(resultStr)) {
 			result.runtimeId = resultStr;
@@ -137,7 +182,7 @@ public class BaseCommand {
 			WIN_XML = WindowsEnumeratedXml.getXml();
 			LAST_UPDATED_XML = System.nanoTime();
 		}
-		WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
+		//WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
 		String resultStr =  "";
 		List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
 		for(String item: resultList) {
@@ -166,6 +211,18 @@ public class BaseCommand {
 			p = api.getWindowPosition(handle.hWnd);
 		else
 			p = uiabridge.getCenterOfElement(handle.runtimeId);
+		return p;
+	}
+	
+	public Point getCenterWindowPosition(WinPtr handle, String windowType) {
+		Point p = null;
+
+		if (handle.isWpf() || windowType.equals("winfrm") || windowType.equals("wpf") || windowType.equals("silver"))
+			p = uiabridge.getCenterOfElement(handle.runtimeId);
+		else if (windowType.equals("win"))
+			p = api.getWindowPosition(handle.hWnd);
+		else if (windowType.equals("menu"))
+			p = api.getMenuItemPosition(handle.hWnd, MenuInfo.GetHandleMenuFromString(handle.hmenuStr), handle.hmenuPos);
 		return p;
 	}
 	

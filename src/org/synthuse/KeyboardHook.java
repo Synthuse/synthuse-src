@@ -159,7 +159,7 @@ public class KeyboardHook implements Runnable{
 	@Override
 	public void run() {
 		createGlobalKeyboardHook();
-		System.out.println("Unhooking Global Keyboard Hook");
+		//System.out.println("Unhooking Global Keyboard Hook");
 		unhook();//wait for quit == true then unhook
 	}
 	

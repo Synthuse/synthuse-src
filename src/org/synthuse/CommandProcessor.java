@@ -243,10 +243,14 @@ public class CommandProcessor implements Runnable{
 				return main.cmdOpen(args);
 			if (command.equals("displayText")) 
 				return main.cmdDisplayText(args);
+			if (command.equals("forceRefresh")) 
+				return main.cmdForceRefresh(args);
 			if (command.equals("setSpeed")) 
 				return main.cmdSetSpeed(args);
 			if (command.equals("setTimeout")) 
 				return main.cmdSetTimeout(args);
+			if (command.equals("setUpdateThreshold")) 
+				return main.cmdSetUpdateThreshold(args);
 			if (command.equals("waitForTitle")) 
 				return main.cmdWaitForTitle(args);
 			if (command.equals("waitForText")) 

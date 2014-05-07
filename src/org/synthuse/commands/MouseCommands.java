@@ -17,8 +17,10 @@ public class MouseCommands extends BaseCommand {
 		//System.out.println("cmdClick1: " + args[0]);
 		if (handle.isEmpty())
 			return false;
-		Point p = getCenterWindowPosition(handle);
-		//System.out.println("cmdClick3: " + p.x + "," + p.y);
+		String wtype = getWindowTypeWithXpath(args[0]);
+		//System.out.println("wtype: " + wtype + " hwnd " + handle.hWnd + " hmenu " + handle.hmenuStr + " pos " + handle.hmenuPos);
+		Point p = getCenterWindowPosition(handle, wtype);
+		//System.out.println("cmdClick: " + p.x + "," + p.y);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		RobotMacro.leftClickMouse();
 		return true;
@@ -30,7 +32,8 @@ public class MouseCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
-		Point p = getCenterWindowPosition(handle);
+		String wtype = getWindowTypeWithXpath(args[0]);
+		Point p = getCenterWindowPosition(handle, wtype);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		RobotMacro.doubleClickMouse();
 		return true;
@@ -42,7 +45,8 @@ public class MouseCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
-		Point p = getCenterWindowPosition(handle);
+		String wtype = getWindowTypeWithXpath(args[0]);
+		Point p = getCenterWindowPosition(handle, wtype);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		RobotMacro.rightClickMouse();
 		return true;
@@ -74,7 +78,8 @@ public class MouseCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
-		Point p = getCenterWindowPosition(handle);
+		String wtype = getWindowTypeWithXpath(args[0]);
+		Point p = getCenterWindowPosition(handle, wtype);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		//System.out.println("point " + p.x + "," + p.y);
 		return true;

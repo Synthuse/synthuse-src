@@ -487,6 +487,17 @@ public class Api {
 		return windowPoint;
 	}
 	
+	public Point getMenuItemPosition(HWND handle, HMENU hMenu, int pos) {
+		Point windowPoint = new Point();
+		RECT rect = new RECT();
+		user32.GetMenuItemRect(handle, hMenu, pos, rect);
+		//System.out.println("rect: l" + rect.left + ",t" + rect.top + ",r" + rect.right + ",b" + rect.bottom);
+		//user32.MapWindowPoints(user32.GetDesktopWindow(), user32.GetParent(handle), rect, 2);
+		windowPoint.x = ((rect.right - rect.left) / 2) + rect.left;
+		windowPoint.y = ((rect.bottom - rect.top) / 2) + rect.top;
+		return windowPoint;
+	}
+	
 	public int getDiskUsedPercentage() {
 		return getDiskUsedPercentage(null);
 	}
@@ -545,9 +556,19 @@ public class Api {
 	}
 	
 	public static boolean isDotNet4Installed() {
-		int installed = Advapi32Util.registryGetIntValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4.0\\Client", "Install");
-		//System.out.println("isDotNet4Installed: " + installed);
-		return (installed == 1);
+		try {
+			int installed = Advapi32Util.registryGetIntValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4.0\\Client", "Install");
+			//System.out.println("isDotNet4Installed: " + installed);
+			return (installed == 1);
+		} catch (Exception e) {
+		}
+		try {
+			int installed = Advapi32Util.registryGetIntValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Client", "Install");
+			//System.out.println("isDotNet4Installed: " + installed);
+			return (installed == 1);
+		} catch (Exception e) {
+		}
+		return false;
 	}
 	
 }

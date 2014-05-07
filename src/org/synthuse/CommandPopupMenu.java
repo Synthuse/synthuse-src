@@ -143,35 +143,42 @@ public class CommandPopupMenu extends JPopupMenu {
 		CommandMenuItem mntmGetwindowclass = new CommandMenuItem("getWindowClass", 2);
 		mnWinMessages.add(mntmGetwindowclass);
 		
-		CommandMenuItem mntmOpen = new CommandMenuItem("open", 2, false);
-		add(mntmOpen);
-		
 		CommandMenuItem mntmDisplayText = new CommandMenuItem("displayText", 3, false);
 		add(mntmDisplayText);
 
+		CommandMenuItem mntmForceRefresh = new CommandMenuItem("forceRefresh", 1, false);
+		add(mntmForceRefresh);
+
+		CommandMenuItem mntmOpen = new CommandMenuItem("open", 2, false);
+		add(mntmOpen);
+		
 		//CommandMenuItem mntmOpenAndWait = new CommandMenuItem("openAndWait", 1, false);
 		//add(mntmOpenAndWait);
 
 		CommandMenuItem mntmPause = new CommandMenuItem("pause", 2, false);
 		add(mntmPause);
+
+		CommandMenuItem mntmSettimeout = new CommandMenuItem("setTimeout", 2, false);
+		add(mntmSettimeout);
+		
+		CommandMenuItem mntmSetspeed = new CommandMenuItem("setSpeed", 2, false);
+		add(mntmSetspeed);
+		
+		CommandMenuItem mntmSetUpdateThreshold = new CommandMenuItem("setUpdateThreshold", 2, false);
+		add(mntmSetUpdateThreshold);
+
+		CommandMenuItem mntmWaitforclass = new CommandMenuItem("waitForClass", 2, false);
+		add(mntmWaitforclass);
 		
 		CommandMenuItem mntmWaitfortitle = new CommandMenuItem("waitForTitle", 2, false);
 		add(mntmWaitfortitle);
 		
 		CommandMenuItem mntmWaitfortext = new CommandMenuItem("waitForText", 2, false);
 		add(mntmWaitfortext);
-		
-		CommandMenuItem mntmWaitforclass = new CommandMenuItem("waitForClass", 2, false);
-		add(mntmWaitforclass);
-		
+				
 		CommandMenuItem mntmWaitforvisible = new CommandMenuItem("waitForVisible", 2);
 		add(mntmWaitforvisible);
 		
-		CommandMenuItem mntmSettimeout = new CommandMenuItem("setTimeout", 2, false);
-		add(mntmSettimeout);
-		
-		CommandMenuItem mntmSetspeed = new CommandMenuItem("setSpeed", 2, false);
-		add(mntmSetspeed);
 	}
 	
 	class CommandMenuItem extends JMenuItem {

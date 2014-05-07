@@ -25,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
 import javax.swing.JSplitPane;
 import javax.swing.JRadioButton;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import java.awt.Component;
@@ -71,7 +72,7 @@ public class SynthuseDlg extends JFrame {
 	/**
 	 * 
 	 */
-	public static String VERSION_STR = "1.1.4";
+	public static String VERSION_STR = "1.1.6";
 
 	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/gnome-robots.png";
 	public static String RES_STR_REFRESH_IMG = "/org/synthuse/img/rapidsvn.png";
@@ -201,7 +202,14 @@ public class SynthuseDlg extends JFrame {
 				String about = "";
 				about += "Synthuse Version " + VERSION_STR + " create by Edward Jakubowski ejakubowski7@gmail.com\n\n";
 				
-				about += "System information: \n";
+				about += "Application information: \n";
+				about += " alwaysOnTop - " + config.isAlwaysOnTop() + "\n";
+				about += " refreshKey - " + config.refreshKey + "\n";
+				about += " targetKey - " + config.targetKey + "\n";
+				about += " disableUiaBridge - " + config.isUiaBridgeDisabled() + "\n";
+				about += " disableFiltersUia - " + config.isFilterUiaDisabled() + "\n";
+				
+				about += "\nSystem information: \n";
 				about += " Java version - " + System.getProperty("java.version") + "\n";
 				about += " Java home - " + System.getProperty("java.home") + "\n";
 				about += " OS Name - " + System.getProperty("os.name") + "\n";
@@ -210,8 +218,10 @@ public class SynthuseDlg extends JFrame {
 				jclasspath = jclasspath.replaceAll(";", ";\n   ");
 				if (!System.getProperty("os.name").startsWith("Windows"))
 					jclasspath = jclasspath.replaceAll(":", ":\n   ");
+				if (jclasspath.length() > 500)
+					jclasspath = jclasspath.substring(0, 500) + "...";
 				about += " Java class path - " + jclasspath + "\n\n";
-				JOptionPane.showMessageDialog(null, about , "About", JOptionPane.QUESTION_MESSAGE);
+				JOptionPane.showMessageDialog(SynthuseDlg.this, about , "About", JOptionPane.QUESTION_MESSAGE);
 			}
 		});
 		toolBar.add(helpBtn);
@@ -396,22 +406,32 @@ public class SynthuseDlg extends JFrame {
 			@Override
 			public void keyPressed(KeyboardHook.TargetKeyPress target) {
 				//System.out.println("target key pressed " + target.targetKeyCode);
-				if (target.targetKeyCode == config.getRefreshKeyCode()){ 
-					btnRefresh.doClick();
+				if (target.targetKeyCode == config.getRefreshKeyCode()){
+					SwingUtilities.invokeLater(new Runnable() {//swing components are not thread safe, this will run on Swings event dispatch thread
+		                public void run() {
+		                	btnRefresh.doClick();
+		                }
+					});
 				}
 				if (target.targetKeyCode == config.getTargetKeyCode()){
-			    	if (!SynthuseDlg.config.isUiaBridgeDisabled())
-			    		uiabridge.initialize("");//need to re-initialize because it might be in a different thread.
-					Point p = Api.getCursorPos();
-					targetX = p.x;
-					targetY = p.y;
-					targetDragged();
+					SwingUtilities.invokeLater(new Runnable() {//swing components are not thread safe, this will run on Swings event dispatch thread
+		                public void run() {
+					    	//if (!SynthuseDlg.config.isUiaBridgeDisabled())
+					    	//	uiabridge.initialize("");//need to re-initialize because it might be in a different thread.
+							Point p = Api.getCursorPos();
+							targetX = p.x;
+							targetY = p.y;
+							targetDragged();
+		                }
+					});
+
 				}
 			}
 		});
 		
 		btnRefresh.doClick();
 		refreshDatabinding();
+		super.setAlwaysOnTop(config.isAlwaysOnTop());
 	}
 	
 	/*

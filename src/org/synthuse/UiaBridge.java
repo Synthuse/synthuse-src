@@ -9,10 +9,14 @@ public class UiaBridge {
 	
 	public static String CACHED_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty,BoundingRectangleProperty";
 	
+	
 	static
 	{
-		if (!Api.isDotNet4Installed()) //if .net 4.0 isn't installed don't use uiabridge
+		String loadFailedMsg = "Failed to load uiabridge library, make sure you have .Net 4.0 already installed.\n";
+		if (!Api.isDotNet4Installed()) { //if .net 4.0 isn't installed don't use uiabridge
 			SynthuseDlg.config.disableUiaBridge = "true";
+			JOptionPane.showMessageDialog(null, loadFailedMsg , "Native Library Load Error", JOptionPane.ERROR_MESSAGE);
+		}
 		if (!SynthuseDlg.config.isUiaBridgeDisabled()) {
 			//System.out.println("SynthuseDlg.config.disableUiaBridge: " + SynthuseDlg.config.disableUiaBridge);
 		    String archDataModel = System.getProperty("sun.arch.data.model");//32 or 64 bit
@@ -24,7 +28,7 @@ public class UiaBridge {
 		    	PrintWriter pw = new PrintWriter(sw);
 		    	ex.printStackTrace(pw);
 		    	System.out.println(sw.toString());
-		    	JOptionPane.showMessageDialog(null, "Failed to load uiabridge library, make sure you have .Net 4.0 already installed.\n" + sw.toString() , "Native Library Load Error", JOptionPane.ERROR_MESSAGE);
+		    	JOptionPane.showMessageDialog(null, loadFailedMsg + sw.toString() , "Native Library Load Error", JOptionPane.ERROR_MESSAGE);
 		    	SynthuseDlg.config.disableUiaBridge = "true";
 		    }
 		}

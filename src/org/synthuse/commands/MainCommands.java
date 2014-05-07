@@ -23,9 +23,10 @@ public class MainCommands extends BaseCommand {
 	public boolean cmdDisplayText(String[] args) throws IOException {
 		if (!checkArgumentLength(args, 2))
 			return false;
-		if (!checkIsNumeric(args[1]))
+		if (!checkIsNumeric(args[1])) //arg[1] is in milliseconds
 			return false;
 		this.killStatusWindow();
+		//System.out.println("StatusWindow " + args[0] + ", " + Integer.parseInt(args[1]));
 		StatusWindow sw = new StatusWindow(args[0], Integer.parseInt(args[1]));
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		sw.setLocation(dim.width/2-sw.getSize().width/2, dim.height + StatusWindow.Y_BOTTOM_OFFSET - 80 );
@@ -45,6 +46,21 @@ public class MainCommands extends BaseCommand {
 			return false;
 		long timeout = Long.parseLong(args[0]);
 		CommandProcessor.WAIT_TIMEOUT_THRESHOLD = timeout;
+		return true;
+	}
+	
+	public boolean cmdSetUpdateThreshold(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		long threshold = Long.parseLong(args[0]);
+		CommandProcessor.XML_UPDATE_THRESHOLD = threshold;
+		return true;
+	}
+	
+	public boolean cmdForceRefresh(String[] args) {
+		if (!checkArgumentLength(args, 0))
+			return false;
+		forceXmlRefresh();
 		return true;
 	}
 	

@@ -316,6 +316,126 @@ ALT %
 		    			specialKeyFlag = false;
 		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_DOWN} );
 		    		}
+		    		else if (specialKey.equals("{LEFT}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_LEFT} );
+		    		}
+		    		else if (specialKey.equals("{RIGHT}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_RIGHT} );
+		    		}
+		    		else if (specialKey.equals("{PRTSC}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_PRINTSCREEN} );
+		    		}
+		    		else if (specialKey.equals("{DELETE}") || specialKey.equals("{DEL}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_DELETE} );
+		    		}
+		    		else if (specialKey.equals("{BACKSPACE}") || specialKey.equals("{BS}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_BACK_SPACE} );
+		    		}
+		    		else if (specialKey.equals("{F1}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F1} );
+		    		}
+		    		else if (specialKey.equals("{F2}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F2} );
+		    		}
+		    		else if (specialKey.equals("{F3}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F3} );
+		    		}
+		    		else if (specialKey.equals("{F4}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F4} );
+		    		}
+		    		else if (specialKey.equals("{F5}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F5} );
+		    		}
+		    		else if (specialKey.equals("{F6}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F6} );
+		    		}
+		    		else if (specialKey.equals("{F7}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F7} );
+		    		}
+		    		else if (specialKey.equals("{F8}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F8} );
+		    		}
+		    		else if (specialKey.equals("{F9}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F9} );
+		    		}
+		    		else if (specialKey.equals("{F10}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F10} );
+		    		}
+		    		else if (specialKey.equals("{F11}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F11} );
+		    		}
+		    		else if (specialKey.equals("{F12}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F12} );
+		    		}
+		    		else if (specialKey.equals("{F13}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F13} );
+		    		}
+		    		else if (specialKey.equals("{F14}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F14} );
+		    		}
+		    		else if (specialKey.equals("{F15}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F15} );
+		    		}
+		    		else if (specialKey.equals("{F16}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_F16} );
+		    		}
+		    		else if (specialKey.equals("{PRTSC}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_PRINTSCREEN} );
+		    		}
+		    		else if (specialKey.equals("{ADD}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_ADD} );
+		    		}
+		    		else if (specialKey.equals("{SUBTRACT}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_SUBTRACT} );
+		    		}
+		    		else if (specialKey.equals("{MULTIPLY}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_MULTIPLY} );
+		    		}
+		    		else if (specialKey.equals("{DIVIDE}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_DIVIDE} );
+		    		}
+		    		else if (specialKey.equals("{INSERT}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_INSERT} );
+		    		}
+		    		else if (specialKey.equals("{BREAK}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_CANCEL} );
+		    		}
+		    		else if (specialKey.equals("{{}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_OPEN_BRACKET} );
+		    		}
+		    		else if (specialKey.equals("{}}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot,new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_CLOSE_BRACKET} );
+		    		}
 		    	}
 	    		
 	    		if (modifierKeyFlag) { //time to release all the modifier keys
