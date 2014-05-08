@@ -69,7 +69,7 @@ public class MainCommands extends BaseCommand {
 			return false;
 		long totalAttempts = (long) (CommandProcessor.WAIT_TIMEOUT_THRESHOLD / (CommandProcessor.XML_UPDATE_THRESHOLD * 1000));
 		long attemptCount = 0;
-		String xpath = "/EnumeratedWindows/win[@TEXT='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
+		String xpath = "/EnumeratedWindows/*[@TEXT='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
 		WinPtr handle = findHandleWithXpath(xpath, true);
 		if (!handle.isEmpty())// first test without a timeout
 			return true;
@@ -82,7 +82,9 @@ public class MainCommands extends BaseCommand {
 			if (isProcessorStopped())
 				break;
 		}
-		return handle != null;
+		if (handle.isEmpty())
+			appendError("Error: command '" + getCurrentCommand() + "' failed to find element matching " + args[0]);
+		return (!handle.isEmpty());
 	}
 	
 	public boolean cmdWaitForText(String[] args) {
@@ -103,7 +105,9 @@ public class MainCommands extends BaseCommand {
 			if (isProcessorStopped())
 				break;
 		}
-		return handle != null;
+		if (handle.isEmpty())
+			appendError("Error: command '" + getCurrentCommand() + "' failed to find element matching " + args[0]);
+		return (!handle.isEmpty());
 	}
 	
 	public boolean cmdWaitForClass(String[] args) {
@@ -111,7 +115,7 @@ public class MainCommands extends BaseCommand {
 			return false;
 		long totalAttempts = (long) (CommandProcessor.WAIT_TIMEOUT_THRESHOLD / (CommandProcessor.XML_UPDATE_THRESHOLD * 1000));
 		long attemptCount = 0;
-		String xpath = "//win[@CLASS='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
+		String xpath = "//[@CLASS='" + WindowsEnumeratedXml.escapeXmlAttributeValue(args[0].toUpperCase()) + "']";
 		WinPtr handle = findHandleWithXpath(xpath, true);
 		if (!handle.isEmpty())// first test without a timeout
 			return true;
@@ -124,7 +128,9 @@ public class MainCommands extends BaseCommand {
 			if (isProcessorStopped())
 				break;
 		}
-		return handle != null;
+		if (handle.isEmpty())
+			appendError("Error: command '" + getCurrentCommand() + "' failed to find element matching " + args[0]);
+		return (!handle.isEmpty());
 	}
 	
 	public boolean cmdWaitForVisible(String[] args) {
@@ -144,7 +150,37 @@ public class MainCommands extends BaseCommand {
 			if (isProcessorStopped())
 				break;
 		}
-		return handle != null;
+		if (handle.isEmpty())
+			appendError("Error: command '" + getCurrentCommand() + "' failed to find element matching " + args[0]);
+		return (!handle.isEmpty());
+	}
+	
+	public boolean cmdVerifyElementNotPresent(String[] args)
+	{
+		if (!checkArgumentLength(args, 1))
+			return false;
+		WinPtr handle = findHandleWithXpath(args[0], true);
+		if (!handle.isEmpty())
+		{
+			appendError("Error: command '" + getCurrentCommand() + "' failed to NOT find element matching " + args[0]);
+			return false;
+		}
+		else
+			return true;
+	}
+	
+	public boolean cmdVerifyElementPresent(String[] args)
+	{
+		if (!checkArgumentLength(args, 1))
+			return false;
+		WinPtr handle = findHandleWithXpath(args[0], true);
+		if (!handle.isEmpty())
+			return true;
+		else
+		{
+			appendError("Error: command '" + getCurrentCommand() + "' failed to find element matching " + args[0]);
+			return false;
+		}
 	}
 	
 }

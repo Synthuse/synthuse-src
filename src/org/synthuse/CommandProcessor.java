@@ -11,6 +11,7 @@ import java.awt.Point;
 import java.text.DecimalFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import org.synthuse.commands.*;
 
@@ -126,7 +127,14 @@ public class CommandProcessor implements Runnable{
 		events.statusChanged("Script Execution " + forcedStr + " with " + scriptErrorCount + " error(s) in " + new DecimalFormat("#.###").format(seconds) + " seconds");
 		events.executionCompleted();
 		if (scriptErrorCount > 0 && !isQuiet)
-			JOptionPane.showMessageDialog(null, lastError);
+		{
+			JOptionPane optionPane = new JOptionPane(lastError);
+			JDialog dialog = optionPane.createDialog("Errors");
+			dialog.setAlwaysOnTop(SynthuseDlg.config.isAlwaysOnTop());
+			dialog.setVisible(true);
+			dialog.dispose();
+			//JOptionPane.showMessageDialog(null, lastError);
+		}
 	}
 	
 	public Object execute(String command, String[] args) {
@@ -251,6 +259,10 @@ public class CommandProcessor implements Runnable{
 				return main.cmdSetTimeout(args);
 			if (command.equals("setUpdateThreshold")) 
 				return main.cmdSetUpdateThreshold(args);
+			if (command.equals("verifyElementNotPresent")) 
+				return main.cmdVerifyElementNotPresent(args);
+			if (command.equals("verifyElementPresent")) 
+				return main.cmdVerifyElementPresent(args);
 			if (command.equals("waitForTitle")) 
 				return main.cmdWaitForTitle(args);
 			if (command.equals("waitForText")) 

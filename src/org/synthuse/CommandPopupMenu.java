@@ -167,6 +167,12 @@ public class CommandPopupMenu extends JPopupMenu {
 		CommandMenuItem mntmSetUpdateThreshold = new CommandMenuItem("setUpdateThreshold", 2, false);
 		add(mntmSetUpdateThreshold);
 
+		CommandMenuItem mntmVerifyElementNotPresent = new CommandMenuItem("verifyElementNotPresent", 2);
+		add(mntmVerifyElementNotPresent);
+
+		CommandMenuItem mntmVerifyElementPresent = new CommandMenuItem("verifyElementPresent", 2);
+		add(mntmVerifyElementPresent);
+		
 		CommandMenuItem mntmWaitforclass = new CommandMenuItem("waitForClass", 2, false);
 		add(mntmWaitforclass);
 		

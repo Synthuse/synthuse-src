@@ -72,7 +72,7 @@ public class SynthuseDlg extends JFrame {
 	/**
 	 * 
 	 */
-	public static String VERSION_STR = "1.1.6";
+	public static String VERSION_STR = "1.1.7";
 
 	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/gnome-robots.png";
 	public static String RES_STR_REFRESH_IMG = "/org/synthuse/img/rapidsvn.png";
