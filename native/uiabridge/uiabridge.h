@@ -40,6 +40,7 @@ namespace uiabridge {
 		static System::String ^DEFAULT_CACHED_PROPS = L"RuntimeIdProperty,ParentRuntimeIdProperty,NativeWindowHandleProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ControlTypeProperty,ClassNameProperty,NameProperty,BoundingRectangleProperty,ValueProperty";
 	private:
 		void initializeCache(System::String ^cachedProperties);
+		void output(Exception ^ex, System::String ^message);
 		Dictionary<System::String ^, System::String ^> ^enumFilters;
 		void AutomationBridge::processFilterModifier(Boolean filtered, Boolean modifierChanged, List<System::String ^> ^filterModifierList);
 		CacheRequest ^cacheRequest;

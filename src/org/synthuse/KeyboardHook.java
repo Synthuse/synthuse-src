@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.sun.jna.*;
+import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinUser.*;
 import com.sun.jna.platform.win32.WinDef.*;
 import com.sun.jna.win32.W32APIOptions;
@@ -62,8 +63,9 @@ public class KeyboardHook implements Runnable{
 	public static LowLevelKeyboardProc lpfn;
 	public static volatile boolean quit = false;
 	
-	public interface User32 extends W32APIOptions {  
-		User32 instance = (User32) Native.loadLibrary("user32", User32.class, DEFAULT_OPTIONS);  
+	
+	public interface User32Ex extends W32APIOptions {  
+		User32Ex instance = (User32Ex) Native.loadLibrary("user32", User32Ex.class, DEFAULT_OPTIONS);  
 		
 		LRESULT LowLevelKeyboardProc(int nCode,WPARAM wParam,LPARAM lParam);
 	    HHOOK SetWindowsHookEx(int idHook, HOOKPROC lpfn, HMODULE hMod, int dwThreadId);
@@ -72,11 +74,13 @@ public class KeyboardHook implements Runnable{
 	    boolean PeekMessage(MSG lpMsg, HWND hWnd, int wMsgFilterMin, int wMsgFilterMax, int wRemoveMsg);
 	    boolean UnhookWindowsHookEx(HHOOK idHook);
 	    short GetKeyState(int nVirtKey);
+	    short GetAsyncKeyState(int nVirtKey);
         
 	    //public static interface HOOKPROC extends StdCallCallback  {
         //    LRESULT callback(int nCode, WPARAM wParam, KBDLLHOOKSTRUCT lParam);
         //}
 	}
+	
 	public interface Kernel32 extends W32APIOptions {
 		Kernel32 instance = (Kernel32) Native.loadLibrary("kernel32", Kernel32.class, DEFAULT_OPTIONS);  
 		
@@ -97,29 +101,48 @@ public class KeyboardHook implements Runnable{
 	    			events.keyPressed(target);
 	    		//if (lParam.vkCode == 87) //w
 	    		//	quit = true;
-	    		return User32.instance.CallNextHookEx(hHook, nCode, wParam, lParam.getPointer());
+	    		return User32.INSTANCE.CallNextHookEx(hHook, nCode, wParam, lParam.getPointer());
 	    	}
 		};
 		
-		hHook = User32.instance.SetWindowsHookEx(WH_KEYBOARD_LL, lpfn, hMod, 0);
+		hHook = User32.INSTANCE.SetWindowsHookEx(WH_KEYBOARD_LL, lpfn, hMod, 0);
 		if (hHook == null)
 			return;
 		MSG msg = new MSG();
+		int cnt = 0;
 		try {
 			while (!quit) {
-				User32.instance.PeekMessage(msg, null, 0, 0, 0);
+				User32.INSTANCE.PeekMessage(msg, null, 0, 0, 1);
 				Thread.sleep(10);
+				++cnt;
+				if (cnt > 500)
+				{
+					cnt = 0;
+					//System.out.println("heartbeat test");
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		/*
+		while (!quit) {
+			// hex arguments: WM_KEYFIRST, WM_KEYLAST
+			int result = User32.INSTANCE.GetMessage(msg, null, 0x100, 0x109);
+			if (result == -1) {
+				break;
+			} else {
+				User32.INSTANCE.TranslateMessage(msg);
+				User32.INSTANCE.DispatchMessage(msg);
+			}
+		}*/
+		//System.out.println("message loop stopped");
 	}
 	
 	//unhook the Global Windows Keyboard hook
 	public void unhook() {
 		if (hHook == null)
 			return;
-	    if (!User32.instance.UnhookWindowsHookEx(hHook))
+	    if (!User32.INSTANCE.UnhookWindowsHookEx(hHook))
 	    	System.out.println("Failed to unhook");
 	    //System.out.println("Unhooked");
 	    hHook = null;
@@ -136,9 +159,9 @@ public class KeyboardHook implements Runnable{
 		for (TargetKeyPress tkp : KeyboardHook.targetList) {
 			if (tkp.targetKeyCode != keyCode)
 				continue;
-			if (!tkp.withShift || ((User32.instance.GetKeyState(VK_SHIFT) & 0x8000) != 0)) {
-				if (!tkp.withCtrl || ((User32.instance.GetKeyState(VK_CONTROL) & 0x8000) != 0)) {
-					if (!tkp.withAlt || ((User32.instance.GetKeyState(VK_MENU) & 0x8000) != 0)) {
+			if (!tkp.withShift || ((User32Ex.instance.GetKeyState(VK_SHIFT) & 0x8000) != 0)) {
+				if (!tkp.withCtrl || ((User32Ex.instance.GetKeyState(VK_CONTROL) & 0x8000) != 0)) {
+					if (!tkp.withAlt || ((User32Ex.instance.GetKeyState(VK_MENU) & 0x8000) != 0)) {
 						return tkp;
 					}
 				}

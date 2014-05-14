@@ -67,7 +67,9 @@ void AutomationBridge::initializeCache(System::String ^cachedProperties)
 	if (cachedPropStr->Contains(L"ValueProperty")) //special property not in the root property list
 	{
 		cacheList->Add(ValuePattern::ValueProperty);
+		cacheRequest->Add(AutomationElement::IsValuePatternAvailableProperty);
 		cacheRequest->Add(ValuePattern::ValueProperty);
+		cacheRequest->Add(ValuePattern::Pattern);
 	}
 	for each(AutomationProperty ^ap in rootProperties) //loop through all supported Properties for a child
 	{
@@ -109,8 +111,8 @@ Boolean AutomationBridge::isElementFiltered(System::Windows::Automation::Automat
 	int filterMatchCount = 0;
 	if (enumFilters->Count == 0)
 		return result;
-	array<AutomationProperty^> ^aps = cachedRootProperties;//element->GetSupportedProperties();
-	for each(AutomationProperty ^ap in aps) //loop through all supported Properties for a child
+	//array<AutomationProperty^> ^aps = cachedRootProperties;//element->GetSupportedProperties();
+	for each(AutomationProperty ^ap in cachedRootProperties) //loop through all supported Properties for a child
 	{
 		System::String ^currentPropertyStr = L""; //current property values
 		System::String ^shortPropName = L" null ";
@@ -252,8 +254,16 @@ array<System::String ^> ^ AutomationBridge::enumWindowInfo(System::String ^prope
 
 array<System::String ^> ^ AutomationBridge::enumWindowInfo(System::IntPtr windowHandle, System::String ^properties)
 {
-	AutomationElement ^element = AutomationElement::FromHandle(windowHandle);
 	List<System::String ^> ^winInfoList = gcnew List<System::String ^>();
+	AutomationElement ^element = nullptr;
+	try {
+		element = AutomationElement::FromHandle(windowHandle);
+	} catch (Exception ^ex) {
+		output(ex, "");
+		return winInfoList->ToArray();
+	}
+	if (element == nullptr)
+		return winInfoList->ToArray();
 	if (!isElementFiltered(element)) //test parent should be filtered
 		winInfoList->Add(getWindowInfo(element, properties, nullptr));
 	winInfoList->AddRange(enumWindowInfo(element, properties));
@@ -307,7 +317,7 @@ array<System::String ^> ^ AutomationBridge::enumWindowInfo(AutomationElement ^pa
 			//currentElement->
 		} catch (Exception ^ex)
 		{
-			System::Console::WriteLine("Exception: {0} {1}",  ex->Message, ex->StackTrace);
+			output(ex, "");
 		}
 		currentElement = tw->GetNextSibling(currentElement, cacheRequest);
     }
@@ -342,7 +352,7 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 		System::String ^delim = L",";
 		array<System::String ^> ^propSpltArray = properties->Split(delim->ToCharArray());
 		System::Int32 count = 0;
-		array<AutomationProperty^> ^aps = cachedRootProperties;//element->GetSupportedProperties();
+		//array<AutomationProperty^> ^aps = cachedRootProperties;//element->GetSupportedProperties();
 		array<System::String ^> ^propValues = gcnew array<System::String ^>(propSpltArray->Length);//keep order
 		System::String ^wildcardProperties = L"";
 		if (wildcardEnabled) {
@@ -357,7 +367,7 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 				propValues[i] = parentRuntimeId;
 			}
 		}
-		for each(AutomationProperty ^ap in aps) //loop through all supported Properties for a child
+		for each(AutomationProperty ^ap in cachedRootProperties) //loop through all supported Properties for a child
 		{
 			propertyNameErrorCheck = ap->ProgrammaticName;//debug purposes
 			System::String ^currentPropertyStr = L""; //current property values
@@ -369,7 +379,15 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 			{
 				//System::Console::WriteLine("shortPropName: {0}", shortPropName);
 				//System::Object ^currentVal = element->GetCurrentPropertyValue(ap);
-				System::Object ^currentVal = element->GetCachedPropertyValue(ap);
+				System::Object ^currentVal = nullptr;
+				if (shortPropName->Equals("ValueProperty")) //check if Value Pattern is an Available Property
+				{
+					if (((Boolean)element->GetCurrentPropertyValue(element->IsValuePatternAvailableProperty)) == false)
+						continue;
+					else
+						currentVal = element->GetCurrentPropertyValue(ap); //cached pattern was having issues;
+				}
+				currentVal = element->GetCachedPropertyValue(ap);
 				if (currentVal == nullptr)
 					continue;
 				if (ap->ProgrammaticName->Equals(L"AutomationElementIdentifiers.RuntimeIdProperty"))
@@ -409,7 +427,7 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 			resultProperties += wildcardProperties;
 	} catch (Exception ^ex)  //when some elements close during enumeration it might cause valid exceptions
 	{
-		System::Console::WriteLine("Exception ({2}): {0} {1}",  ex->Message, ex->StackTrace, propertyNameErrorCheck);
+		output(ex, " getWindowInfo on " + propertyNameErrorCheck + ", results: " + resultProperties);
 	}
 	return resultProperties;
 
@@ -418,12 +436,22 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 System::String ^ AutomationBridge::getWindowInfo(System::Int32 x, System::Int32 y, System::String ^properties)
 {
 	AutomationElement ^element = AutomationElement::FromPoint(System::Windows::Point(x, y));
+	if (element == nullptr)
+		return "";
 	return getWindowInfo(element, properties, nullptr);
 }
 
 System::String ^ AutomationBridge::getWindowInfo(System::IntPtr windowHandle, System::String ^properties)
 {
-	AutomationElement ^element = AutomationElement::FromHandle(windowHandle);
+	AutomationElement ^element = nullptr;
+	try {
+		AutomationElement ^element = AutomationElement::FromHandle(windowHandle);
+	} catch (Exception ^ex) {
+		output(ex, "");
+		return "";
+	}
+	if (element == nullptr)
+		return "";
 	return getWindowInfo(element, properties, nullptr);
 }
 
@@ -438,4 +466,9 @@ System::String ^ AutomationBridge::getWindowInfo(System::String ^runtimeIdStr, S
 	else
 		return "";
 	//return getWindowInfo(element, properties);
+}
+
+void AutomationBridge::output(Exception ^ex, System::String ^message) 
+{
+	System::Console::WriteLine("Exception ({0}): {1} \n{2}",  message, ex->Message, ex->StackTrace);
 }
