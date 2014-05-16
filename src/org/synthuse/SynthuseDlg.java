@@ -393,7 +393,7 @@ public class SynthuseDlg extends JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				KeyboardHook.stopGlobalKeyboardHook(); //stop keyboard hook
+				KeyboardHook.stopKeyboardHook(); //stop keyboard hook
 				config.save();
 				SynthuseDlg.this.dispose(); // force app to close
 			}
@@ -402,7 +402,7 @@ public class SynthuseDlg extends JFrame {
 		KeyboardHook.addKeyEvent(config.getRefreshKeyCode(), true, true, false);// refresh xml when CTRL+SHIFT+3 is pressed
 		KeyboardHook.addKeyEvent(config.getTargetKeyCode(), true, true, false);// target window when CTRL+SHIFT+~ is pressed
 		//add global hook and event
-		KeyboardHook.StartGlobalKeyboardHookThreaded(new KeyboardHook.KeyboardEvents() {
+		KeyboardHook.StartKeyboardHookThreaded(new KeyboardHook.KeyboardEvents() {
 			@Override
 			public void keyPressed(KeyboardHook.TargetKeyPress target) {
 				//System.out.println("target key pressed " + target.targetKeyCode);

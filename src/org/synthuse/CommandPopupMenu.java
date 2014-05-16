@@ -148,7 +148,7 @@ public class CommandPopupMenu extends JPopupMenu {
 
 		CommandMenuItem mntmForceRefresh = new CommandMenuItem("forceRefresh", 1, false);
 		add(mntmForceRefresh);
-
+		
 		CommandMenuItem mntmOpen = new CommandMenuItem("open", 2, false);
 		add(mntmOpen);
 		
@@ -166,6 +166,9 @@ public class CommandPopupMenu extends JPopupMenu {
 		
 		CommandMenuItem mntmSetUpdateThreshold = new CommandMenuItem("setUpdateThreshold", 2, false);
 		add(mntmSetUpdateThreshold);
+
+		CommandMenuItem mntmTargetRefresh = new CommandMenuItem("targetRefresh", 2);
+		add(mntmTargetRefresh);
 
 		CommandMenuItem mntmVerifyElementNotPresent = new CommandMenuItem("verifyElementNotPresent", 2);
 		add(mntmVerifyElementNotPresent);

@@ -263,6 +263,8 @@ public class CommandProcessor implements Runnable{
 				return main.cmdVerifyElementNotPresent(args);
 			if (command.equals("verifyElementPresent")) 
 				return main.cmdVerifyElementPresent(args);
+			if (command.equals("targetRefresh")) 
+				return main.cmdTargetRefresh(args);
 			if (command.equals("waitForTitle")) 
 				return main.cmdWaitForTitle(args);
 			if (command.equals("waitForText")) 

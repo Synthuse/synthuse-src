@@ -64,6 +64,13 @@ public class MainCommands extends BaseCommand {
 		return true;
 	}
 	
+	public boolean cmdTargetRefresh(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		targetXmlRefresh(args[0]);
+		return true;
+	}
+	
 	public boolean cmdWaitForTitle(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;

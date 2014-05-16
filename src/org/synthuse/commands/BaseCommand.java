@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.synthuse.*;
 
@@ -95,6 +96,48 @@ public class BaseCommand {
 	public void forceXmlRefresh() {
 		WIN_XML = WindowsEnumeratedXml.getXml();
 		LAST_UPDATED_XML = System.nanoTime();
+	}
+
+	public void targetXmlRefresh(String xpath) {
+		if (WIN_XML.isEmpty()) //can't target refresh unless there is XML to start with
+		{
+			forceXmlRefresh();
+			return;
+		}
+		//WIN_XML = WindowsEnumeratedXml.getXml();
+		LAST_UPDATED_XML = System.nanoTime();
+		
+		String resultStr =  "";
+		String resultHwndStr =  "";
+		List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(WIN_XML, xpath);
+		for(String item: resultList) {
+			//System.out.println("xpath result item: " + item);
+			resultStr = item;
+			if (item.contains("hwnd=")) {
+				List<String> hwndList = WindowsEnumeratedXml.evaluateXpathGetValues(item, "//@hwnd");
+				if (hwndList.size() > 0)
+					resultHwndStr = hwndList.get(0).replaceAll("[^\\d-.]", ""); //get first hwnd;
+			}
+			else
+				resultStr = item;
+			break;
+		}
+		String newXml = "";
+		Map<String, WindowInfo> infoList;
+		if (resultHwndStr.contains("-")) { //uiabridge target refresh
+			resultHwndStr = resultHwndStr.split("-")[1];
+			infoList = WindowsEnumeratedXml.EnumerateWindowsWithUiaBridge(uiabridge, resultHwndStr, "*");
+			newXml = WindowsEnumeratedXml.generateWindowsXml(infoList, "updates");
+			//System.out.println("newXml: " + newXml);
+		}
+		else
+		{ // native target refresh
+			
+		}
+		
+		int pos = WIN_XML.indexOf(resultStr);
+		WIN_XML = WIN_XML.substring(0, pos) + newXml + WIN_XML.substring(pos + resultStr.length());
+		
 	}
 	
 	public String getWindowTypeWithXpath(String xpath) {

@@ -79,14 +79,9 @@ public class WindowsEnumeratedXml implements Runnable{
 	
 	public static String getXml() {
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
-		final Map<String, String> processList = new LinkedHashMap<String, String>();
 		final List<String> wpfParentList = new ArrayList<String>();//HwndWrapper
 		final List<String> silverlightParentList = new ArrayList<String>();//MicrosoftSilverlight
 		final List<String> winFormParentList = new ArrayList<String>();//class="WindowsForms*"
-		int wpfCount = 0;
-		int winFormCount = 0;
-		int silverlightCount = 0;
-		int menuCount = 0;
 		
 		//wpf.setTouchableOnly(false);
     	//wpf.countChildrenWindows();//fix for missing cached elements
@@ -126,22 +121,29 @@ public class WindowsEnumeratedXml implements Runnable{
 	    	UiaBridge uiabridge = new UiaBridge();
 		    for (String handle : wpfParentList) {
 		    	Map<String, WindowInfo> wpfInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "*");
-		    	wpfCount += wpfInfoList.size();
 		    	infoList.putAll(wpfInfoList);
 		    }
 		    for (String handle : winFormParentList) {
 		    	//System.out.println("winform parent " + handle);
 		    	Map<String, WindowInfo> winFormInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "*");
-		    	winFormCount += winFormInfoList.size();
 		    	infoList.putAll(winFormInfoList);
 		    }
 		    for (String handle : silverlightParentList) {
 		    	Map<String, WindowInfo> slInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "Silverlight");
-		    	silverlightCount += slInfoList.size();
 		    	infoList.putAll(slInfoList);
 		    }
+		    
 	    }
+	    return generateWindowsXml(infoList, "EnumeratedWindows");
+	}
 
+	public static String generateWindowsXml(Map<String, WindowInfo> infoList, String rootElementName)
+	{
+		final Map<String, String> processList = new LinkedHashMap<String, String>();
+		int wpfCount = 0;
+		int winFormCount = 0;
+		int silverlightCount = 0;
+		int menuCount = 0;
 	    // convert window info list to xml dom
 	    try {
 			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -149,7 +151,7 @@ public class WindowsEnumeratedXml implements Runnable{
 		    
 			// root elements
 			Document doc = docBuilder.newDocument();
-			Element rootElement = doc.createElement("EnumeratedWindows");
+			Element rootElement = doc.createElement(rootElementName);
 			doc.appendChild(rootElement);
 			
 			long parentCount = 0;
@@ -162,11 +164,20 @@ public class WindowsEnumeratedXml implements Runnable{
 		    	if (w.framework.equals("win32"))
 		    		win = doc.createElement("win");
 		    	else if (w.framework.equals("WPF"))
+		    	{
 		    		win = doc.createElement("wpf");
+		    		++wpfCount;
+		    	}
 		    	else if (w.framework.equals("WinForm"))
+		    	{
 		    		win = doc.createElement("winfrm");
+		    		++winFormCount;
+		    	}
 		    	else if (w.framework.equals("Silverlight"))
+		    	{
 		    		win = doc.createElement("silver");
+		    		++silverlightCount;
+		    	}
 		    	else
 		    		win = doc.createElement("win");
 		    	//System.out.println(w.toString());
@@ -229,7 +240,7 @@ public class WindowsEnumeratedXml implements Runnable{
 		    totals.setAttribute("parentCount", parentCount+"");
 		    totals.setAttribute("childCount", childCount+"");
 		    totals.setAttribute("windowCount", infoList.size()+"");
-		    totals.setAttribute("wpfWrapperCount", wpfParentList.size()+"");
+		    //totals.setAttribute("wpfWrapperCount", wpfParentList.size()+"");
 		    totals.setAttribute("wpfCount", wpfCount+"");
 		    totals.setAttribute("winFormCount", winFormCount+"");
 		    totals.setAttribute("silverlightCount", silverlightCount+"");

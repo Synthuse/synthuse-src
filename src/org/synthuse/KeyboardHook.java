@@ -15,6 +15,8 @@ import java.util.List;
 
 import com.sun.jna.*;
 import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef;
+import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinUser.*;
 import com.sun.jna.platform.win32.WinDef.*;
 import com.sun.jna.win32.W32APIOptions;
@@ -24,6 +26,7 @@ public class KeyboardHook implements Runnable{
 	
 	// Keyboard event class, interface, and array list
 	public static class TargetKeyPress {
+		int idNumber;
 		int targetKeyCode;
 		boolean withShift, withCtrl, withAlt;
 		public TargetKeyPress (int targetKeyCode) {
@@ -31,6 +34,13 @@ public class KeyboardHook implements Runnable{
 			this.withShift = false;
 			this.withCtrl = false;
 			this.withAlt = false;
+		}
+		public TargetKeyPress (int idNumber, int targetKeyCode, boolean withShift, boolean withCtrl, boolean withAlt) {
+			this.idNumber = idNumber;
+			this.targetKeyCode = targetKeyCode;
+			this.withShift = withShift;
+			this.withCtrl = withCtrl;
+			this.withAlt = withAlt;
 		}
 		public TargetKeyPress (int targetKeyCode, boolean withShift, boolean withCtrl, boolean withAlt) {
 			this.targetKeyCode = targetKeyCode;
@@ -59,6 +69,15 @@ public class KeyboardHook implements Runnable{
 	public static final int VK_MENU = 0x12;
 	public static final int VK_CAPITAL = 0x14;
 	
+	public static final int MOD_ALT = 0x0001;
+	public static final int MOD_CONTROL = 0x0002;
+	public static final int MOD_NOREPEAT = 0x4000;
+	public static final int MOD_SHIFT = 0x0004;
+	public static final int MOD_WIN = 0x0008;
+	
+	public static final int QS_HOTKEY = 0x0080;
+	public static final int INFINITE = 0xFFFFFFFF;
+	
 	public static HHOOK hHook = null;
 	public static LowLevelKeyboardProc lpfn;
 	public static volatile boolean quit = false;
@@ -75,7 +94,18 @@ public class KeyboardHook implements Runnable{
 	    boolean UnhookWindowsHookEx(HHOOK idHook);
 	    short GetKeyState(int nVirtKey);
 	    short GetAsyncKeyState(int nVirtKey);
-        
+	    
+	    /*
+	    DWORD WINAPI MsgWaitForMultipleObjects(
+	    __in  DWORD nCount, //The number of object handles in the array pointed to by pHandles.
+	    __in  const HANDLE *pHandles, //An array of object handles.
+	    __in  BOOL bWaitAll, //If this parameter is TRUE, the function returns when the states of all objects in the pHandles array have been set to signaled and an input event has been received.
+	    __in  DWORD dwMilliseconds, //if dwMilliseconds is INFINITE, the function will return only when the specified objects are signaled.
+	    __in  DWORD dwWakeMask //The input types for which an input event object handle will be added to the array of object handles.
+	    );*/
+	    int MsgWaitForMultipleObjects(int nCount, Pointer pHandles, boolean bWaitAll, int dwMilliSeconds, int dwWakeMask);
+	    boolean RegisterHotKey(Pointer hWnd, int id, int fsModifiers, int vk);
+
 	    //public static interface HOOKPROC extends StdCallCallback  {
         //    LRESULT callback(int nCode, WPARAM wParam, KBDLLHOOKSTRUCT lParam);
         //}
@@ -89,8 +119,10 @@ public class KeyboardHook implements Runnable{
 	
 	// Create Global Windows Keyboard hook and wait until quit == true
 	public void createGlobalKeyboardHook() {
+
 		if (hHook != null)
 			return; //hook already running don't add anymore
+		System.out.println("starting global keyboard hook");
 		HMODULE hMod = Kernel32.instance.GetModuleHandle(null);
 		HOOKPROC lpfn = new HOOKPROC() {
 	    	@SuppressWarnings("unused")
@@ -108,33 +140,49 @@ public class KeyboardHook implements Runnable{
 		hHook = User32.INSTANCE.SetWindowsHookEx(WH_KEYBOARD_LL, lpfn, hMod, 0);
 		if (hHook == null)
 			return;
+		
+		//System.out.println("starting message loop");
 		MSG msg = new MSG();
-		int cnt = 0;
 		try {
+			
 			while (!quit) {
 				User32.INSTANCE.PeekMessage(msg, null, 0, 0, 1);
-				Thread.sleep(10);
-				++cnt;
-				if (cnt > 500)
-				{
-					cnt = 0;
-					//System.out.println("heartbeat test");
+				if (msg.message == User32.WM_HOTKEY){ // && msg.wParam.intValue() == 1
+					//System.out.println("Hot key pressed!");
+					msg = new MSG(); //must clear msg so it doesn't repeat
 				}
+				Thread.sleep(10);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		/*
-		while (!quit) {
-			// hex arguments: WM_KEYFIRST, WM_KEYLAST
-			int result = User32.INSTANCE.GetMessage(msg, null, 0x100, 0x109);
-			if (result == -1) {
-				break;
-			} else {
-				User32.INSTANCE.TranslateMessage(msg);
-				User32.INSTANCE.DispatchMessage(msg);
+		//System.out.println("message loop stopped");
+	}
+	
+	// Create HotKeys Windows hook and wait until quit == true
+	public void createHotKeysHook() {
+		registerAllHotKeys();
+		//User32Ex.instance.MsgWaitForMultipleObjects(0, Pointer.NULL, true, INFINITE, QS_HOTKEY);
+
+		//System.out.println("starting message loop");
+		MSG msg = new MSG();
+		try {
+			
+			while (!quit) {
+				User32.INSTANCE.PeekMessage(msg, null, 0, 0, 1);
+				if (msg.message == User32.WM_HOTKEY){ // && msg.wParam.intValue() == 1
+					//System.out.println("Hot key pressed " + msg.wParam);
+					TargetKeyPress target = findTargetKeyPressById(msg.wParam.intValue());
+					if (target != null)
+		    			events.keyPressed(target);
+					msg = new MSG(); //must clear msg so it doesn't repeat
+				}
+				Thread.sleep(10);
 			}
-		}*/
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		unregisterAllHotKeys();
 		//System.out.println("message loop stopped");
 	}
 	
@@ -149,11 +197,12 @@ public class KeyboardHook implements Runnable{
 	}
 	
 	//stops Keyboard hook and causes the unhook command to be called
-	public static void stopGlobalKeyboardHook() {
+	public static void stopKeyboardHook() {
 		quit = true;
 	}
 	
 	// search target keyboard event list for a match and return it otherwise return null if no match
+
 	private TargetKeyPress getTargetKeyPressed(int keyCode) {
 		TargetKeyPress target = null;
 		for (TargetKeyPress tkp : KeyboardHook.targetList) {
@@ -170,10 +219,52 @@ public class KeyboardHook implements Runnable{
 		return target;
 	}
 	
+	private TargetKeyPress findTargetKeyPressById(int idNumber) 
+	{
+		TargetKeyPress target = null;
+		for (TargetKeyPress tkp : KeyboardHook.targetList) {
+			if (tkp.idNumber == idNumber)
+				return tkp;
+		}
+		return target;
+	}
+	
 	// add more target keys to watch for
 	public static void addKeyEvent(int targetKeyCode, boolean withShift, boolean withCtrl, boolean withAlt) {
-		KeyboardHook.targetList.add(new TargetKeyPress(targetKeyCode, withShift, withCtrl, withAlt));
+		KeyboardHook.targetList.add(new TargetKeyPress(KeyboardHook.targetList.size() + 1 , targetKeyCode, withShift, withCtrl, withAlt));
 	}
+	
+	private void registerAllHotKeys() // must register hot keys in the same thread that is watching for hotkey messages
+	{
+		for (TargetKeyPress tkp : KeyboardHook.targetList) {
+			//BOOL WINAPI RegisterHotKey(HWND hWnd, int id, UINT fsModifiers, UINT vk);
+			int modifiers = User32.MOD_NOREPEAT;
+			if (tkp.withShift)
+				modifiers = modifiers | User32.MOD_SHIFT;
+			if (tkp.withCtrl)
+				modifiers = modifiers | User32.MOD_CONTROL;
+			if (tkp.withAlt)
+				modifiers = modifiers | User32.MOD_ALT;
+			//System.out.println("RegisterHotKey " + tkp.idNumber + "," + modifiers + ", " + tkp.targetKeyCode);
+			
+			if (!User32.INSTANCE.RegisterHotKey(new WinDef.HWND(Pointer.NULL), tkp.idNumber, modifiers, tkp.targetKeyCode))
+			{
+	            System.out.println("Couldn't register hotkey " + tkp.targetKeyCode);
+			}
+		}
+	}
+	
+	private void unregisterAllHotKeys() // must register hot keys in the same thread that is watching for hotkey messages
+	{
+		for (TargetKeyPress tkp : KeyboardHook.targetList) {
+			if (!User32.INSTANCE.UnregisterHotKey(Pointer.NULL, tkp.idNumber))
+			{
+	            System.out.println("Couldn't unregister hotkey " + tkp.targetKeyCode);
+			}
+		}
+	}
+
+	
 	// add more target keys to watch for
 	public static void addKeyEvent(int targetKeyCode) {
 		KeyboardHook.targetList.add(new TargetKeyPress(targetKeyCode));
@@ -181,7 +272,8 @@ public class KeyboardHook implements Runnable{
 	
 	@Override
 	public void run() {
-		createGlobalKeyboardHook();
+		//createGlobalKeyboardHook();
+		createHotKeysHook();
 		//System.out.println("Unhooking Global Keyboard Hook");
 		unhook();//wait for quit == true then unhook
 	}
@@ -193,7 +285,7 @@ public class KeyboardHook implements Runnable{
 		this.events = events;
 	}
 	
-	public static void StartGlobalKeyboardHookThreaded(KeyboardEvents events) {
+	public static void StartKeyboardHookThreaded(KeyboardEvents events) {
 		Thread t = new Thread(new KeyboardHook(events));
         t.start();
 	}
