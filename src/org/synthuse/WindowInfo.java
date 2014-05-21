@@ -7,6 +7,8 @@
 
 package org.synthuse;
 
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -25,6 +27,7 @@ import com.sun.jna.ptr.PointerByReference;
 public class WindowInfo {
 	
 	public static String UIA_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty";
+	public static String UIA_PROPERTY_LIST_ADV = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty,BoundingRectangleProperty";
 	public static String UIA_RUNTIME_ID = "RuntimeIdProperty";
 	public static String UIA_BOUNDING_RECT = "BoundingRectangleProperty";
 	public static int MAX_TEXT_SIZE = 200;
@@ -46,6 +49,7 @@ public class WindowInfo {
 	public String runtimeId = "";
 	public int menus = 0;
 	public HMENU menu = null;
+	public boolean useUiaBridge = false;
 	
 	public Map<String, String> extra = null;
     
@@ -97,20 +101,6 @@ public class WindowInfo {
 				extra = new LinkedHashMap<String, String>(); 
 			extra.put("tvCount", tvCount.intValue() + "");
 		}
-		/*
-		if (isChild) {
-			int ctrlID =  Api.User32.instance.GetDlgCtrlID(hWnd);
-			if (ctrlID > 0){
-				//parent = User32.instance.GetParent(hWnd);
-				int dtresult = Api.User32.instance.GetDlgItemText(hWnd, ctrlID, buffer, 1024);
-				if (dtresult > 0) {
-			        String dgText = Native.toString(buffer);
-					if (extra == null)
-						extra = new LinkedHashMap<String, String>(); 
-					extra.put("dgText", dgText + "");
-				}
-			}
-		}*/
 		
         char[] buffer2 = new char[1026];
 		User32.instance.GetClassName(hWnd, buffer2, 1026);
@@ -151,6 +141,9 @@ public class WindowInfo {
 		if (isChild) {
 			parent = User32.instance.GetParent(hWnd);
 			parentStr = Api.GetHandleAsString(parent);
+			// test to see if uiaBridge should be used on this child
+			if (this.className.startsWith("HwndWrapper") || this.className.startsWith("MicrosoftSilverlight") || this.className.startsWith("GeckoPluginWindow"))
+				useUiaBridge = true;
 		}
 		else {
 			
@@ -160,7 +153,9 @@ public class WindowInfo {
 		    Pointer process = Kernel32.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, pointer.getValue());
 		    Psapi.instance.GetModuleBaseNameW(process, null, buffer2, 512);
 		    processName = Native.toString(buffer2);
-		    
+		    //test to see if uiaBridge should be used on this parent
+			if (this.className.startsWith("HwndWrapper") || this.className.startsWith("WindowsForms"))
+				useUiaBridge = true;
 		}
 		this.hwnd = hWnd;
 		hwndStr = Api.GetHandleAsString(hWnd);
@@ -168,23 +163,12 @@ public class WindowInfo {
     		this.hwndStr = "";
     }
     
-    public static String replaceEscapedCodes(String input) {
-    	//&#44; is a comma ,
-    	String result = input;
-    	result = result.replaceAll("&#44;", ",");
-    	result = result.replaceAll("&lt;", "<");
-    	result = result.replaceAll("&gt;", ">");
-    	result = result.replaceAll("&apos;", "'");
-    	result = result.replaceAll("&quot;", "\"");
-    	result = result.replaceAll("&amp;", "&");
-    	return result;
-    }
-    
     //support for WPF, Silverlight, WinForms
     public WindowInfo(String enumProperties, boolean isChild) {
     	//WPF_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty";
     	String[] spltProperties = enumProperties.split(",");
     	this.isChild = isChild;
+    	this.useUiaBridge = true;
     	if (SynthuseDlg.config.isFilterUiaDisabled()) { //use wildcard mode
     		extra = new LinkedHashMap<String, String>();
     		for(String prop: spltProperties) {
@@ -233,13 +217,13 @@ public class WindowInfo {
     	if (spltProperties.length > 3)
     		this.framework = spltProperties[3];
     	if (spltProperties.length > 4)
-    		this.controlType = replaceEscapedCodes(spltProperties[4]);
+    		this.controlType = UiaBridge.replaceEscapedCodes(spltProperties[4]);
     	if (spltProperties.length > 5)
-    		this.className = replaceEscapedCodes(spltProperties[5]);
+    		this.className = UiaBridge.replaceEscapedCodes(spltProperties[5]);
     	if (spltProperties.length > 6)
-    		this.text = replaceEscapedCodes(spltProperties[6]);
+    		this.text = UiaBridge.replaceEscapedCodes(spltProperties[6]);
     	if (spltProperties.length > 7)
-    		this.value = replaceEscapedCodes(spltProperties[7]);
+    		this.value = UiaBridge.replaceEscapedCodes(spltProperties[7]);
     	if (this.className == "")
     		this.className = this.controlType;
     	if (text != null)
@@ -266,12 +250,33 @@ public class WindowInfo {
     	*/
     }
     
+    
     public static String getRuntimeIdFromProperties(String enumProperties)
     {
     	String[] spltProperties = enumProperties.split(",");
     	if (spltProperties.length > 0)
     		return spltProperties[0];
     	return "";
+    }
+    
+    public static String getFrameworkFromProperties(String enumProperties)
+    {
+    	String[] spltProperties = enumProperties.split(",");
+    	if (spltProperties.length > 3)
+    		return spltProperties[3];
+    	return "";
+    }
+    
+    public static Point findOffset(Rectangle rect, int xPos, int yPos)
+    {
+    	Point offset = new Point();
+    	int x = ((rect.width) /2) + rect.x;
+    	int y = ((rect.height) /2) + rect.y;
+    	
+    	offset.x = xPos - x;
+    	offset.y = yPos - y;
+    	
+    	return offset;
     }
     
     public String toString() {

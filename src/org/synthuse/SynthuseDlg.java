@@ -13,31 +13,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 
-import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JToolBar;
-import javax.swing.JSplitPane;
-import javax.swing.JRadioButton;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 
 import java.awt.Component;
-
-import javax.swing.Box;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-
 import java.awt.Dimension;
-
-import javax.swing.JComboBox;
-import javax.swing.JScrollPane;
 
 /*
 import com.jgoodies.forms.layout.FormLayout;
@@ -46,9 +29,6 @@ import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.factories.FormFactory;
 */
 import com.sun.jna.platform.win32.WinDef.HWND;
-
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
@@ -60,8 +40,6 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JTextPane;
-
 import org.synthuse.Api.User32;
 import org.synthuse.DragTarget.dragEvents;
 
@@ -72,7 +50,7 @@ public class SynthuseDlg extends JFrame {
 	/**
 	 * 
 	 */
-	public static String VERSION_STR = "1.1.8";
+	public static String VERSION_STR = "1.2.0";
 
 	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/gnome-robots.png";
 	public static String RES_STR_REFRESH_IMG = "/org/synthuse/img/rapidsvn.png";
@@ -82,6 +60,9 @@ public class SynthuseDlg extends JFrame {
 	public static String RES_STR_FIND_IMG = "/org/synthuse/img/edit-find-3.png";
 	public static String RES_STR_SETACTION_IMG = "/org/synthuse/img/document-new-5.png";
 	public static String RES_STR_CANCEL_IMG = "/org/synthuse/img/document-close-2.png";
+	public static String RES_STR_PREFERENCES_IMG = "/org/synthuse/img/preferences-desktop.png";
+	
+	private static final int STRUT_WIDTH = 10;
 	
 	public static List<String> actionListQueue = new ArrayList<String>();
 	private static final long serialVersionUID = 1L;
@@ -99,8 +80,10 @@ public class SynthuseDlg extends JFrame {
 	private String lastRuntimeId ="";
 	private JComboBox<String> cmbXpath;
 	private JButton btnTestIde;
+	private JButton btnAdvanced;
 	
 	private TestIdeFrame testIde = null;
+	private MessageHookFrame msgHook = null;
 	private int targetX;
 	private int targetY;
 	private UiaBridge uiabridge = new UiaBridge();
@@ -141,7 +124,7 @@ public class SynthuseDlg extends JFrame {
 		rdbtnWindows.setSelected(true);
 		toolBar.add(rdbtnWindows);
 		
-		Component horizontalStrut = Box.createHorizontalStrut(20);
+		Component horizontalStrut = Box.createHorizontalStrut(STRUT_WIDTH);
 		toolBar.add(horizontalStrut);
 		
 		JRadioButton rdbtnUrl = new JRadioButton("Url: ");
@@ -158,7 +141,7 @@ public class SynthuseDlg extends JFrame {
 		cmbUrl.setEditable(true);
 		toolBar.add(cmbUrl);
 		
-		Component horizontalStrut_1 = Box.createHorizontalStrut(20);
+		Component horizontalStrut_1 = Box.createHorizontalStrut(STRUT_WIDTH);
 		toolBar.add(horizontalStrut_1);
 		
 		btnRefresh = new JButton(" Refresh ");
@@ -172,7 +155,7 @@ public class SynthuseDlg extends JFrame {
 		btnRefresh.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_REFRESH_IMG)));
 		toolBar.add(btnRefresh);
 		
-		Component horizontalStrut_3 = Box.createHorizontalStrut(20);
+		Component horizontalStrut_3 = Box.createHorizontalStrut(STRUT_WIDTH);
 		toolBar.add(horizontalStrut_3);
 		
 		btnTestIde = new JButton("Test IDE");
@@ -192,8 +175,40 @@ public class SynthuseDlg extends JFrame {
 		btnTestIde.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_TESTIDE_IMG)));
 		toolBar.add(btnTestIde);
 		
-		Component horizontalStrut_2 = Box.createHorizontalStrut(20);
+		Component horizontalStrut_2 = Box.createHorizontalStrut(STRUT_WIDTH);
 		toolBar.add(horizontalStrut_2);
+
+		btnAdvanced = new JButton("Advanced");
+		btnAdvanced.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_PREFERENCES_IMG)));
+		btnAdvanced.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JPopupMenu menu = new JPopupMenu();
+			    ActionListener menuListener = new ActionListener() {
+			    	public void actionPerformed(ActionEvent event) {
+			    		//System.out.println("Popup menu item [" + event.getActionCommand() + "] was pressed.");
+			    		if (event.getActionCommand() == "Message Hook"){
+							if (msgHook == null)
+								msgHook = new MessageHookFrame();
+							msgHook.setVisible(true);
+			    		}
+			    	}
+			    };
+				JMenuItem mnMessageHook = new JMenuItem("Message Hook");
+				mnMessageHook.addActionListener(menuListener);
+				menu.add(mnMessageHook);
+				JMenuItem mnSettings = new JMenuItem("Settings");
+				mnSettings.setEnabled(false);
+				mnSettings.addActionListener(menuListener);
+				menu.add(mnSettings);
+
+				Component c = (Component) e.getSource();
+                menu.show(c, -1, c.getHeight());
+			}
+		});
+		toolBar.add(btnAdvanced);
+		
+		Component horizontalStrut_4 = Box.createHorizontalStrut(STRUT_WIDTH);
+		toolBar.add(horizontalStrut_4);
 		
 		JButton helpBtn = new JButton("Help");
 		helpBtn.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_HELP_IMG)));
@@ -480,9 +495,12 @@ public class SynthuseDlg extends JFrame {
 		String parentStr = Api.GetHandleAsString(User32.instance.GetParent(hwnd));
 		String enumProperties = "";
     	if (!SynthuseDlg.config.isUiaBridgeDisabled())
-    		enumProperties = uiabridge.getWindowInfo(targetX, targetY, WindowInfo.UIA_PROPERTY_LIST);
+    		enumProperties = uiabridge.getWindowInfo(targetX, targetY, WindowInfo.UIA_PROPERTY_LIST_ADV);
 		String runtimeId = WindowInfo.getRuntimeIdFromProperties(enumProperties);
-		lblStatus.setText("rid:" + runtimeId + " class: " + classStr + " hWnd: " + handleStr + " parent: " + parentStr + "  X,Y: " + targetX + ", " + targetY);
+		String framework = WindowInfo.getFrameworkFromProperties(enumProperties);
+		Rectangle rect = UiaBridge.getBoundaryRect(enumProperties);
+		Point offsetPoint = WindowInfo.findOffset(rect, targetX, targetY);
+		lblStatus.setText("rid:" + runtimeId + " " + framework + " class: " + classStr + " hWnd: " + handleStr + " parent: " + parentStr + "  X,Y (" + targetX + ", " + targetY + ") offset: " + offsetPoint.x + ", " + offsetPoint.y);
 		if (!lastDragHwnd.equals(handleStr) || !lastRuntimeId.equals(runtimeId)) {
 			if (!lastDragHwnd.isEmpty()) {
 				Api.refreshWindow(Api.GetHandleFromString(lastDragHwnd));
@@ -490,7 +508,12 @@ public class SynthuseDlg extends JFrame {
 			lastDragHwnd = handleStr;
 			lastRuntimeId = runtimeId;
 			//lastDragHwnd = (hwnd + "");
-			Api.highlightWindow(hwnd);
+			if (framework.equals(UiaBridge.FRAMEWORK_ID_WPF) || framework.equals(UiaBridge.FRAMEWORK_ID_SILVER))
+			{// WPF and Silverlight apps don't expose their child windows boundaries the same as win32 apps
+				Api.highlightWindow(Api.User32.instance.GetDesktopWindow(), rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
+			}
+			else
+				Api.highlightWindow(hwnd);
 			XpathManager.buildXpathStatementThreaded(hwnd, enumProperties, textPane, xpathEvents);
 		}
 	}

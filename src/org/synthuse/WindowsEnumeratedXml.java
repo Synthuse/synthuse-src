@@ -79,62 +79,62 @@ public class WindowsEnumeratedXml implements Runnable{
 	
 	public static String getXml() {
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
-		final List<String> wpfParentList = new ArrayList<String>();//HwndWrapper
-		final List<String> silverlightParentList = new ArrayList<String>();//MicrosoftSilverlight
-		final List<String> winFormParentList = new ArrayList<String>();//class="WindowsForms*"
 		
-		//wpf.setTouchableOnly(false);
-    	//wpf.countChildrenWindows();//fix for missing cached elements
-
-		
-	    class ChildWindowCallback implements WinUser.WNDENUMPROC {
-			@Override
-			public boolean callback(HWND hWnd, Pointer lParam) {
-				WindowInfo wi = new WindowInfo(hWnd, true);
-				infoList.put(wi.hwndStr, wi);
-				if (wi.className.startsWith("HwndWrapper"))
-					wpfParentList.add(wi.hwndStr);
-				if (wi.className.startsWith("MicrosoftSilverlight") || wi.className.startsWith("GeckoPluginWindow"))
-					silverlightParentList.add(wi.hwndStr);
-				return true;
-			}
-	    }
+		HWND desktopRootHwnd = Api.User32.instance.GetDesktopWindow();
+		WindowInfo wi = new WindowInfo(desktopRootHwnd, false);
+		wi.controlType = "DesktopRoot";
+		infoList.put(wi.hwndStr, wi);
 	    
 	    class ParentWindowCallback implements WinUser.WNDENUMPROC {
 			@Override
 			public boolean callback(HWND hWnd, Pointer lParam) {
 				WindowInfo wi = new WindowInfo(hWnd, false);
 				infoList.put(wi.hwndStr, wi);
-				if (wi.className.startsWith("HwndWrapper"))
-					wpfParentList.add(wi.hwndStr);
-				if (wi.className.startsWith("WindowsForms"))
-					winFormParentList.add(wi.hwndStr);
-				Api.User32.instance.EnumChildWindows(hWnd, new ChildWindowCallback(), new Pointer(0));
+				infoList.putAll(EnumerateWin32ChildWindows(hWnd));
 				return true;
 			}
-	    }	    
+	    }
 	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
 	    
+	    //process all windows that have been flagged for uiaBridge (useUiaBridge == true)
+	    appendUiaBridgeWindows(infoList);
+	    
+	    return generateWindowsXml(infoList, "EnumeratedWindows");
+	}
+	
+	public static void appendUiaBridgeWindows(Map<String, WindowInfo> infoList)
+	{
 	    //Enumerate WPF, WinForm, Silverlight windows and add to list
 	    if (!SynthuseDlg.config.isUiaBridgeDisabled())
 	    {
 	    	UiaBridge uiabridge = new UiaBridge();
-		    for (String handle : wpfParentList) {
-		    	Map<String, WindowInfo> wpfInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "*");
-		    	infoList.putAll(wpfInfoList);
-		    }
-		    for (String handle : winFormParentList) {
-		    	//System.out.println("winform parent " + handle);
-		    	Map<String, WindowInfo> winFormInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "*");
-		    	infoList.putAll(winFormInfoList);
-		    }
-		    for (String handle : silverlightParentList) {
-		    	Map<String, WindowInfo> slInfoList = EnumerateWindowsWithUiaBridge(uiabridge, handle, "Silverlight");
-		    	infoList.putAll(slInfoList);
-		    }
-		    
+	    	Map<String, WindowInfo> uiaInfoList = new LinkedHashMap<String, WindowInfo>();
+	    	for (String handle : infoList.keySet()) {
+	    		if (infoList.get(handle).useUiaBridge) {
+	    			uiaInfoList.putAll(EnumerateWindowsWithUiaBridge(uiabridge, handle, "*"));
+	    		}
+	    	}
+	    	infoList.putAll(uiaInfoList);
 	    }
-	    return generateWindowsXml(infoList, "EnumeratedWindows");
+	    //return infoList;
+	}
+	
+	public static Map<String, WindowInfo> EnumerateWin32ChildWindows(HWND parentHwnd)
+	{
+		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
+		
+	    class ChildWindowCallback implements WinUser.WNDENUMPROC {
+			@Override
+			public boolean callback(HWND hWnd, Pointer lParam) {
+				WindowInfo wi = new WindowInfo(hWnd, true);
+				infoList.put(wi.hwndStr, wi);
+				return true;
+			}
+	    }
+	    
+		Api.User32.instance.EnumChildWindows(parentHwnd, new ChildWindowCallback(), new Pointer(0));
+	    
+		return infoList;
 	}
 
 	public static String generateWindowsXml(Map<String, WindowInfo> infoList, String rootElementName)
@@ -163,17 +163,17 @@ public class WindowsEnumeratedXml implements Runnable{
 		    	Element win = null;
 		    	if (w.framework.equals("win32"))
 		    		win = doc.createElement("win");
-		    	else if (w.framework.equals("WPF"))
+		    	else if (w.framework.equals(UiaBridge.FRAMEWORK_ID_WPF))
 		    	{
 		    		win = doc.createElement("wpf");
 		    		++wpfCount;
 		    	}
-		    	else if (w.framework.equals("WinForm"))
+		    	else if (w.framework.equals(UiaBridge.FRAMEWORK_ID_WINFORM))
 		    	{
 		    		win = doc.createElement("winfrm");
 		    		++winFormCount;
 		    	}
-		    	else if (w.framework.equals("Silverlight"))
+		    	else if (w.framework.equals(UiaBridge.FRAMEWORK_ID_SILVER))
 		    	{
 		    		win = doc.createElement("silver");
 		    		++silverlightCount;

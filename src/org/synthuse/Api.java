@@ -77,6 +77,13 @@ public class Api {
     public static int PROCESS_VM_READ = 0x0010;
     
     public static int PS_SOLID = 0x0;
+    public static int PS_DASH = 0x1;
+    public static int PS_DOT = 0x2;
+    public static int PS_DASHDOT = 0x3;
+    public static int PS_DASHDOTDOT = 0x4;
+    public static int PS_NULL = 0x5;
+    public static int PS_INSIDEFRAME = 0x6;
+
     public static int HOLLOW_BRUSH = 0x5;
     
     public static int WM_PAINT = 0x0F;
@@ -521,14 +528,19 @@ public class Api {
 	    String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
 	    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
-
-	// creates highlight around selected window
+	
 	public static void highlightWindow(HWND hwnd){
+		RECT rect = new RECT();
+		User32.instance.GetWindowRect(hwnd, rect);
+		//System.out.println("RECT: " + rect.left + "," + rect.top + "," + (rect.right - rect.left) + "," + (rect.bottom - rect.top));
+		highlightWindow(hwnd, 0, 0, rect.right - rect.left, rect.bottom - rect.top);
+	}
+	
+	// creates highlight around selected window
+	public static void highlightWindow(HWND hwnd, int x, int y, int x2, int y2){
 		//COLORREF i.e. 0x00804070  Red = 0x70 green = 0x40 blue = 0x80
 		//g_hRectanglePen = CreatePen (PS_SOLID, 3, RGB(256, 0, 0));
 		HPEN rectPen = Gdi32.instance.CreatePen(PS_SOLID, 3, 0x00000099); //RGB(255, 0, 0)
-		RECT rect = new RECT();
-		User32.instance.GetWindowRect(hwnd, rect);
 		HDC dc = User32.instance.GetWindowDC(hwnd);
 		if (dc != null) {
 			// Select our created pen into the DC and backup the previous pen.
@@ -538,7 +550,7 @@ public class Api {
 		    HANDLE prevBrush = Gdi32.instance.SelectObject(dc, Gdi32.instance.GetStockObject(HOLLOW_BRUSH));
 
 		    // Draw a rectangle in the DC covering the entire window area of the found window.
-		    Gdi32.instance.Rectangle (dc, 0, 0, rect.right - rect.left, rect.bottom - rect.top);
+		    Gdi32.instance.Rectangle (dc, x, y, x2, y2);
 
 		    // Reinsert the previous pen and brush into the found window's DC.
 		    Gdi32.instance.SelectObject(dc, prevPen);

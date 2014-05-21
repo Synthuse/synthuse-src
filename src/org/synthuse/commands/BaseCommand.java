@@ -6,10 +6,13 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.synthuse.*;
+
+import com.sun.jna.platform.win32.WinDef.HWND;
 
 public class BaseCommand {
 	
@@ -132,7 +135,14 @@ public class BaseCommand {
 		}
 		else
 		{ // native target refresh
-			
+			infoList = new LinkedHashMap<String, WindowInfo>();
+			HWND parentHwnd = Api.GetHandleFromString(resultHwndStr);
+			WindowInfo wi = new WindowInfo(parentHwnd, false);
+			infoList.put(wi.hwndStr, wi);
+			infoList.putAll(WindowsEnumeratedXml.EnumerateWin32ChildWindows(parentHwnd));
+			//WindowsEnumeratedXml.appendUiaBridgeWindows(infoList); //if we need this we should specify a runtimeID handle instead
+			newXml = WindowsEnumeratedXml.generateWindowsXml(infoList, "updates");
+			System.out.println("newNativeXml: " + newXml);
 		}
 		
 		int pos = WIN_XML.indexOf(resultStr);

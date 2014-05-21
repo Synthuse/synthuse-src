@@ -1,6 +1,7 @@
 package org.synthuse;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.io.*;
 
 import javax.swing.JOptionPane;
@@ -8,7 +9,10 @@ import javax.swing.JOptionPane;
 public class UiaBridge {
 	
 	public static String CACHED_PROPERTY_LIST = "RuntimeIdProperty,ParentRuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty,BoundingRectangleProperty";
-	
+	public static final String FRAMEWORK_ID_WPF = "WPF";
+	public static final String FRAMEWORK_ID_SILVER = "Silverlight";
+	public static final String FRAMEWORK_ID_WINFORM = "WinForm";
+	public static final String FRAMEWORK_ID_WIN = "Win32";
 	
 	static
 	{
@@ -128,18 +132,41 @@ public class UiaBridge {
 	public native String[] getProperties(String runtimeIdValue);
 	public native String[] getPropertiesAndValues(String runtimeIdValue);
 	*/
+    
+    public static String replaceEscapedCodes(String input) {
+    	//&#44; is a comma ,
+    	String result = input;
+    	result = result.replaceAll("&#44;", ",");
+    	result = result.replaceAll("&lt;", "<");
+    	result = result.replaceAll("&gt;", ">");
+    	result = result.replaceAll("&apos;", "'");
+    	result = result.replaceAll("&quot;", "\"");
+    	result = result.replaceAll("&amp;", "&");
+    	return result;
+    }
+    
 	public Point getCenterOfElement(String runtimeIdValue) {
 		Point p = new Point();
-    	String boundary = getWindowInfo(runtimeIdValue, "BoundingRectangleProperty");
-    	boundary = WindowInfo.replaceEscapedCodes(boundary);
-    	//System.out.println("runtimeId: " + runtimeIdValue + ", boundary: " + boundary); //boundary: 841,264,125,29
-    	String[] boundarySplt = boundary.split(",");
-    	int x = Integer.parseInt(boundarySplt[0]);
-    	int y = Integer.parseInt(boundarySplt[1]);
-    	int width = Integer.parseInt(boundarySplt[2]);
-    	int height = Integer.parseInt(boundarySplt[3]);
-    	p.x = ((width) /2) + x;
-    	p.y = ((height) /2) + y;
+    	String boundaryProperty = getWindowInfo(runtimeIdValue, "BoundingRectangleProperty");
+    	Rectangle rect = getBoundaryRect(boundaryProperty);
+    	p.x = ((rect.width) /2) + rect.x;
+    	p.y = ((rect.height) /2) + rect.y;
 		return p;
+	}
+	
+	//BoundingRectangleProperty is the last property listed in comma separated properties string
+	public static Rectangle getBoundaryRect(String properties) {
+		Rectangle rect = new Rectangle();
+		String[] propSplt = properties.split(",");
+		if (propSplt.length > 0)
+		{
+			String[] boundarySplt = replaceEscapedCodes(propSplt[propSplt.length - 1]).split(",");
+			if (boundarySplt.length == 4 )
+			rect.x = Integer.parseInt(boundarySplt[0]);
+			rect.y = Integer.parseInt(boundarySplt[1]);
+			rect.width = Integer.parseInt(boundarySplt[2]);
+			rect.height = Integer.parseInt(boundarySplt[3]);
+		}
+		return rect;
 	}
 }

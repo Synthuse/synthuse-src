@@ -46,6 +46,14 @@ public class WinPtr {
 		return (runtimeIdTest.contains("-"));
 	}
 	
+	public void convertToNativeHwnd()
+	{
+		if (isWpfRuntimeIdFormat(runtimeId)){
+			hWndStr = runtimeId.split("-")[1];
+			hWnd = Api.GetHandleFromString(hWndStr);
+		}
+	}
+	
 	public String toString() {
 		if (isWin32() && !hWndStr.equals(""))
 			return hWndStr;

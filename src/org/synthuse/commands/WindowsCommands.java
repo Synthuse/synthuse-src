@@ -17,6 +17,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.activateWindow(handle.hWnd);
 		//api.showWindow(handle);
 		return true;
@@ -28,6 +29,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.minimizeWindow(handle.hWnd);
 		return true;
 	}
@@ -38,6 +40,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.maximizeWindow(handle.hWnd);
 		return true;
 	}
@@ -48,6 +51,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.restoreWindow(handle.hWnd);
 		return true;
 	}
@@ -58,6 +62,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.hideWindow(handle.hWnd);
 		return true;
 	}
@@ -68,6 +73,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.showWindow(handle.hWnd);
 		return true;
 	}
@@ -78,6 +84,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.switchToThisWindow(handle.hWnd, true);
 		return true;
 	}
@@ -89,6 +96,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.closeWindow(handle.hWnd);
 		return true;
 	}
@@ -99,6 +107,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return false;
+		handle.convertToNativeHwnd();
 		api.sendWmSetText(handle.hWnd, args[1]);
 		return true;
 	}
@@ -109,6 +118,7 @@ public class WindowsCommands extends BaseCommand {
 		WinPtr handle = findHandleWithXpath(args[0]);
 		if (handle.isEmpty())
 			return "";
+		handle.convertToNativeHwnd();
 		return api.sendWmGetText(handle.hWnd);
 	}
 
@@ -119,6 +129,7 @@ public class WindowsCommands extends BaseCommand {
 		if (handle.isEmpty())
 			return false;
 		int id = findMenuIdWithXpath(args[0]);
+		handle.convertToNativeHwnd();
 		//LRESULT result = 
 		//System.out.println("PostMessage to " + handle.hWndStr + " for id " + id);
 		api.user32.PostMessage(handle.hWnd, Api.WM_COMMAND, new WPARAM(id), new LPARAM(0));
@@ -133,6 +144,7 @@ public class WindowsCommands extends BaseCommand {
 		if (handle.isEmpty())
 			return false;
 		int id = Integer.parseInt(args[1]); //context menu id is supplied as second argument
+		handle.convertToNativeHwnd();
 		//LRESULT result = 
 		System.out.println("PostMessage to " + handle.toString() + " for id " + id + " - " + Api.MAKELONG(id, 0));
 		//api.user32.PostMessage(handle.hWnd, Api.WM_COMMAND, new WPARAM(id), new LPARAM(0));
