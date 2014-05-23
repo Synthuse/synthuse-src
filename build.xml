@@ -77,5 +77,8 @@
     <javah destdir="${build}" verbose="yes" classpath="${dist}/${jarname}">
       <class name="org.synthuse.UiaBridge"/>
     </javah>
+    <javah destdir="${build}" verbose="yes" classpath="${dist}/${jarname}">
+      <class name="org.synthuse.MsgHook"/>
+    </javah>
   </target>
 </project>

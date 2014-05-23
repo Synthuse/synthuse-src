@@ -1,3 +1,10 @@
+/*
+ * Copyright 2014, Synthuse.org
+ * Released under the Apache Version 2.0 License.
+ *
+ * last modified by ejakubowski7@gmail.com
+*/
+
 // MsgHookTest.cpp : Defines the entry point for the application.
 //
 
@@ -21,11 +28,17 @@ bool filterWmNotify = false;
 bool filterAbove = false;
 
 
+const int MAX_TEST_SIZE = 100;
+TCHAR testWmSettextL[MAX_TEST_SIZE] = _T("This is a test");
+TCHAR testWmSettextW[MAX_TEST_SIZE] = _T("0");
+TCHAR testWmCommandL[MAX_TEST_SIZE] = _T("0");
+TCHAR testWmCommandW[MAX_TEST_SIZE] = _T("1");
+
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK	DlgProc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
@@ -127,7 +140,7 @@ void StartMessageHook()
 		return;
 	}
 	
-	if (InitHook(mainHwnd, tid))
+	if (InitMsgHook(mainHwnd, tid))
 	{
 		AppendText(txtbox, _T("Hook successfully initialized\r\n"));
 	}
@@ -175,7 +188,7 @@ bool OnCopyData(COPYDATASTRUCT* pCopyDataStruct) // WM_COPYDATA lParam will have
 		if (_tcscmp(msgName, _T("")) != 0)
 		{
 			TCHAR tmp[200];
-			_stprintf_s(tmp, _T("msg: %s (%ld), wparam: %ld, lparam: %ld\r\n"), msgName, Event.nCode, Event.wParam, Event.lParam);
+			_stprintf_s(tmp, _T("%d hwnd: %ld, msg: %s (%ld), wparam: '%s'[%ld], lparam: '%s'{%ld}\r\n"),Event.dwHookType, Event.hWnd, msgName, Event.nCode, Event.wParamStr, Event.wParam, Event.lParamStr,Event.lParam);
 			AppendText(txtbox, tmp);
 		}
 	}
@@ -185,9 +198,20 @@ bool OnCopyData(COPYDATASTRUCT* pCopyDataStruct) // WM_COPYDATA lParam will have
 void SendWmSettext() //ID_TESTMSGS_WM
 {
 	//SetWindowText(targetHwnd, _T("This is a test"));
-	TCHAR txt[] = _T("This is a test");
-	SendMessage(targetHwnd, WM_SETTEXT, 0 , (LPARAM)txt);
+	//TCHAR txt[] = _T("This is a test");
+	TCHAR *stopStr;
+	long wparam = _tcstol(testWmSettextW, &stopStr, 10);
+	SendMessage(targetHwnd, WM_SETTEXT, wparam, (LPARAM)testWmSettextL);
 	//PostMessage(targetHwnd, WM_SETTEXT, 0 , (LPARAM)txt);
+}
+
+
+void SendWmCommand() //ID_TESTMSGS_WM
+{
+	TCHAR *stopStr;
+	long wparam = _tcstol(testWmCommandW, &stopStr, 10);
+	long lparam = _tcstol(testWmCommandL, &stopStr, 10);
+	SendMessage(targetHwnd, WM_COMMAND, wparam, lparam);
 }
 
 //
@@ -299,11 +323,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_TESTMSGS_WM:
 			SendWmSettext();
 			break;
+		case ID_TESTMSGS_WMCOM:
+			SendWmCommand();
+			break;
 		case ID_FILE_SETTINGS:
-			DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, About);
+			DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, DlgProc);
 			break;
 		case IDM_ABOUT:
-			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, DlgProc);
+			break;
+		case ID_FILE_CLEAR:
+			SetWindowText(txtbox, _T(""));
 			break;
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
@@ -334,7 +364,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 // Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UNREFERENCED_PARAMETER(lParam);
 	switch (message)
@@ -342,26 +372,28 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 		{
 			//IDC_EDIT1
-			HWND classnameHwnd = GetDlgItem(hDlg, IDC_EDIT1);  
-			if (classnameHwnd != NULL)
-				SetWindowText(classnameHwnd, targetClassname);
-
+			SendDlgItemMessage(hDlg, IDC_EDIT1, WM_SETTEXT, 0 , (LPARAM)targetClassname);
 			if (filterWmCommand)
 				SendDlgItemMessage(hDlg, IDC_CHECK_CMD, BM_SETCHECK, BST_CHECKED, 0);
 			if (filterWmNotify)
 				SendDlgItemMessage(hDlg, IDC_CHECK_NOT, BM_SETCHECK, BST_CHECKED, 0);
 			if (filterAbove)
 				SendDlgItemMessage(hDlg, IDC_CHECK_ABO, BM_SETCHECK, BST_CHECKED, 0);
-
+			SendDlgItemMessage(hDlg, IDC_WMCOMW, WM_SETTEXT, 0 , (LPARAM)testWmCommandW);
+			SendDlgItemMessage(hDlg, IDC_WMCOML, WM_SETTEXT, 0 , (LPARAM)testWmCommandL);
+			SendDlgItemMessage(hDlg, IDC_WMSETW, WM_SETTEXT, 0 , (LPARAM)testWmSettextW);
+			SendDlgItemMessage(hDlg, IDC_WMSETL, WM_SETTEXT, 0 , (LPARAM)testWmSettextL);
 		}
 		return (INT_PTR)TRUE;
 
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK) //only save on OK
 		{
-			HWND classnameHwnd = GetDlgItem(hDlg, IDC_EDIT1);  
-			if (classnameHwnd != NULL)
-				GetWindowText(classnameHwnd, targetClassname, 100);
+			GetDlgItemText(hDlg, IDC_EDIT1, targetClassname, 100);
+			GetDlgItemText(hDlg, IDC_WMCOMW, testWmCommandW, MAX_TEST_SIZE);
+			GetDlgItemText(hDlg, IDC_WMCOML, testWmCommandL, MAX_TEST_SIZE);
+			GetDlgItemText(hDlg, IDC_WMSETW, testWmSettextW, MAX_TEST_SIZE);
+			GetDlgItemText(hDlg, IDC_WMSETL, testWmSettextL, MAX_TEST_SIZE);
 			// check filter options
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_CMD, BM_GETCHECK, 0, 0) == BST_CHECKED) // the hard way
 				filterWmCommand = true;
@@ -375,6 +407,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				filterAbove = true;
 			else
 				filterAbove = false;
+
 			InitMsgFiltersAndLookup();
 		}
 		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)

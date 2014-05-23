@@ -1,12 +1,19 @@
+/*
+ * Copyright 2014, Synthuse.org
+ * Released under the Apache Version 2.0 License.
+ *
+ * last modified by ejakubowski7@gmail.com
+*/
+
 #include <windows.h>
 
 #define MSGHOOKER_FILE TEXT("MsgHook.dll")
 
 HINSTANCE msgHookDll;
 
-//BOOL SetHook(HWND callerHWnd, DWORD threadId)
-typedef BOOL (* SETHOOK)(HWND, DWORD);
-SETHOOK SetHook;
+//BOOL SetMsgHook(HWND callerHWnd, DWORD threadId)
+typedef BOOL (* SETMSGHOOK)(HWND, DWORD);
+SETMSGHOOK SetMsgHook;
 
 //BOOL RemoveHook()
 typedef BOOL (* REMOVEHOOK)(VOID);
@@ -14,10 +21,13 @@ REMOVEHOOK RemoveHook;
 
 typedef struct
 {
+	HWND hWnd;
 	int nCode;
 	DWORD dwHookType;
 	WPARAM wParam;
 	LPARAM lParam;
+	TCHAR wParamStr[25];
+	TCHAR lParamStr[25];
 }HEVENT;
 
 /*
@@ -30,16 +40,16 @@ typedef struct {
 } KBDLLHOOKSTRUCT, *PKBDLLHOOKSTRUCT;
 */
 
-BOOL InitHook(HWND hw, int threadId)
+BOOL InitMsgHook(HWND hw, int threadId)
 {
 	msgHookDll = LoadLibrary(MSGHOOKER_FILE);
 	if (msgHookDll != NULL)
 	{
-		SetHook = (SETHOOK)GetProcAddress(msgHookDll, "SetHook");
+		SetMsgHook = (SETMSGHOOK)GetProcAddress(msgHookDll, "SetMsgHook");
 		RemoveHook = (REMOVEHOOK)GetProcAddress(msgHookDll, "RemoveHook");
-		if (SetHook)
+		if (SetMsgHook)
 		{
-			return SetHook(hw, threadId);
+			return SetMsgHook(hw, threadId);
 		}
 	}
 	return false;
@@ -195,8 +205,8 @@ void InitializeMsgLookup(int allowList[], int allowSize)
 			case WM_CTLCOLORDLG:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_CTLCOLORDLG")); break;
 			case WM_CTLCOLORSCROLLBAR:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_CTLCOLORSCROLLBAR")); break;
 			case WM_CTLCOLORSTATIC:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_CTLCOLORSTATIC")); break;
-			case WM_MOUSEFIRST:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_MOUSEFIRST")); break;
-			//case WM_MOUSEMOVE:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_MOUSEMOVE")); break;
+			//case WM_MOUSEFIRST:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_MOUSEFIRST")); break;
+			case WM_MOUSEMOVE:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_MOUSEMOVE")); break;
 			case WM_LBUTTONDOWN:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_LBUTTONDOWN")); break;
 			case WM_LBUTTONUP:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_LBUTTONUP")); break;
 			case WM_LBUTTONDBLCLK:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_LBUTTONDBLCLK")); break;

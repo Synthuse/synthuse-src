@@ -235,7 +235,7 @@ public class XpathManager implements Runnable{
 						++matches;
 					}
 				}
-				lblStatus.setText(results + " matches");
+				lblStatus.setText(results + " match(es)");
 				if (cPos > 0  && matches == 0 && !alwaysFromTop) { //ask if user wants to search from top
 					int result = JOptionPane.showConfirmDialog(target.getTopLevelAncestor(), "No more matches found.  Do you want to search from the top of the document?", "Find", JOptionPane.YES_NO_OPTION);
 					if (result == JOptionPane.YES_OPTION) {

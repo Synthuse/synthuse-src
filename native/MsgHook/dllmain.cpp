@@ -19,9 +19,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			memset((void *)&szBaseName, '\0', sizeof(TCHAR) * _MAX_FNAME);
 
 			if (GetModuleBaseName(GetCurrentProcess(), (HMODULE)hModule, szTmp, sizeof(szTmp)))// compute MMF-filename from current module base name, uses Psapi
-			_wsplitpath(szTmp, NULL, NULL, szBaseName, NULL);
+			_wsplitpath_s(szTmp, NULL, NULL, szBaseName, _MAX_FNAME, NULL, NULL, NULL, NULL);
+			//_wsplitpath(szTmp, NULL, NULL, szBaseName, NULL);
 
-			wcscat(szBaseName, TEXT("MsgHookSharedMem"));       // add specifier string
+			wcscat_s(szBaseName, TEXT("MsgHookSharedMem"));       // add specifier string
 
 			hMappedFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(GLOBALDATA), szBaseName);
 			pData = (GLOBALDATA*)MapViewOfFile(hMappedFile, FILE_MAP_WRITE, 0, 0, 0);
@@ -29,9 +30,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 			if(bStartingProcess)       // if the MMF doesn't exist, we have the first instance
 			{
-				pData->g_hInstance  = hModule;  // so set the instance handle
-				pData->g_hWnd       = NULL;     // and initialize the other handles
-				pData->g_hHook      = NULL;
+				pData->g_hInstance = hModule;  // so set the instance handle
+				pData->g_hWnd = NULL;     // and initialize the other handles
+				pData->g_CwpHook = NULL;
+				pData->g_MsgHook = NULL;
 			}
 			DisableThreadLibraryCalls((HMODULE)hModule);
 		}

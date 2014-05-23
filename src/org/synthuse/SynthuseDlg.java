@@ -215,7 +215,7 @@ public class SynthuseDlg extends JFrame {
 		helpBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String about = "";
-				about += "Synthuse Version " + VERSION_STR + " create by Edward Jakubowski ejakubowski7@gmail.com\n\n";
+				about += "Synthuse Version " + VERSION_STR + " created by Edward Jakubowski ejakubowski7@gmail.com\n\n";
 				
 				about += "Application information: \n";
 				about += " alwaysOnTop - " + config.isAlwaysOnTop() + "\n";

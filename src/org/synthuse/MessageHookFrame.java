@@ -26,6 +26,8 @@ public class MessageHookFrame extends JFrame {
 	public static final int WH_GETMESSAGE = 3;
 	public static final int WH_KEYBOARD_LL = 13;
 	
+	public static final int WM_COPYDATA = 74;
+	
 	private JTextArea textArea;
 	private JButton btnSave;
 	private JButton btnStartMsgHook;
@@ -91,6 +93,8 @@ public class MessageHookFrame extends JFrame {
 	}
 
 	public void createMessageHook() {
+		/*
+		// Below set windows hook is called from inside the native DLL
 		if (hHook != null)
 			return; //hook already running don't add anymore
 		System.out.println("starting global message hook");
@@ -108,13 +112,17 @@ public class MessageHookFrame extends JFrame {
 		hHook = User32.INSTANCE.SetWindowsHookEx(WH_CALLWNDPROC, lpfn, hMod, threadId);
 		if (hHook == null)
 			return;
+		*/
+		MsgHook mh = new MsgHook();
+		//mh.setMessageHook(hwnd, threadId);
 		
 		MSG msg = new MSG();
 		try {
 			
 			while (!quit) {
 				User32.INSTANCE.PeekMessage(msg, null, 0, 0, 1);
-				if (msg.message == User32.WM_HOTKEY){ // && msg.wParam.intValue() == 1
+				if (msg.message == WM_COPYDATA){ // && msg.wParam.intValue() == 1
+					System.out.println("WM_COPYDATA");
 					msg = new MSG(); //must clear msg so it doesn't repeat
 				}
 				Thread.sleep(10);
