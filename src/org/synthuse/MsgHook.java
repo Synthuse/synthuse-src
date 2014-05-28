@@ -1,3 +1,10 @@
+/*
+ * Copyright 2014, Synthuse.org
+ * Released under the Apache Version 2.0 License.
+ *
+ * last modified by ejakubowski7@gmail.com
+*/
+
 package org.synthuse;
 
 import java.io.File;
@@ -6,6 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
 
 import javax.swing.JOptionPane;
 
@@ -78,7 +86,27 @@ public class MsgHook {
         System.load(temp.getAbsolutePath());
     }
     
-	public native boolean setMessageHook(long hwnd, long threadId);
+    //public native boolean initialize(int hwnd);
+    public native boolean createMsgHookWindow();
+    public native boolean setMsgHookWindowTargetHwnd(int hwnd);
+    public native boolean setMsgHookWindowTargetClass(String classname);
+	public native boolean setMessageHook(int hwnd, int threadId);
 	public native boolean removeMessageHook();
+	//public native boolean shutdown();
+	
+	public static Thread createMsgHookWinThread(final long targetHwnd)
+	{
+		Thread t = new Thread() {
+			public void run() {
+				MsgHook mh = new MsgHook();
+				mh.setMsgHookWindowTargetClass("");
+				if (targetHwnd != 0)
+					mh.setMsgHookWindowTargetHwnd((int)targetHwnd);
+				mh.createMsgHookWindow();
+			}
+		};
+		t.start();
+		return t;
+	}
 	
 }

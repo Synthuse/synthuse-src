@@ -78,11 +78,19 @@ extern "C" __declspec(dllexport) BOOL SetMsgHook(HWND callerHWnd, DWORD threadId
 		pData->g_hWnd   = callerHWnd; // remember the windows and hook handle for further instances
 		pData->g_CwpHook  = SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)CwpHookProc, (HINSTANCE)pData->g_hInstance, threadId);
 		//pData->g_MsgHook  = SetWindowsHookEx(WH_GETMESSAGE, (HOOKPROC)MsgHookProc, (HINSTANCE)pData->g_hInstance, threadId);   
+		if (pData->g_CwpHook == NULL) {
+			TCHAR tmp[100];
+			_stprintf_s(tmp, _T("Last Error # %ld on threadId %ld"), GetLastError(), threadId);
+			MessageBox(0, tmp, _T("Set Hook Error"), 0);
+		}
 
 		return (pData->g_CwpHook != NULL); //pData->g_CwpHook != NULL && 
 	}
 	else 
+	{
+		//MessageBox(0, _T("Error: Not starting process"), _T("Set Hook Error"), 0);
 		return false;
+	}
 }
 
 extern "C" __declspec(dllexport) BOOL RemoveHook()

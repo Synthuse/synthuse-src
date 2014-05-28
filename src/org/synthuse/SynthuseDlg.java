@@ -50,7 +50,7 @@ public class SynthuseDlg extends JFrame {
 	/**
 	 * 
 	 */
-	public static String VERSION_STR = "1.2.0";
+	public static String VERSION_STR = "1.2.1";
 
 	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/gnome-robots.png";
 	public static String RES_STR_REFRESH_IMG = "/org/synthuse/img/rapidsvn.png";
@@ -83,7 +83,7 @@ public class SynthuseDlg extends JFrame {
 	private JButton btnAdvanced;
 	
 	private TestIdeFrame testIde = null;
-	private MessageHookFrame msgHook = null;
+	//private MessageHookFrame msgHook = null;
 	private int targetX;
 	private int targetY;
 	private UiaBridge uiabridge = new UiaBridge();
@@ -187,9 +187,19 @@ public class SynthuseDlg extends JFrame {
 			    	public void actionPerformed(ActionEvent event) {
 			    		//System.out.println("Popup menu item [" + event.getActionCommand() + "] was pressed.");
 			    		if (event.getActionCommand() == "Message Hook"){
+			    			/*
 							if (msgHook == null)
 								msgHook = new MessageHookFrame();
 							msgHook.setVisible(true);
+							msgHook.txtTarget.setText(lastDragHwnd);
+							*/
+			    			long lastHwndLong = 0;
+			    			try {
+			    				lastHwndLong = Long.parseLong(lastDragHwnd);
+			    			} catch (Exception ex) {
+			    			}
+			    			MsgHook.createMsgHookWinThread(lastHwndLong);
+			    			
 			    		}
 			    	}
 			    };
@@ -224,7 +234,9 @@ public class SynthuseDlg extends JFrame {
 				about += " disableUiaBridge - " + config.isUiaBridgeDisabled() + "\n";
 				about += " disableFiltersUia - " + config.isFilterUiaDisabled() + "\n";
 				
-				about += "\nSystem information: \n";
+				about += " Synthuse location - " + SynthuseDlg.class.getProtectionDomain().getCodeSource().getLocation().toString();
+				
+				about += "\n\nSystem information: \n";
 				about += " Java version - " + System.getProperty("java.version") + "\n";
 				about += " Java home - " + System.getProperty("java.home") + "\n";
 				about += " OS Name - " + System.getProperty("os.name") + "\n";
@@ -380,12 +392,17 @@ public class SynthuseDlg extends JFrame {
 				lblStatus.setText(status);
 			}
 			@Override
-			public void executionCompleted(Object input, String results) { //buildXpathStatementThreaded finished, with results being the xpath statement
+			public void executionCompleted(Object input, final String results) { //buildXpathStatementThreaded finished, with results being the xpath statement
 				if (input instanceof HWND) { // in case thread takes long time to process
 					lastDragHwnd = Api.GetHandleAsString((HWND)input);
 				}
-				XpathManager.nextXpathMatch(results, textPane, lblStatus, true);
-				cmbXpath.setSelectedItem(results);
+				SwingUtilities.invokeLater(new Runnable() {//swing components are not thread safe, this will run on Swings event dispatch thread
+	                public void run() {
+	                	XpathManager.nextXpathMatch(results, textPane, lblStatus, true);
+	    				cmbXpath.setSelectedItem(results);
+	                }
+				});
+				
 			}
 		};
 		

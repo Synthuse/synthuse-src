@@ -61,6 +61,9 @@
       <fileset dir="native/uiabridge/bin"> <!-- includes native jni dlls -->
         <include name="**/*.dll" />
       </fileset>
+      <fileset dir="native/MsgHook/bin"> <!-- includes native jni dlls -->
+        <include name="**/*.dll" />
+      </fileset>
       <manifest>
         <attribute name="Main-Class" value="${main.class}"/>
         <attribute name="Class-Path" value="${mf.classpath}"/>

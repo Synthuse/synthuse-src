@@ -130,7 +130,7 @@ public class DragTarget extends JLabel  {
 		
 		@Override 
 		public boolean importData(TransferSupport support) {
-			System.out.println("importData");
+			//System.out.println("importData");
 			return true;
 		}
 		

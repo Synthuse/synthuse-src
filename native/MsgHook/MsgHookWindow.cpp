@@ -9,8 +9,10 @@
 //
 
 #include "stdafx.h"
-#include "MsgHookTest.h"
-#include "MsgHook.h"
+#include "resource.h"
+#include "MsgLookup.h"
+//#include "MsgHookTest.h"
+//#include "MsgHook.h"
 
 #define MAX_LOADSTRING 100
 
@@ -19,66 +21,42 @@ HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 HWND mainHwnd = NULL;
+HMENU mainMenu = NULL;
 HWND txtbox = NULL;
 HWND targetHwnd = NULL;
-//TCHAR targetClassname[100] = _T("Notepad");
-TCHAR targetClassname[100] = _T("WordPadClass");
+const int txtboxSpacing = 2;
+
+
 bool filterWmCommand = true;
 bool filterWmNotify = false;
 bool filterAbove = false;
 
 
-const int MAX_TEST_SIZE = 100;
+//#define MAX_TEST_SIZE 100
+//TCHAR targetClassname[MAX_TEST_SIZE] = _T("Notepad");
+TCHAR targetClassname[MAX_TEST_SIZE] = _T("WordPadClass");
 TCHAR testWmSettextL[MAX_TEST_SIZE] = _T("This is a test");
 TCHAR testWmSettextW[MAX_TEST_SIZE] = _T("0");
 TCHAR testWmCommandL[MAX_TEST_SIZE] = _T("0");
 TCHAR testWmCommandW[MAX_TEST_SIZE] = _T("1");
 
+TCHAR targetHwndStr[MAX_TEST_SIZE] = _T("");
+
+const int hotkeyIdOffset = 0;
+const int pauseHotKey = 'P'; //P
+bool isPaused = false;
+
 // Forward declarations of functions included in this code module:
+int APIENTRY StartWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow);
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	DlgProc(HWND, UINT, WPARAM, LPARAM);
 
-int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
-{
-
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
-
- 	// TODO: Place code here.
-	MSG msg;
-	HACCEL hAccelTable;
-
-	// Initialize global strings
-	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_MSGHOOKTEST, szWindowClass, MAX_LOADSTRING);
-	MyRegisterClass(hInstance);
-
-	// Perform application initialization:
-	if (!InitInstance (hInstance, nCmdShow))
-	{
-		return FALSE;
-	}
-
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MSGHOOKTEST));
-
-	// Main message loop:
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
-
-	return (int) msg.wParam;
-}
-
 void AppendText(HWND txtHwnd, LPCTSTR newText)
 {
-	
+	if (isPaused)
+		return;
 	DWORD len = GetWindowTextLength(txtHwnd);
 	if (len > 25000)
 	{//need to truncate the beginning so the text doesn't go past it's limit
@@ -125,13 +103,20 @@ void StartMessageHook()
 {
 	AppendText(txtbox, _T("Starting Message Hook\r\n"));
 	targetHwnd = FindWindow(targetClassname, NULL);
+
+	if (_tcscmp(targetHwndStr, _T("")) != 0) //if target HWND was used then override classname hwnd
+	{
+		TCHAR *stopStr;
+		targetHwnd = (HWND)_tcstol(targetHwndStr, &stopStr, 10);
+	}
+
 	DWORD tid = GetWindowThreadProcessId(targetHwnd, NULL);
 
 	InitMsgFiltersAndLookup();
 	//InitializeMsgLookup();
 
 	TCHAR tmp[50];
-	_stprintf_s(tmp, _T("Targetting %ld, %ld\r\n"), targetHwnd, tid);
+	_stprintf_s(tmp, _T("Target Handle: %ld, and Thread Id: %ld\r\n"), targetHwnd, tid);
 	AppendText(txtbox, tmp);
 	
 	//block self/global msg hook
@@ -140,8 +125,11 @@ void StartMessageHook()
 		return;
 	}
 	
-	if (InitMsgHook(mainHwnd, tid))
+	//if (InitMsgHook(mainHwnd, tid))
+	if (SetMsgHook(mainHwnd, tid))
 	{
+		EnableMenuItem(mainMenu, ID_FILE_STOPHOOK, MF_ENABLED);
+		EnableMenuItem(mainMenu, ID_FILE_STARTHOOK, MF_DISABLED | MF_GRAYED);
 		AppendText(txtbox, _T("Hook successfully initialized\r\n"));
 	}
 	else
@@ -150,8 +138,11 @@ void StartMessageHook()
 
 void StopMessageHook()
 {
+	EnableMenuItem(mainMenu, ID_FILE_STOPHOOK, MF_DISABLED | MF_GRAYED);
+	EnableMenuItem(mainMenu, ID_FILE_STARTHOOK, MF_ENABLED);
 	AppendText(txtbox, TEXT("Stopping Message Hook\r\n"));
-	KillHook();
+	//KillHook();
+	RemoveHook();
 }
 
 bool OnCopyData(COPYDATASTRUCT* pCopyDataStruct) // WM_COPYDATA lParam will have this struct
@@ -188,7 +179,7 @@ bool OnCopyData(COPYDATASTRUCT* pCopyDataStruct) // WM_COPYDATA lParam will have
 		if (_tcscmp(msgName, _T("")) != 0)
 		{
 			TCHAR tmp[200];
-			_stprintf_s(tmp, _T("%d hwnd: %ld, msg: %s (%ld), wparam: '%s'[%ld], lparam: '%s'{%ld}\r\n"),Event.dwHookType, Event.hWnd, msgName, Event.nCode, Event.wParamStr, Event.wParam, Event.lParamStr,Event.lParam);
+			_stprintf_s(tmp, _T("hwnd: %ld, msg: %s (%ld), wparam: '%s'[%ld], lparam: '%s'{%ld}\r\n"), Event.hWnd, msgName, Event.nCode, Event.wParamStr, Event.wParam, Event.lParamStr,Event.lParam);
 			AppendText(txtbox, tmp);
 		}
 	}
@@ -209,9 +200,78 @@ void SendWmSettext() //ID_TESTMSGS_WM
 void SendWmCommand() //ID_TESTMSGS_WM
 {
 	TCHAR *stopStr;
+	HWND sendHwnd = targetHwnd;
+	if (_tcscmp(targetHwndStr, _T("")) != 0)
+	{
+		sendHwnd = (HWND)_tcstol(targetHwndStr, &stopStr, 10);
+	}
 	long wparam = _tcstol(testWmCommandW, &stopStr, 10);
 	long lparam = _tcstol(testWmCommandL, &stopStr, 10);
-	SendMessage(targetHwnd, WM_COMMAND, wparam, lparam);
+	SendMessage(sendHwnd, WM_COMMAND, wparam, lparam);
+}
+
+void HotKeyPressed(WPARAM wParam)
+{
+	//AppendText(txtbox, _T("hotkey test"));
+	if (wParam == (pauseHotKey + hotkeyIdOffset))
+	{
+		if (!isPaused) 
+		{
+			AppendText(txtbox, _T("Paused\r\n"));
+			isPaused = true;
+		}
+		else
+		{
+			isPaused = false;
+			AppendText(txtbox, _T("Unpaused\r\n"));
+		}
+	}
+}
+
+extern "C" __declspec(dllexport) void CreateMsgHookWindow(LPTSTR lpCmdLine)
+{
+	//StartWinMain(GetModuleHandle(NULL), NULL, lpCmdLine, SW_SHOW);
+	StartWinMain((HINSTANCE)pData->g_hInstance, NULL, lpCmdLine, SW_SHOW);
+	
+}
+
+int APIENTRY StartWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+{
+
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
+
+ 	// TODO: Place code here.
+	MSG msg;
+	HACCEL hAccelTable;
+
+	// Initialize global strings
+	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+	LoadString(hInstance, IDC_MSGHOOKTEST, szWindowClass, MAX_LOADSTRING);
+	MyRegisterClass(hInstance);
+
+	// Perform application initialization:
+	if (!InitInstance (hInstance, nCmdShow))
+	{
+		return FALSE;
+	}
+
+	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MSGHOOKTEST));
+
+	// Main message loop:
+	while (GetMessage(&msg, NULL, 0, 0))
+	{
+		//if (msg.message == WM_HOTKEY)
+		//	HotKeyPressed(msg.wParam);
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+	UnregisterHotKey(mainHwnd, pauseHotKey + hotkeyIdOffset);
+
+	return (int) msg.wParam;
 }
 
 //
@@ -265,10 +325,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+      CW_USEDEFAULT, 0, 700, 300, NULL, NULL, hInstance, NULL);
 
-   if (!hWnd)
-      return FALSE;
+   if (!hWnd) {
+	    DWORD lastErr = GetLastError();
+		printf("Error Creating Window %d\n", lastErr);
+		return FALSE;
+   }
    mainHwnd = hWnd;
    
    RECT rect;
@@ -276,10 +339,23 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    // make the txtbox edit control almost the same size as the parent window
    //WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL
    txtbox = CreateWindow(TEXT("Edit"),TEXT(""), WS_CHILD | WS_VISIBLE | ES_MULTILINE | WS_VSCROLL | ES_AUTOVSCROLL | ES_READONLY, 
-	   10, 10,rect.right - 20, rect.bottom - 20, hWnd, NULL, NULL, NULL);
+	   txtboxSpacing, txtboxSpacing,rect.right-(txtboxSpacing*2), rect.bottom-(txtboxSpacing*2), hWnd, NULL, NULL, NULL);
+
+   HFONT hFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+	  OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+	  DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"));
+   SendMessage(txtbox, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+   mainMenu = GetMenu(mainHwnd);
+   EnableMenuItem(mainMenu, ID_FILE_STOPHOOK, MF_DISABLED | MF_GRAYED);
+
+   RegisterHotKey(mainHwnd, pauseHotKey + hotkeyIdOffset, MOD_NOREPEAT | MOD_SHIFT | MOD_CONTROL, pauseHotKey);
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
+
+   //set always on top
+   SetWindowPos(mainHwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE| SWP_NOMOVE);
 
    return TRUE;
 }
@@ -342,6 +418,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 		break;
+	case WM_HOTKEY:
+		HotKeyPressed(wParam);
+		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		// TODO: Add any drawing code here...
@@ -351,7 +430,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{ //resize the txtbox when the parent window size changes
 			int nWidth = LOWORD(lParam);
 			int nHeight = HIWORD(lParam);
-			SetWindowPos(txtbox, HWND_NOTOPMOST, 10, 10, nWidth-20, nHeight-20, SWP_NOZORDER|SWP_NOMOVE);
+			SetWindowPos(txtbox, HWND_NOTOPMOST, txtboxSpacing, txtboxSpacing, nWidth-(txtboxSpacing*2), nHeight-(txtboxSpacing*2), SWP_NOZORDER|SWP_NOMOVE);
 		}
 		break;
 	case WM_DESTROY:
@@ -383,6 +462,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			SendDlgItemMessage(hDlg, IDC_WMCOML, WM_SETTEXT, 0 , (LPARAM)testWmCommandL);
 			SendDlgItemMessage(hDlg, IDC_WMSETW, WM_SETTEXT, 0 , (LPARAM)testWmSettextW);
 			SendDlgItemMessage(hDlg, IDC_WMSETL, WM_SETTEXT, 0 , (LPARAM)testWmSettextL);
+			SendDlgItemMessage(hDlg, IDC_HWND, WM_SETTEXT, 0 , (LPARAM)targetHwndStr);
+			
 		}
 		return (INT_PTR)TRUE;
 
@@ -394,6 +475,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			GetDlgItemText(hDlg, IDC_WMCOML, testWmCommandL, MAX_TEST_SIZE);
 			GetDlgItemText(hDlg, IDC_WMSETW, testWmSettextW, MAX_TEST_SIZE);
 			GetDlgItemText(hDlg, IDC_WMSETL, testWmSettextL, MAX_TEST_SIZE);
+			GetDlgItemText(hDlg, IDC_HWND, targetHwndStr, MAX_TEST_SIZE);
 			// check filter options
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_CMD, BM_GETCHECK, 0, 0) == BST_CHECKED) // the hard way
 				filterWmCommand = true;

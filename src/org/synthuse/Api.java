@@ -8,14 +8,17 @@
 package org.synthuse;
 
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.sun.jna.Callback;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.platform.win32.WinDef.*;
 import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.platform.win32.BaseTSD.ULONG_PTR;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
@@ -24,6 +27,7 @@ import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.WinNT.LARGE_INTEGER;
 import com.sun.jna.platform.win32.WinUser.WNDENUMPROC;
 import com.sun.jna.ptr.PointerByReference;
+import com.sun.jna.win32.StdCallLibrary.StdCallCallback;
 import com.sun.jna.win32.W32APIOptions;
 
 public class Api {
@@ -198,10 +202,47 @@ public class Api {
             public int cch; //The length of the menu item text, in characters, when information is received about a menu item of the MFT_STRING type.
             public HBITMAP hbmpItem; //A handle to the bitmap to be displayed, or it can be one of the values in the following table.
         }
+        
+        public static class COPYDATASTRUCT extends Structure {
+        	//The by-reference version of this structure.
+            public static class ByReference extends COPYDATASTRUCT implements Structure.ByReference { }
+            
+            public COPYDATASTRUCT() { }
+
+            //Instantiates a new COPYDATASTRUCT with existing data given the address of that data.
+            public COPYDATASTRUCT(final long pointer) {
+                this(new Pointer(pointer));
+            }
+
+            //Instantiates a new COPYDATASTRUCT with existing data given a pointer to that data.
+            public COPYDATASTRUCT(final Pointer memory) {
+                super(memory);
+                read();
+            }
+
+            public ULONG_PTR dwData; // The data to be passed to the receiving application.
+            public int cbData; //The size, in bytes, of the data pointed to by the lpData
+            public Pointer lpData;
+            
+            @SuppressWarnings("rawtypes")
+			@Override
+            protected final List getFieldOrder() {
+                return Arrays.asList(new String[] {"dwData", "cbData", "lpData" });
+            }
+        }
+    }
+    
+    interface WNDPROC extends StdCallCallback {
+
+        LRESULT callback(HWND hWnd, int uMsg, WPARAM uParam, LPARAM lParam);
+       
     }
 	
 	public interface User32 extends W32APIOptions {  
 		User32 instance = (User32) Native.loadLibrary("user32", User32.class, DEFAULT_OPTIONS);  
+		
+		int SetWindowLongPtr(HWND hWnd, int nIndex, Callback callback);
+		LRESULT CallWindowProc(LONG_PTR proc, HWND hWnd, int uMsg, WPARAM uParam, LPARAM lParam);
 		
 		boolean ShowWindow(HWND hWnd, int nCmdShow);  
 		boolean SetForegroundWindow(HWND hWnd);
@@ -291,13 +332,16 @@ public class Api {
 	    kernel32 = Kernel32.instance;
 	}
 	
-    public static String GetHandleAsString(HWND hWnd) {
+    public static Long GetHandleAsLong(HWND hWnd) {
     	if (hWnd == null)
-    		return "0";
+    		return (long)0;
     	//String longHexStr = hWnd.toString().substring("native@".length());
     	String longHexStr = hWnd.getPointer().toString().substring("native@".length());
-    	Long l = Long.decode(longHexStr);
-    	return l.toString();
+    	return Long.decode(longHexStr);
+    }
+	
+    public static String GetHandleAsString(HWND hWnd) {
+    	return GetHandleAsLong(hWnd).toString();
     }
 
     public static HWND GetHandleFromString(String hWnd) {
@@ -581,6 +625,28 @@ public class Api {
 		} catch (Exception e) {
 		}
 		return false;
+	}
+	
+	public static HWND FindMainWindowFromPid(final long targetProcessId) {
+		
+		final List<HWND> resultList = new ArrayList<HWND>();
+	    class ParentWindowCallback implements WinUser.WNDENUMPROC {
+			@Override
+			public boolean callback(HWND hWnd, Pointer lParam) {
+				PointerByReference pointer = new PointerByReference();
+				User32.instance.GetWindowThreadProcessId(hWnd, pointer);
+				long pid = pointer.getPointer().getInt(0);
+				if (pid == targetProcessId)
+					if (resultList.isEmpty())
+						resultList.add(hWnd);
+				return true;
+			}
+	    }
+	    
+	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
+	    if (!resultList.isEmpty())
+	    	return resultList.get(0);
+	    return null;
 	}
 	
 }

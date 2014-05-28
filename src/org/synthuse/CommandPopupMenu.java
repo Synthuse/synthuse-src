@@ -98,6 +98,7 @@ public class CommandPopupMenu extends JPopupMenu {
 		CommandMenuItem mntmSetTargetOffset = new CommandMenuItem("setTargetOffset", 3, false);
 		mnMouse.add(mntmSetTargetOffset);
 		
+		
 		JMenu mnWinMessages = new JMenu("Win Messages");
 		add(mnWinMessages);
 		
@@ -112,6 +113,9 @@ public class CommandPopupMenu extends JPopupMenu {
 
 		CommandMenuItem mntmSelectContextMenuId = new CommandMenuItem("selectContextMenuId", 3);
 		mnWinMessages.add(mntmSelectContextMenuId);
+
+		CommandMenuItem mntmSendCommandMsg = new CommandMenuItem("sendCommandMsg", 4);
+		mnWinMessages.add(mntmSendCommandMsg);
 		
 		CommandMenuItem mntmSetcursorposition = new CommandMenuItem("setCursorPosition", 3);
 		mnWinMessages.add(mntmSetcursorposition);
@@ -142,7 +146,7 @@ public class CommandPopupMenu extends JPopupMenu {
 		
 		CommandMenuItem mntmGetwindowclass = new CommandMenuItem("getWindowClass", 2);
 		mnWinMessages.add(mntmGetwindowclass);
-		
+
 		CommandMenuItem mntmDisplayText = new CommandMenuItem("displayText", 3, false);
 		add(mntmDisplayText);
 
@@ -226,6 +230,8 @@ public class CommandPopupMenu extends JPopupMenu {
 			actionStr += "on | " + xpathItem + " | ";
 		if (paramCount > 2)
 			actionStr += "with |  |";
+		if (paramCount > 3)
+			actionStr += " and |  |";
 		return actionStr;
 	}
 }

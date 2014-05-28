@@ -102,6 +102,8 @@ public class CommandProcessor implements Runnable{
 			if (!line.trim().startsWith("|")) 
 				continue; //skip if it doesn't start with bar
 			String[] parsed = line.split("\\|");
+			//
+			
 			//System.out.println("line: " + line);
 			//System.out.println("parsed len = " + parsed.length);
 			//System.out.println("parsed 2 = " + parsed[2]);
@@ -113,6 +115,8 @@ public class CommandProcessor implements Runnable{
 				execute(parsed[2].trim(), new String[] {parsed[4].trim()});
 			if (parsed.length == 7)
 				execute(parsed[2].trim(), new String[] {parsed[4].trim(), parsed[6].trim()});
+			if (parsed.length == 9)
+				execute(parsed[2].trim(), new String[] {parsed[4].trim(), parsed[6].trim(), parsed[8].trim()});
 			
 			if (executeErrorCount > 0) //check if any errors occurred
 				++scriptErrorCount;
@@ -215,6 +219,8 @@ public class CommandProcessor implements Runnable{
 				return win.cmdSelectMenu(args);
 			if (command.equals("selectContextMenuId")) 
 				return win.cmdSelectContextMenuId(args);
+			if (command.equals("sendCommandMsg")) 
+				return win.cmdSendCommandMsg(args);
 			if (command.equals("windowMinimize")) 
 				return win.cmdWindowMinimize(args);
 			if (command.equals("windowMaximize")) 

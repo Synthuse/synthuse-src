@@ -1,3 +1,10 @@
+/*
+ * Copyright 2014, Synthuse.org
+ * Released under the Apache Version 2.0 License.
+ *
+ * last modified by ejakubowski
+*/
+
 package org.synthuse.commands;
 
 import java.awt.Point;
@@ -18,9 +25,9 @@ public class MouseCommands extends BaseCommand {
 		if (handle.isEmpty())
 			return false;
 		String wtype = getWindowTypeWithXpath(args[0]);
-		System.out.println("wtype: " + wtype + " hwnd " + handle.hWnd + " hmenu " + handle.hmenuStr + " pos " + handle.hmenuPos);
+		//System.out.println("wtype: " + wtype + " hwnd " + handle.hWnd + " hmenu " + handle.hmenuStr + " pos " + handle.hmenuPos);
 		Point p = getCenterWindowPosition(handle, wtype);
-		System.out.println("cmdClick: " + p.x + "," + p.y);
+		//System.out.println("cmdClick: " + p.x + "," + p.y);
 		RobotMacro.mouseMove(p.x + parentProcessor.targetOffset.x, p.y + parentProcessor.targetOffset.y);
 		RobotMacro.leftClickMouse();
 		return true;

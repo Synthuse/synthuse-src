@@ -1,3 +1,10 @@
+/*
+ * Copyright 2014, Synthuse.org
+ * Released under the Apache Version 2.0 License.
+ *
+ * last modified by ejakubowski
+*/
+
 package org.synthuse.commands;
 
 

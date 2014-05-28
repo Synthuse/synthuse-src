@@ -9,6 +9,7 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
+#include <stdio.h>
 #include <windows.h>
 #include <tchar.h>
 #include <Psapi.h>
@@ -41,6 +42,7 @@ typedef struct
 #ifndef GLOBAL_VARS_H // header guards
 #define GLOBAL_VARS_H
 
+extern "C" __declspec(dllexport) void CreateMsgHookWindow(LPTSTR lpCmdLine);
 extern "C" __declspec(dllexport) BOOL SetMsgHook(HWND callerHWnd, DWORD threadId);
 extern "C" __declspec(dllexport) BOOL RemoveHook();
 
@@ -48,5 +50,9 @@ extern "C" __declspec(dllexport) BOOL RemoveHook();
 extern HANDLE hMappedFile;
 extern GLOBALDATA* pData;
 extern bool bStartingProcess;
+
+#define MAX_TEST_SIZE 100
+extern TCHAR targetHwndStr[MAX_TEST_SIZE];
+extern TCHAR targetClassname[MAX_TEST_SIZE];
 
 #endif

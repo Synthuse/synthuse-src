@@ -428,6 +428,10 @@ ALT %
 		    			specialKeyFlag = false;
 		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_CANCEL} );
 		    		}
+		    		else if (specialKey.equals("{BAR}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_SLASH});
+		    		}
 		    		else if (specialKey.equals("{{}")) {
 		    			specialKeyFlag = false;
 		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_OPEN_BRACKET} );
@@ -602,7 +606,7 @@ ALT %
 	    	case '}': return(new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_CLOSE_BRACKET});
 	    	case '|': return(new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_SLASH});
 	    	case ';': return(new int[]{KeyEvent.VK_SEMICOLON});
-	    	case ':': return(new int[]{KeyEvent.VK_COLON});
+	    	case ':': return(new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_SEMICOLON});
 	    	case '\'': return(new int[]{KeyEvent.VK_QUOTE});
 	    	case '"': return(new int[]{KeyEvent.VK_QUOTEDBL});
 	    	case ',': return(new int[]{KeyEvent.VK_COMMA});
