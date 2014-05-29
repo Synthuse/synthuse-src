@@ -29,18 +29,20 @@ const int txtboxSpacing = 2;
 
 bool filterWmCommand = true;
 bool filterWmNotify = false;
+bool filterCustom = false;
 bool filterAbove = false;
 
 
 //#define MAX_TEST_SIZE 100
 //TCHAR targetClassname[MAX_TEST_SIZE] = _T("Notepad");
 TCHAR targetClassname[MAX_TEST_SIZE] = _T("WordPadClass");
+TCHAR targetHwndStr[MAX_TEST_SIZE] = _T("");
 TCHAR testWmSettextL[MAX_TEST_SIZE] = _T("This is a test");
 TCHAR testWmSettextW[MAX_TEST_SIZE] = _T("0");
 TCHAR testWmCommandL[MAX_TEST_SIZE] = _T("0");
 TCHAR testWmCommandW[MAX_TEST_SIZE] = _T("1");
 
-TCHAR targetHwndStr[MAX_TEST_SIZE] = _T("");
+TCHAR customMsgStr[MAX_TEST_SIZE] = _T("WM_SETTEXT");
 
 const int hotkeyIdOffset = 0;
 const int pauseHotKey = 'P'; //P
@@ -75,12 +77,12 @@ void AppendText(HWND txtHwnd, LPCTSTR newText)
 
 void InitMsgFiltersAndLookup()
 {
-	if (!filterWmCommand && !filterAbove && !filterWmNotify)
+	if (!filterWmCommand && !filterAbove && !filterWmNotify && !filterCustom)
 		InitializeMsgLookup();
 	else
 	{
-		int allowList[3];
-		for (int i = 0; i < 3; i ++)
+		int allowList[4];
+		for (int i = 0; i < 4; i ++)
 			allowList[i] = -1;
 		
 		if (filterWmCommand) {
@@ -95,7 +97,20 @@ void InitMsgFiltersAndLookup()
 		}
 		//if (filterAbove)
 		//	allowList[0] = WM_COMMAND;
-		InitializeMsgLookup(allowList, 3);
+		if (filterCustom && _tcslen(customMsgStr) > 0) 
+		{
+			InitializeMsgLookup(); //initialize full msg list and do reverse lookup based on custom filter string
+			for (int x = 0; x < MAX_MSG_LOOKUP; x++)
+			{
+				if (_tcscmp(customMsgStr, MSG_LOOKUP[x]) == 0) {
+					TCHAR tmp[100];
+					_stprintf_s(tmp, _T("filtering on %s (%d)\r\n"), customMsgStr, x);
+					AppendText(txtbox, tmp);
+					allowList[3] = x;
+				}
+			}
+		}
+		InitializeMsgLookup(allowList, 4);
 	}
 }
 
@@ -178,8 +193,10 @@ bool OnCopyData(COPYDATASTRUCT* pCopyDataStruct) // WM_COPYDATA lParam will have
 		}
 		if (_tcscmp(msgName, _T("")) != 0)
 		{
+			TCHAR msgHwndClassname[20];
+			GetClassName(Event.hWnd, msgHwndClassname, 20);
 			TCHAR tmp[200];
-			_stprintf_s(tmp, _T("hwnd: %ld, msg: %s (%ld), wparam: '%s'[%ld], lparam: '%s'{%ld}\r\n"), Event.hWnd, msgName, Event.nCode, Event.wParamStr, Event.wParam, Event.lParamStr,Event.lParam);
+			_stprintf_s(tmp, _T("hwnd: %ld (%s), msg: %s (%ld), wparam: '%s'[%ld], lparam: '%s'{%ld}\r\n"), Event.hWnd, msgHwndClassname, msgName, Event.nCode, Event.wParamStr, Event.wParam, Event.lParamStr,Event.lParam);
 			AppendText(txtbox, tmp);
 		}
 	}
@@ -458,12 +475,14 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				SendDlgItemMessage(hDlg, IDC_CHECK_NOT, BM_SETCHECK, BST_CHECKED, 0);
 			if (filterAbove)
 				SendDlgItemMessage(hDlg, IDC_CHECK_ABO, BM_SETCHECK, BST_CHECKED, 0);
+			if (filterCustom)
+				SendDlgItemMessage(hDlg, IDC_CUSTOMCHK, BM_SETCHECK, BST_CHECKED, 0);
 			SendDlgItemMessage(hDlg, IDC_WMCOMW, WM_SETTEXT, 0 , (LPARAM)testWmCommandW);
 			SendDlgItemMessage(hDlg, IDC_WMCOML, WM_SETTEXT, 0 , (LPARAM)testWmCommandL);
 			SendDlgItemMessage(hDlg, IDC_WMSETW, WM_SETTEXT, 0 , (LPARAM)testWmSettextW);
 			SendDlgItemMessage(hDlg, IDC_WMSETL, WM_SETTEXT, 0 , (LPARAM)testWmSettextL);
 			SendDlgItemMessage(hDlg, IDC_HWND, WM_SETTEXT, 0 , (LPARAM)targetHwndStr);
-			
+			SendDlgItemMessage(hDlg, IDC_CUSTOMMSG, WM_SETTEXT, 0 , (LPARAM)customMsgStr);			
 		}
 		return (INT_PTR)TRUE;
 
@@ -476,19 +495,12 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			GetDlgItemText(hDlg, IDC_WMSETW, testWmSettextW, MAX_TEST_SIZE);
 			GetDlgItemText(hDlg, IDC_WMSETL, testWmSettextL, MAX_TEST_SIZE);
 			GetDlgItemText(hDlg, IDC_HWND, targetHwndStr, MAX_TEST_SIZE);
+			GetDlgItemText(hDlg, IDC_CUSTOMMSG, customMsgStr, MAX_TEST_SIZE);
 			// check filter options
-			if (SendDlgItemMessage(hDlg, IDC_CHECK_CMD, BM_GETCHECK, 0, 0) == BST_CHECKED) // the hard way
-				filterWmCommand = true;
-			else
-				filterWmCommand = false;
-			if (IsDlgButtonChecked(hDlg, IDC_CHECK_NOT) == BST_CHECKED) // the easy way
-				filterWmNotify = true;
-			else
-				filterWmNotify = false;
-			if (IsDlgButtonChecked(hDlg, IDC_CHECK_ABO) == BST_CHECKED)
-				filterAbove = true;
-			else
-				filterAbove = false;
+			filterWmCommand = (SendDlgItemMessage(hDlg, IDC_CHECK_CMD, BM_GETCHECK, 0, 0) == BST_CHECKED); // the hard way
+			filterWmNotify = (IsDlgButtonChecked(hDlg, IDC_CHECK_NOT) == BST_CHECKED);// the easy way
+			filterAbove = (IsDlgButtonChecked(hDlg, IDC_CHECK_ABO) == BST_CHECKED);
+			filterCustom = (IsDlgButtonChecked(hDlg, IDC_CUSTOMCHK) == BST_CHECKED);
 
 			InitMsgFiltersAndLookup();
 		}

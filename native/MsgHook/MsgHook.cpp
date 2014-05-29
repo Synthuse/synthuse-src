@@ -32,8 +32,28 @@ LRESULT CALLBACK CwpHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		Event.dwHookType = WH_CALLWNDPROC;
 		memset((void *)&Event.wParamStr, '\0', sizeof(TCHAR) * 25);
 		memset((void *)&Event.lParamStr, '\0', sizeof(TCHAR) * 25);
-		//if (cwps->message == WM_SETTEXT && cwps->lParam != 0)
-		//	_tcscpy_s(Event.lParamStr, 25, (const wchar_t*)Event.lParam);
+		bool errorFlg = false;
+		if (cwps->message == WM_SETTEXT && cwps->lParam != 0 && cwps->wParam == 0)
+		{
+			if (IsWindowUnicode(Event.hWnd))
+			{
+				_tcsncpy_s(Event.lParamStr, 25, (const wchar_t*)Event.lParam, _TRUNCATE);
+			}
+			else
+			{
+				int asciiSize = (int)strlen((const char*)Event.lParam);
+				int unicodeSize = (int)_tcslen((const wchar_t*)Event.lParam);
+				if (unicodeSize > asciiSize)
+					_tcsncpy_s(Event.lParamStr, 25, (const wchar_t*)Event.lParam, _TRUNCATE);
+				else
+				{
+					int tstrLen = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)cwps->lParam, (int)strlen((LPCSTR)cwps->lParam), NULL, 0); //get t len
+					if (tstrLen > 24)
+						tstrLen = 24;
+					MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)cwps->lParam, (int)strlen((LPCSTR)cwps->lParam), Event.lParamStr, tstrLen); // convert char to tchar
+				}
+			}
+		}
 
 		BOOL bRes = (BOOL)SendMessage(pData->g_hWnd, WM_COPYDATA, 0, (LPARAM)(VOID*)&CDS); // ask the controlling program if the hook should be passed
 	}

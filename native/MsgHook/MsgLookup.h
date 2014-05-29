@@ -20,7 +20,10 @@ void InitializeMsgLookup(int allowList[], int allowSize)
 			if (allowList[a] == i)
 				allowFlg = true;
 		if (!allowFlg)
+		{
+			memset((void *)&MSG_LOOKUP[i], '\0', sizeof(TCHAR) * MAX_MSG_NAME); //blank it
 			continue;
+		}
 		switch (i)
 		{
 			case WM_NULL:	_tcscpy_s(MSG_LOOKUP[i], _T("WM_NULL")); break;
