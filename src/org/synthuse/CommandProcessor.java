@@ -24,6 +24,7 @@ public class CommandProcessor implements Runnable{
 	public static boolean DEFAULT_QUIET = false; //by default is quiet enabled
 	
 	protected CommandProcessor CommandProcessor = null;
+	public int executeCount = 0;
 	public int executeErrorCount;
 	public String lastError = "";
 	public String currentCommandText = "";
@@ -94,6 +95,7 @@ public class CommandProcessor implements Runnable{
 		events.statusChanged("Executing Test Script...");
 		//CommandProcessor cmdProcessor = new CommandProcessor();
 		scriptErrorCount = 0;
+		executeCount = 0;
 		lastError = "";
 		long startTime = System.nanoTime();
 		String[] lines = scriptStr.split("\n");
@@ -101,7 +103,7 @@ public class CommandProcessor implements Runnable{
 			
 			if (!line.trim().startsWith("|")) 
 				continue; //skip if it doesn't start with bar
-			String[] parsed = line.split("\\|");
+			String[] parsed = line.trim().split("\\|");
 			//
 			
 			//System.out.println("line: " + line);
@@ -117,6 +119,8 @@ public class CommandProcessor implements Runnable{
 				execute(parsed[2].trim(), new String[] {parsed[4].trim(), parsed[6].trim()});
 			if (parsed.length == 9)
 				execute(parsed[2].trim(), new String[] {parsed[4].trim(), parsed[6].trim(), parsed[8].trim()});
+			if (parsed.length == 11)
+				execute(parsed[2].trim(), new String[] {parsed[4].trim(), parsed[6].trim(), parsed[8].trim(), parsed[10].trim()});
 			
 			if (executeErrorCount > 0) //check if any errors occurred
 				++scriptErrorCount;
@@ -128,7 +132,7 @@ public class CommandProcessor implements Runnable{
 		String forcedStr = "Completed";
 		if (STOP_PROCESSOR.get())
 			forcedStr = "Stopped";
-		events.statusChanged("Script Execution " + forcedStr + " with " + scriptErrorCount + " error(s) in " + new DecimalFormat("#.###").format(seconds) + " seconds");
+		events.statusChanged("Script Execution " + forcedStr + " " + executeCount + " command(s) with " + scriptErrorCount + " error(s) in " + new DecimalFormat("#.###").format(seconds) + " seconds");
 		events.executionCompleted();
 		if (scriptErrorCount > 0 && !isQuiet)
 		{
@@ -142,6 +146,7 @@ public class CommandProcessor implements Runnable{
 	}
 	
 	public Object execute(String command, String[] args) {
+		++executeCount;
 		executeErrorCount = 0;
 		currentCommandText = command;
 		String joinedArgs = "";
@@ -221,6 +226,8 @@ public class CommandProcessor implements Runnable{
 				return win.cmdSelectContextMenuId(args);
 			if (command.equals("sendCommandMsg")) 
 				return win.cmdSendCommandMsg(args);
+			if (command.equals("sendMessage")) 
+				return win.cmdSendMessage(args);
 			if (command.equals("windowMinimize")) 
 				return win.cmdWindowMinimize(args);
 			if (command.equals("windowMaximize")) 

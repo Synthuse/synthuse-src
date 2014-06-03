@@ -19,14 +19,23 @@ import javax.swing.JOptionPane;
 
 public class MsgHook {
 
-	
+	public static String targetdllName = "";
+	public static String dll64bitName = "";  
+	public static String dll32bitName = "";  
 	static
 	{
 		String loadFailedMsg = "Failed to load MsgHook library.\n";
 		//System.out.println("SynthuseDlg.config.disableUiaBridge: " + SynthuseDlg.config.disableUiaBridge);
 	    String archDataModel = System.getProperty("sun.arch.data.model");//32 or 64 bit
 	    try {
-	    	loadNativeLibraryFromJar("/MsgHook" + archDataModel + ".dll");
+	    	targetdllName = "/MsgHook" + archDataModel + ".dll";
+	    	dll64bitName = SaveNativeLibraryFromJar("/MsgHook64.dll"); //need to save both 32 and 64 bit dlls for hooking both types
+	    	dll32bitName = SaveNativeLibraryFromJar("/MsgHook32.dll");
+	    	if (archDataModel.equals("32"))
+	    		System.load(dll32bitName);
+	    	else
+	    		System.load(dll64bitName);
+	    	
 	    } catch (Exception ex) {
 	    	StringWriter sw = new StringWriter();
 	    	PrintWriter pw = new PrintWriter(sw);
@@ -36,7 +45,7 @@ public class MsgHook {
 	    }
 	}
 	
-    public static void loadNativeLibraryFromJar(String path) {
+    public static String SaveNativeLibraryFromJar(String path) {
         // Obtain filename from path
         String[] parts = path.split("/");
         String filename = (parts.length > 1) ? parts[parts.length - 1] : null;
@@ -58,7 +67,7 @@ public class MsgHook {
         }
         if (!temp.exists()) { //some reason the temp file wasn't create so abort
             System.out.println("File " + temp.getAbsolutePath() + " does not exist.");
-            return;
+            return "";
         }
  
         // Prepare buffer for data copying
@@ -68,7 +77,7 @@ public class MsgHook {
         InputStream is = MsgHook.class.getResourceAsStream(path);
         if (is == null) { //check if valid
             System.out.println("File " + path + " was not found inside JAR.");
-            return;
+            return "";
         }
         // Open output stream and copy data between source file in JAR and the temporary file
         OutputStream os = null;
@@ -83,23 +92,25 @@ public class MsgHook {
         	e.printStackTrace();
         }
         // Finally, load the library
-        System.load(temp.getAbsolutePath());
+        return temp.getAbsolutePath();
     }
     
-    //public native boolean initialize(int hwnd);
+    public native boolean initialize(String dll32bitName, String dll64bitName);
     public native boolean createMsgHookWindow();
     public native boolean setMsgHookWindowTargetHwnd(int hwnd);
-    public native boolean setMsgHookWindowTargetClass(String classname);
+    public native boolean setMsgHookWindowTargetPid(int pid);
 	public native boolean setMessageHook(int hwnd, int threadId);
 	public native boolean removeMessageHook();
 	//public native boolean shutdown();
 	
-	public static Thread createMsgHookWinThread(final long targetHwnd)
+	public static Thread createMsgHookWinThread(final long targetHwnd, final int targetPid)
 	{
 		Thread t = new Thread() {
 			public void run() {
 				MsgHook mh = new MsgHook();
-				mh.setMsgHookWindowTargetClass("");
+				mh.initialize(dll32bitName, dll64bitName);
+				if (targetPid != 0)
+					mh.setMsgHookWindowTargetPid(targetPid);
 				if (targetHwnd != 0)
 					mh.setMsgHookWindowTargetHwnd((int)targetHwnd);
 				mh.createMsgHookWindow();

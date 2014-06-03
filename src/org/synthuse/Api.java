@@ -20,12 +20,14 @@ import com.sun.jna.platform.win32.WinDef.*;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.platform.win32.BaseTSD.ULONG_PTR;
+import com.sun.jna.platform.win32.WinBase.SYSTEM_INFO;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.platform.win32.WinReg;
 import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.WinNT.LARGE_INTEGER;
 import com.sun.jna.platform.win32.WinUser.WNDENUMPROC;
+import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import com.sun.jna.win32.StdCallLibrary.StdCallCallback;
 import com.sun.jna.win32.W32APIOptions;
@@ -323,6 +325,9 @@ public class Api {
 		boolean GetDiskFreeSpaceEx(String lpDirectoryName, LARGE_INTEGER.ByReference lpFreeBytesAvailable, LARGE_INTEGER.ByReference lpTotalNumberOfBytes, LARGE_INTEGER.ByReference lpTotalNumberOfFreeBytes);
 	    int GetLastError();
 	    Pointer OpenProcess(int dwDesiredAccess, boolean bInheritHandle, Pointer pointer);
+	    boolean CloseHandle(HANDLE hObject);
+	    void GetNativeSystemInfo(SYSTEM_INFO lpSystemInfo);
+	    boolean IsWow64Process(HANDLE hProcess, IntByReference Wow64Process);
 	}
 	
 	
@@ -625,6 +630,36 @@ public class Api {
 		} catch (Exception e) {
 		}
 		return false;
+	}
+	
+	public static boolean isProcess64bit(int pid)
+	{
+		try {
+			SYSTEM_INFO lpSystemInfo = new SYSTEM_INFO();
+			Kernel32.instance.GetNativeSystemInfo(lpSystemInfo);
+			if (lpSystemInfo.processorArchitecture.dwOemID.intValue() == 0)
+			{
+				System.out.println("intel x86"); //not a 64 bit os
+				return false;
+			}
+			
+		    Pointer process = Kernel32.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, new Pointer(pid));
+		    IntByReference isWow64 = new IntByReference(0);
+		    if (!Kernel32.instance.IsWow64Process(new HANDLE(process), isWow64))
+		    {
+		    	//handle error
+		    }
+		    //System.out.println("isProcess64bit " + pid + " = " + isWow64.getValue());
+		    Kernel32.instance.CloseHandle(new HANDLE(process));
+		    if (isWow64.getValue() == 1)
+		    	return false;
+		    return true;
+		    //CloseHandle()
+		} catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	    return false;
 	}
 	
 	public static HWND FindMainWindowFromPid(final long targetProcessId) {

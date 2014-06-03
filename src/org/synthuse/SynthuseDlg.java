@@ -29,6 +29,7 @@ import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.factories.FormFactory;
 */
 import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.ptr.PointerByReference;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
@@ -50,7 +51,7 @@ public class SynthuseDlg extends JFrame {
 	/**
 	 * 
 	 */
-	public static String VERSION_STR = "1.2.1";
+	public static String VERSION_STR = "1.2.2";
 
 	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/gnome-robots.png";
 	public static String RES_STR_REFRESH_IMG = "/org/synthuse/img/rapidsvn.png";
@@ -77,6 +78,7 @@ public class SynthuseDlg extends JFrame {
 	public static Config config = new Config(Config.DEFAULT_PROP_FILENAME);
 	private String dialogResult = "";
 	private String lastDragHwnd = "";
+	private int lastDragPid = 0;
 	private String lastRuntimeId ="";
 	private JComboBox<String> cmbXpath;
 	private JButton btnTestIde;
@@ -195,10 +197,10 @@ public class SynthuseDlg extends JFrame {
 							*/
 			    			long lastHwndLong = 0;
 			    			try {
-			    				lastHwndLong = Long.parseLong(lastDragHwnd);
+			    				//lastHwndLong = Long.parseLong(lastDragHwnd);
 			    			} catch (Exception ex) {
 			    			}
-			    			MsgHook.createMsgHookWinThread(lastHwndLong);
+			    			MsgHook.createMsgHookWinThread(lastHwndLong, lastDragPid);
 			    			
 			    		}
 			    	}
@@ -510,6 +512,10 @@ public class SynthuseDlg extends JFrame {
 		String handleStr = Api.GetHandleAsString(hwnd);
 		String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.getWindowClassName(hwnd));
 		String parentStr = Api.GetHandleAsString(User32.instance.GetParent(hwnd));
+		PointerByReference pointer = new PointerByReference();
+		User32.instance.GetWindowThreadProcessId(hwnd, pointer);
+		int pid = pointer.getPointer().getInt(0);
+
 		String enumProperties = "";
     	if (!SynthuseDlg.config.isUiaBridgeDisabled())
     		enumProperties = uiabridge.getWindowInfo(targetX, targetY, WindowInfo.UIA_PROPERTY_LIST_ADV);
@@ -524,6 +530,7 @@ public class SynthuseDlg extends JFrame {
 			}
 			lastDragHwnd = handleStr;
 			lastRuntimeId = runtimeId;
+			lastDragPid = pid;
 			//lastDragHwnd = (hwnd + "");
 			if (framework.equals(UiaBridge.FRAMEWORK_ID_WPF) || framework.equals(UiaBridge.FRAMEWORK_ID_SILVER))
 			{// WPF and Silverlight apps don't expose their child windows boundaries the same as win32 apps

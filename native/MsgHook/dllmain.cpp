@@ -15,6 +15,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		{
+			//printf("debug DLL_PROCESS_ATTACH hModule: %ld\n", (long)hModule);
 			TCHAR szBaseName[_MAX_FNAME], szTmp[_MAX_FNAME];
 			memset((void *)&szBaseName, '\0', sizeof(TCHAR) * _MAX_FNAME);
 
@@ -23,6 +24,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			//_wsplitpath(szTmp, NULL, NULL, szBaseName, NULL);
 
 			wcscat_s(szBaseName, TEXT("MsgHookSharedMem"));       // add specifier string
+			if (IsCurrentProcess64Bit())
+				wcscat_s(szBaseName, TEXT("64"));       // add bit specifier
+			else
+				wcscat_s(szBaseName, TEXT("32"));       // add bit specifier
 
 			hMappedFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(GLOBALDATA), szBaseName);
 			pData = (GLOBALDATA*)MapViewOfFile(hMappedFile, FILE_MAP_WRITE, 0, 0, 0);
@@ -34,6 +39,13 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 				pData->g_hWnd = NULL;     // and initialize the other handles
 				pData->g_CwpHook = NULL;
 				pData->g_MsgHook = NULL;
+				pData->g_CwpHookProc = NULL;
+			}
+			else
+			{
+				//open
+				hMappedFile = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, szBaseName);
+				pData = (GLOBALDATA*)MapViewOfFile(hMappedFile, FILE_MAP_ALL_ACCESS, 0, 0, 0);
 			}
 			DisableThreadLibraryCalls((HMODULE)hModule);
 		}

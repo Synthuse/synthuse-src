@@ -16,20 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
-    <None Include="MsgHookTest.ico">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="small.ico">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="MsgHook.def">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="binary1.bin">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\SetMsgHook\bin\SetMsgHook64.exe" />
-    <None Include="..\SetMsgHook\bin\SetMsgHook32.exe" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -38,16 +24,7 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="org_synthuse_MsgHook.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MsgLookup.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ResExtract.h">
+    <ClInclude Include="MsgHook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -55,22 +32,8 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MsgHook.cpp">
+    <ClCompile Include="SetMsgHook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="org_synthuse_MsgHook.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MsgHookWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="MsgHookTest.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -11,6 +11,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "MsgLookup.h"
+#include "ResExtract.h"
 //#include "MsgHookTest.h"
 //#include "MsgHook.h"
 
@@ -24,18 +25,25 @@ HWND mainHwnd = NULL;
 HMENU mainMenu = NULL;
 HWND txtbox = NULL;
 HWND targetHwnd = NULL;
+DWORD targetPid = 0;
 const int txtboxSpacing = 2;
 
+long msgCount = 0;
 
-bool filterWmCommand = true;
+//message filters flags
+bool filterWmCommand = false;
 bool filterWmNotify = false;
 bool filterCustom = false;
 bool filterAbove = false;
 
+TCHAR dll32bitName[500] = _T("");
+TCHAR dll64bitName[500] = _T("");
+char dllProcName[500] = "CwpHookProc";
 
 //#define MAX_TEST_SIZE 100
 //TCHAR targetClassname[MAX_TEST_SIZE] = _T("Notepad");
-TCHAR targetClassname[MAX_TEST_SIZE] = _T("WordPadClass");
+TCHAR targetProcessId[MAX_TEST_SIZE] = _T("");
+TCHAR targetClassname[MAX_TEST_SIZE] = _T("");
 TCHAR targetHwndStr[MAX_TEST_SIZE] = _T("");
 TCHAR testWmSettextL[MAX_TEST_SIZE] = _T("This is a test");
 TCHAR testWmSettextW[MAX_TEST_SIZE] = _T("0");
@@ -117,30 +125,75 @@ void InitMsgFiltersAndLookup()
 void StartMessageHook()
 {
 	AppendText(txtbox, _T("Starting Message Hook\r\n"));
-	targetHwnd = FindWindow(targetClassname, NULL);
-
-	if (_tcscmp(targetHwndStr, _T("")) != 0) //if target HWND was used then override classname hwnd
+	//targetHwnd = FindWindow(targetClassname, NULL);
+	
+	TCHAR tmp[500];
+	
+	DWORD tid = 0;
+	if (_tcscmp(targetHwndStr, _T("")) != 0) //if target HWND was used
 	{
 		TCHAR *stopStr;
 		targetHwnd = (HWND)_tcstol(targetHwndStr, &stopStr, 10);
+		tid = GetWindowThreadProcessId(targetHwnd, NULL);
+		_stprintf_s(tmp, _T("Target Handle: %ld, and Thread Id: %ld\r\n"), targetHwnd, tid);
 	}
 
-	DWORD tid = GetWindowThreadProcessId(targetHwnd, NULL);
-
+	targetPid = 0;
+	if (_tcscmp(targetProcessId, _T("")) != 0) //if target pid was used
+	{
+		TCHAR *stopStr;
+		targetPid = (DWORD)_tcstol(targetProcessId, &stopStr, 10);
+		tid = GetProcessMainThreadId(targetPid);
+		_stprintf_s(tmp, _T("Target PId: %ld, and Thread Id: %ld\r\n"), targetPid, tid);		
+	}
+	
 	InitMsgFiltersAndLookup();
 	//InitializeMsgLookup();
 
-	TCHAR tmp[50];
-	_stprintf_s(tmp, _T("Target Handle: %ld, and Thread Id: %ld\r\n"), targetHwnd, tid);
 	AppendText(txtbox, tmp);
 	
 	//block self/global msg hook
-	if (targetHwnd == NULL || tid == 0) {
-		AppendText(txtbox, _T("Target window not found\r\n"));
+	if (tid == 0) {
+		AppendText(txtbox, _T("Target thread not found\r\n"));
 		return;
 	}
 	
-	//if (InitMsgHook(mainHwnd, tid))
+	if (targetPid != 0) // handle various types of bit matching
+	{
+		BOOL current64bit = IsCurrentProcess64Bit();
+		if (IsProcess64Bit(targetPid) && current64bit)
+		{
+			_stprintf_s(tmp, _T("Target PId (%ld) is a matching 64 bit process\r\n"), targetPid);
+			SetCustomMsgHookDll(dll64bitName, dllProcName);
+		}
+		else if(!IsProcess64Bit(targetPid) && !current64bit)
+		{
+			_stprintf_s(tmp, _T("Target PId (%ld) is a matching 32 bit process\r\n"), targetPid);
+			SetCustomMsgHookDll(dll32bitName, dllProcName);
+		}
+		else
+		{
+			_stprintf_s(tmp, _T("Target PId (%ld) is a not matching bit process\r\n"), targetPid);
+			AppendText(txtbox, tmp);
+			TCHAR *dllname = dll32bitName;
+			TCHAR *exename = _T("SetMsgHook32.exe");
+			int setMsgHookRes = IDR_SETMH32;
+			if (IsProcess64Bit(targetPid))
+			{
+				dllname = dll64bitName;
+				exename = _T("SetMsgHook64.exe");
+				setMsgHookRes = IDR_SETMH64;
+			}
+			_stprintf_s(tmp, _T("%s %s 0 %d"), exename, dllname, targetPid);
+			RunResource(setMsgHookRes, tmp);
+			//EnableMenuItem(mainMenu, ID_FILE_STOPHOOK, MF_ENABLED);
+			//EnableMenuItem(mainMenu, ID_FILE_STARTHOOK, MF_DISABLED | MF_GRAYED);
+			_tcscat_s(tmp, 500, _T("\r\n"));
+			AppendText(txtbox, tmp);
+			return;
+		}
+		AppendText(txtbox, tmp);
+	}
 	if (SetMsgHook(mainHwnd, tid))
 	{
 		EnableMenuItem(mainMenu, ID_FILE_STOPHOOK, MF_ENABLED);
@@ -158,6 +211,7 @@ void StopMessageHook()
 	AppendText(txtbox, TEXT("Stopping Message Hook\r\n"));
 	//KillHook();
 	RemoveHook();
+	msgCount = 0;
 }
 
 bool OnCopyData(COPYDATASTRUCT* pCopyDataStruct) // WM_COPYDATA lParam will have this struct
@@ -193,10 +247,11 @@ bool OnCopyData(COPYDATASTRUCT* pCopyDataStruct) // WM_COPYDATA lParam will have
 		}
 		if (_tcscmp(msgName, _T("")) != 0)
 		{
+			++msgCount;
 			TCHAR msgHwndClassname[20];
 			GetClassName(Event.hWnd, msgHwndClassname, 20);
 			TCHAR tmp[200];
-			_stprintf_s(tmp, _T("hwnd: %ld (%s), msg: %s (%ld), wparam: '%s'[%ld], lparam: '%s'{%ld}\r\n"), Event.hWnd, msgHwndClassname, msgName, Event.nCode, Event.wParamStr, Event.wParam, Event.lParamStr,Event.lParam);
+			_stprintf_s(tmp, _T("<%07ld>  hwnd: %ld (%s), msg: %s (%ld), wparam: '%s'[%ld], lparam: '%s'{%ld}\r\n"), msgCount, Event.hWnd, msgHwndClassname, msgName, Event.nCode, Event.wParamStr, Event.wParam, Event.lParamStr,Event.lParam);
 			AppendText(txtbox, tmp);
 		}
 	}
@@ -225,6 +280,11 @@ void SendWmCommand() //ID_TESTMSGS_WM
 	long wparam = _tcstol(testWmCommandW, &stopStr, 10);
 	long lparam = _tcstol(testWmCommandL, &stopStr, 10);
 	SendMessage(sendHwnd, WM_COMMAND, wparam, lparam);
+
+	/*
+	TCHAR tmp[500];
+	_stprintf_s(tmp, _T("hook handle %ld\r\n"), (long)GetCurrentHookHandle());
+	AppendText(txtbox, tmp); */
 }
 
 void HotKeyPressed(WPARAM wParam)
@@ -254,6 +314,19 @@ extern "C" __declspec(dllexport) void CreateMsgHookWindow(LPTSTR lpCmdLine)
 
 int APIENTRY StartWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
+	// get this Dlls path, by default set both 32 and 64 bit names the same
+	if (_tcscmp(dll32bitName, _T("")) == 0 && _tcscmp(dll64bitName, _T("")) == 0)
+	{
+		HMODULE hm = NULL;
+		if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCWSTR) &StartWinMain, &hm))
+		{
+			int ret = GetLastError();
+			fprintf(stderr, "GetModuleHandle returned %d\n", ret);
+		}
+		GetModuleFileName(hm, dll32bitName, sizeof(dll32bitName));
+		GetModuleFileName(hm, dll64bitName, sizeof(dll64bitName));
+		//MessageBox(0, dll32bitname, dll64bitname, 0);
+	}
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -274,6 +347,17 @@ int APIENTRY StartWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR l
 	}
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MSGHOOKTEST));
+
+	if (lpCmdLine != NULL) //process command line args
+	{
+		if (_tcslen(lpCmdLine) > 0)
+		{
+			TCHAR *stopStr;
+			targetPid = (DWORD)_tcstol(lpCmdLine, &stopStr, 10);
+			_stprintf_s(targetProcessId, _T("%ld"), (long)targetPid);
+			StartMessageHook();
+		}
+	}
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -315,7 +399,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
 	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MSGHOOKTEST));
+	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MSGHOOKICO));
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_MSGHOOKTEST);
@@ -419,6 +503,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_TESTMSGS_WMCOM:
 			SendWmCommand();
 			break;
+		case ID_PROC64TEST:
+			if (_tcscmp(targetProcessId, _T("")) != 0) //if target pid was used
+			{
+				TCHAR tmp[500];
+				TCHAR *stopStr;
+				targetPid = (DWORD)_tcstol(targetProcessId, &stopStr, 10);
+				BOOL current64bit = IsCurrentProcess64Bit();
+				if (IsProcess64Bit(targetPid) && current64bit)
+					_stprintf_s(tmp, _T("Target pid (%ld) is a matching 64 bit process\r\n"), targetPid);
+				else if(!IsProcess64Bit(targetPid) && !current64bit)
+					_stprintf_s(tmp, _T("Target pid (%ld) is a matching 32 bit process\r\n"), targetPid);
+				else if (IsProcess64Bit(targetPid))
+					_stprintf_s(tmp, _T("Target pid (%ld) is 64 bit process\r\n"), targetPid);
+				else
+					_stprintf_s(tmp, _T("Target pid (%ld) is 32 bit process\r\n"), targetPid);
+				AppendText(txtbox, tmp);
+				//ExtractResource(IDR_SETMH32, _T("SetMsgHook32.exe"));
+				//_stprintf_s(tmp, _T(" %s %ld %d"), dll32bitName, (long)mainHwnd, targetPid);
+				//RunResource(IDR_SETMH32, tmp);
+
+				//MessageBox(0, , _T("64 bit Test"), 0);
+			}
+			break;
 		case ID_FILE_SETTINGS:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, DlgProc);
 			break;
@@ -468,7 +575,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 		{
 			//IDC_EDIT1
-			SendDlgItemMessage(hDlg, IDC_EDIT1, WM_SETTEXT, 0 , (LPARAM)targetClassname);
+			//SendDlgItemMessage(hDlg, IDC_EDIT1, WM_SETTEXT, 0 , (LPARAM)targetClassname);
+			SendDlgItemMessage(hDlg, IDC_TARGETPID, WM_SETTEXT, 0 , (LPARAM)targetProcessId);
 			if (filterWmCommand)
 				SendDlgItemMessage(hDlg, IDC_CHECK_CMD, BM_SETCHECK, BST_CHECKED, 0);
 			if (filterWmNotify)
@@ -489,7 +597,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK) //only save on OK
 		{
-			GetDlgItemText(hDlg, IDC_EDIT1, targetClassname, 100);
+			//GetDlgItemText(hDlg, IDC_EDIT1, targetClassname, MAX_TEST_SIZE);
+			GetDlgItemText(hDlg, IDC_TARGETPID, targetProcessId, MAX_TEST_SIZE);
 			GetDlgItemText(hDlg, IDC_WMCOMW, testWmCommandW, MAX_TEST_SIZE);
 			GetDlgItemText(hDlg, IDC_WMCOML, testWmCommandL, MAX_TEST_SIZE);
 			GetDlgItemText(hDlg, IDC_WMSETW, testWmSettextW, MAX_TEST_SIZE);

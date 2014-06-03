@@ -176,5 +176,23 @@ public class WindowsCommands extends BaseCommand {
 		
 		return true;
 	}
+	
+	public boolean cmdSendMessage(String[] args) {
+		if (!checkArgumentLength(args, 4))
+			return false;
+		WinPtr handle = findHandleWithXpath(args[0]); //xpath to HWND is first argument
+		if (handle.isEmpty())
+			return false;
+		int msg = Integer.parseInt(args[1]);
+		int id = Integer.parseInt(args[2]); //context menu id is supplied as second argument
+		int idLparam = Integer.parseInt(args[3]); //context menu id is supplied as second argument
+		handle.convertToNativeHwnd();
+		//LRESULT result = 
+		//System.out.println("Send Message  WM_COMMAND to " + handle.toString() + " PARAMS: " + id + ", " + idLparam);
+		//api.user32.PostMessage(handle.hWnd, Api.WM_COMMAND, new WPARAM(id), new LPARAM(0));
+		api.user32.SendMessage(handle.hWnd, msg, new WPARAM(id), new LPARAM(idLparam));
+		
+		return true;
+	}
 }
 

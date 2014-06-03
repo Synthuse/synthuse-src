@@ -117,6 +117,9 @@ public class CommandPopupMenu extends JPopupMenu {
 		CommandMenuItem mntmSendCommandMsg = new CommandMenuItem("sendCommandMsg", 4);
 		mnWinMessages.add(mntmSendCommandMsg);
 		
+		CommandMenuItem mntmSendMessage = new CommandMenuItem("sendMessage", 5);
+		mnWinMessages.add(mntmSendMessage);
+		
 		CommandMenuItem mntmSetcursorposition = new CommandMenuItem("setCursorPosition", 3);
 		mnWinMessages.add(mntmSetcursorposition);
 		
@@ -231,6 +234,8 @@ public class CommandPopupMenu extends JPopupMenu {
 		if (paramCount > 2)
 			actionStr += "with |  |";
 		if (paramCount > 3)
+			actionStr += " and |  |";
+		if (paramCount > 4)
 			actionStr += " and |  |";
 		return actionStr;
 	}

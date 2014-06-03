@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     org_synthuse_MsgHook
+ * Method:    initialize
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_synthuse_MsgHook_initialize
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_synthuse_MsgHook
  * Method:    createMsgHookWindow
  * Signature: ()Z
  */
@@ -25,11 +33,11 @@ JNIEXPORT jboolean JNICALL Java_org_synthuse_MsgHook_setMsgHookWindowTargetHwnd
 
 /*
  * Class:     org_synthuse_MsgHook
- * Method:    setMsgHookWindowTargetClass
- * Signature: (Ljava/lang/String;)Z
+ * Method:    setMsgHookWindowTargetPid
+ * Signature: (I)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_synthuse_MsgHook_setMsgHookWindowTargetClass
-  (JNIEnv *, jobject, jstring);
+JNIEXPORT jboolean JNICALL Java_org_synthuse_MsgHook_setMsgHookWindowTargetPid
+  (JNIEnv *, jobject, jint);
 
 /*
  * Class:     org_synthuse_MsgHook

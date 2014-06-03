@@ -22,6 +22,7 @@ import com.sun.jna.platform.win32.WinDef.LPARAM;
 import com.sun.jna.platform.win32.WinDef.LRESULT;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinDef.WPARAM;
+import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.ptr.PointerByReference;
 
 public class WindowInfo {
@@ -50,6 +51,7 @@ public class WindowInfo {
 	public int menus = 0;
 	public HMENU menu = null;
 	public boolean useUiaBridge = false;
+	public boolean is64bit = false;
 	
 	public Map<String, String> extra = null;
     
@@ -146,13 +148,10 @@ public class WindowInfo {
 				useUiaBridge = true;
 		}
 		else {
-			
 			PointerByReference pointer = new PointerByReference();
 			User32.instance.GetWindowThreadProcessId(hWnd, pointer);
 			pid = pointer.getPointer().getInt(0);
-		    Pointer process = Kernel32.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, pointer.getValue());
-		    Psapi.instance.GetModuleBaseNameW(process, null, buffer2, 512);
-		    processName = Native.toString(buffer2);
+			getProcessInfo();
 		    //test to see if uiaBridge should be used on this parent
 			if (this.className.startsWith("HwndWrapper") || this.className.startsWith("WindowsForms"))
 				useUiaBridge = true;
@@ -204,6 +203,8 @@ public class WindowInfo {
         		this.hwndStr = "";
         	//if (this.framework == null)
         	//	this.framework = "na";
+        	if(this.controlType.equals("window"))
+        		this.isChild = false;
     		return;
     	}
     	// non-wildcard mode
@@ -234,7 +235,9 @@ public class WindowInfo {
     			value = value.substring(0, MAX_TEXT_SIZE);
     	if (this.hwndStr == null)
     		this.hwndStr = "";
-    	
+    	getProcessInfo();
+    	if(this.controlType.equals("window"))
+    		this.isChild = false;
     	/*
     	this.rect = new RECT();
     	try {
@@ -248,6 +251,18 @@ public class WindowInfo {
     		e.printStackTrace();
     	}
     	*/
+    }
+    
+    private void getProcessInfo()
+    {
+    	if (pid == 0)
+    		return;
+        char[] buffer = new char[1026];
+	    Pointer process = Kernel32.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, new Pointer(pid));
+	    Psapi.instance.GetModuleBaseNameW(process, null, buffer, 512);
+	    processName = Native.toString(buffer);
+	    Kernel32.instance.CloseHandle(new HANDLE(process));
+		is64bit = Api.isProcess64bit((int)pid);
     }
     
     

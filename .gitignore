@@ -8,4 +8,4 @@ native/uiabridge/release
 native/uiabridge/Debug
 !native/uiabridge/bin
 !native/MsgHook/bin
-!native/MsgHookTest/bin
+!native/SetMsgHook/bin

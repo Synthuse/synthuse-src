@@ -1,0 +1,5 @@
+LIBRARY MsgHook
+
+EXPORTS
+  CwpHookProc @1
+  MsgHookProc @2

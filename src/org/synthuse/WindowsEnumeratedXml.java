@@ -195,6 +195,7 @@ public class WindowsEnumeratedXml implements Runnable{
 					if (!w.controlType.isEmpty())
 						win.setAttribute("type", w.controlType);
 				if (!w.isChild) {
+					//win.setAttribute("parent", "yes");
 					parentCount++;
 					if (w.processName != null && !w.processName.isEmpty()) {
 						if (!processList.containsKey(w.pid+""))
@@ -203,11 +204,20 @@ public class WindowsEnumeratedXml implements Runnable{
 						if (w.processName != null)
 							win.setAttribute("PROCESS", w.processName.toUpperCase());
 					}
+					if (w.pid != 0)
+					{
+						if (w.is64bit)
+							win.setAttribute("bits", "64");
+						else
+							win.setAttribute("bits", "32");
+					}
 				}
 				if (w.pid != 0)
 					win.setAttribute("pid", w.pid+"");
 				//else
 					//win.setAttribute("parent", w.parent + ""); // not really needed since child node is append to parent node
+				
+				
 				if (w.extra != null) {
 					for(String extraName: w.extra.keySet()) {
 						win.setAttribute(extraName, w.extra.get(extraName)+"");
