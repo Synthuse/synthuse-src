@@ -88,7 +88,7 @@ public class SynthuseDlg extends JFrame {
 	//private MessageHookFrame msgHook = null;
 	private int targetX;
 	private int targetY;
-	private UiaBridge uiabridge = new UiaBridge();
+	private UiaBridge uiabridge = null;
 
 	/**
 	 * Launch the application.
@@ -296,7 +296,7 @@ public class SynthuseDlg extends JFrame {
 		
 		btnFind = new JButton("Find");
 		btnFind.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent arg0) {				
 				String xpathItem = cmbXpath.getSelectedItem().toString();
 				int matches = XpathManager.nextXpathMatch(xpathItem, textPane, lblStatus, false);
 				if (matches < 0) //check for an error
@@ -427,43 +427,18 @@ public class SynthuseDlg extends JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
+				//System.out.println("synthuse window closed");
 				KeyboardHook.stopKeyboardHook(); //stop keyboard hook
 				config.save();
 				SynthuseDlg.this.dispose(); // force app to close
 			}
 		});
 		
-		KeyboardHook.addKeyEvent(config.getRefreshKeyCode(), true, true, false);// refresh xml when CTRL+SHIFT+3 is pressed
-		KeyboardHook.addKeyEvent(config.getTargetKeyCode(), true, true, false);// target window when CTRL+SHIFT+~ is pressed
-		//add global hook and event
-		KeyboardHook.StartKeyboardHookThreaded(new KeyboardHook.KeyboardEvents() {
-			@Override
-			public void keyPressed(KeyboardHook.TargetKeyPress target) {
-				//System.out.println("target key pressed " + target.targetKeyCode);
-				if (target.targetKeyCode == config.getRefreshKeyCode()){
-					SwingUtilities.invokeLater(new Runnable() {//swing components are not thread safe, this will run on Swings event dispatch thread
-		                public void run() {
-		                	btnRefresh.doClick();
-		                }
-					});
-				}
-				if (target.targetKeyCode == config.getTargetKeyCode()){
-					SwingUtilities.invokeLater(new Runnable() {//swing components are not thread safe, this will run on Swings event dispatch thread
-		                public void run() {
-					    	//if (!SynthuseDlg.config.isUiaBridgeDisabled())
-					    	//	uiabridge.initialize("");//need to re-initialize because it might be in a different thread.
-							Point p = Api.getCursorPos();
-							targetX = p.x;
-							targetY = p.y;
-							targetDragged();
-		                }
-					});
-
-				}
-			}
-		});
+		initializeHotKeys();
 		
 		btnRefresh.doClick();
+		//uiabridge = new UiaBridge();
+		//uiabridge.useCachedRequests(false);
 		refreshDatabinding();
 		super.setAlwaysOnTop(config.isAlwaysOnTop());
 	}
@@ -497,7 +472,7 @@ public class SynthuseDlg extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
 		this.setVisible(true);
-		return dialogResult;
+		return dialogResult;// this gets returned immediately
 	}
 	
 	public void refreshDatabinding() {
@@ -505,6 +480,40 @@ public class SynthuseDlg extends JFrame {
 			cmbXpath.setModel(new DefaultComboBoxModel<String>(config.xpathList.split("\u00ba")));
 		if (config.xpathHightlight != null)
 			XmlEditorKit.TAG_HIGHLIGHTED = config.xpathHightlight;
+	}
+	
+	private void initializeHotKeys()
+	{
+		KeyboardHook.clearKeyEvent();
+		KeyboardHook.addKeyEvent(config.getRefreshKeyCode(), true, true, false);// refresh xml when CTRL+SHIFT+3 is pressed
+		KeyboardHook.addKeyEvent(config.getTargetKeyCode(), true, true, false);// target window when CTRL+SHIFT+~ is pressed
+		//add global hook and event
+		KeyboardHook.StartKeyboardHookThreaded(new KeyboardHook.KeyboardEvents() {
+			@Override
+			public void keyPressed(KeyboardHook.TargetKeyPress target) {
+				//System.out.println("target key pressed " + target.targetKeyCode);
+				if (target.targetKeyCode == config.getRefreshKeyCode()){
+					SwingUtilities.invokeLater(new Runnable() {//swing components are not thread safe, this will run on Swings event dispatch thread
+		                public void run() {
+		                	btnRefresh.doClick();
+		                }
+					});
+				}
+				if (target.targetKeyCode == config.getTargetKeyCode()){
+					SwingUtilities.invokeLater(new Runnable() {//swing components are not thread safe, this will run on Swings event dispatch thread
+		                public void run() {
+					    	//if (!SynthuseDlg.config.isUiaBridgeDisabled())
+					    	//	uiabridge.initialize("");//need to re-initialize because it might be in a different thread.
+							Point p = Api.getCursorPos();
+							targetX = p.x;
+							targetY = p.y;
+							targetDragged();
+		                }
+					});
+
+				}
+			}
+		});
 	}
 	
 	public void targetDragged() {
@@ -518,7 +527,13 @@ public class SynthuseDlg extends JFrame {
 
 		String enumProperties = "";
     	if (!SynthuseDlg.config.isUiaBridgeDisabled())
+    	{
+    		//System.out.println("useCachedRequests false");
+    		if (uiabridge == null)
+    			uiabridge = new UiaBridge();
+    		uiabridge.useCachedRequests(false);
     		enumProperties = uiabridge.getWindowInfo(targetX, targetY, WindowInfo.UIA_PROPERTY_LIST_ADV);
+    	}
 		String runtimeId = WindowInfo.getRuntimeIdFromProperties(enumProperties);
 		String framework = WindowInfo.getFrameworkFromProperties(enumProperties);
 		Rectangle rect = UiaBridge.getBoundaryRect(enumProperties);

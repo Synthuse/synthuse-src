@@ -78,11 +78,15 @@ void MsgHook_CreateMsgHookWindow(LPTSTR args)
 	if (msgHookDll != NULL)
 	{
 		CreateMsgHookWindow = (CREATEMSGHOOKWINDOW)GetProcAddress(msgHookDll, "CreateMsgHookWindow");
+		SetGlobalDLLInstance = (SETGLOBALDLLINSTANCE)GetProcAddress(msgHookDll, "SetGlobalDLLInstance");
 		if (CreateMsgHookWindow)
 		{
+			SetGlobalDLLInstance(msgHookDll);
 			CreateMsgHookWindow(args);
 		}
 	}
+	if (msgHookDll != NULL)
+		FreeLibrary(msgHookDll);
 }
 
 BOOL MsgHook_SetMsgHook(HWND hw, int threadId)

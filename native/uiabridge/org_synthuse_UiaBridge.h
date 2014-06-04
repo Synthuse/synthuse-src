@@ -25,6 +25,14 @@ JNIEXPORT void JNICALL Java_org_synthuse_UiaBridge_shutdown
 
 /*
  * Class:     org_synthuse_UiaBridge
+ * Method:    useCachedRequests
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_org_synthuse_UiaBridge_useCachedRequests
+  (JNIEnv *, jobject, jboolean);
+
+/*
+ * Class:     org_synthuse_UiaBridge
  * Method:    addEnumFilter
  * Signature: (Ljava/lang/String;Ljava/lang/String;)I
  */

@@ -103,6 +103,7 @@ public class UiaBridge {
     
     public native void initialize(String properties);
     public native void shutdown();
+    public native void useCachedRequests(boolean cacheRequestsFlg);
     public native int addEnumFilter(String propertyName, String propertyValue);
     public native void clearEnumFilters();
     public native String[] enumWindowInfo(String properties);
@@ -169,10 +170,12 @@ public class UiaBridge {
 		{
 			String[] boundarySplt = replaceEscapedCodes(propSplt[propSplt.length - 1]).split(",");
 			if (boundarySplt.length == 4 )
-			rect.x = Integer.parseInt(boundarySplt[0]);
-			rect.y = Integer.parseInt(boundarySplt[1]);
-			rect.width = Integer.parseInt(boundarySplt[2]);
-			rect.height = Integer.parseInt(boundarySplt[3]);
+			{
+				rect.x = Integer.parseInt(boundarySplt[0]);
+				rect.y = Integer.parseInt(boundarySplt[1]);
+				rect.width = Integer.parseInt(boundarySplt[2]);
+				rect.height = Integer.parseInt(boundarySplt[3]);
+			}
 		}
 		return rect;
 	}

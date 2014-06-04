@@ -60,11 +60,18 @@ int main(array<System::String ^> ^args)
 {
     Console::WriteLine(L"UI Automation Bridge Test");
 	//System::String ^propList = L"RuntimeIdProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ClassNameProperty,NameProperty";
-	System::String ^propList = L"RuntimeIdProperty,ParentRuntimeIdProperty,NativeWindowHandleProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ControlTypeProperty,ClassNameProperty,NameProperty,BoundingRectangleProperty";
+	System::String ^propList = L"RuntimeIdProperty,ParentRuntimeIdProperty,NativeWindowHandleProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ControlTypeProperty,ClassNameProperty,NameProperty,ValueProperty,BoundingRectangleProperty";
 	AutomationBridge ^ab = gcnew AutomationBridge(propList);
 	//System::String ^propList = L"RuntimeIdProperty,BoundingRectangleProperty";
 	Console::WriteLine(propList);
+	Console::WriteLine(L"\nCached Requests Enabled");
+	ab->useCachedRequests(true);//disable cache
+	runBasicTests(ab, propList);
+	runBasicTests(ab, propList);
+	runBasicTests(ab, propList);
 
+	Console::WriteLine(L"Cached Requests Disabled");
+	ab->useCachedRequests(false);//disable cache
 	runBasicTests(ab, propList);
 	runBasicTests(ab, propList);
 	runBasicTests(ab, propList);
@@ -102,6 +109,6 @@ int main(array<System::String ^> ^args)
 	//System::Double seconds = System::Math::Round(System::DateTime::Now.Subtract(start).TotalSeconds, 4);
 	//Console::WriteLine(L"Total Elements: {0} in {1} seconds", winInfo->Length, seconds);
 	Console::WriteLine(L"press any key to exit");
-	getch();//wait for user input
+	_getch();//wait for user input
     return 0;
 }

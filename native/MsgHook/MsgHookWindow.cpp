@@ -23,6 +23,7 @@ TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 HWND mainHwnd = NULL;
 HMENU mainMenu = NULL;
+#define TXTBOX_LIMIT 700000
 HWND txtbox = NULL;
 HWND targetHwnd = NULL;
 DWORD targetPid = 0;
@@ -68,9 +69,9 @@ void AppendText(HWND txtHwnd, LPCTSTR newText)
 	if (isPaused)
 		return;
 	DWORD len = GetWindowTextLength(txtHwnd);
-	if (len > 25000)
+	if (len > (TXTBOX_LIMIT - 500))
 	{//need to truncate the beginning so the text doesn't go past it's limit
-		SendMessage(txtHwnd, EM_SETSEL, 0, 10000);
+		SendMessage(txtHwnd, EM_SETSEL, 0, 20000);
 		SendMessage(txtHwnd, EM_REPLACESEL, 0, (LPARAM)_T(""));
 		len = GetWindowTextLength(txtHwnd);
 	}
@@ -173,7 +174,10 @@ void StartMessageHook()
 		}
 		else
 		{
-			_stprintf_s(tmp, _T("Target PId (%ld) is a not matching bit process\r\n"), targetPid);
+			if (current64bit)
+				_stprintf_s(tmp, _T("Target PId (%ld) is a not matching 64 bit process.\r\n"), targetPid);
+			else
+				_stprintf_s(tmp, _T("Target PId (%ld) is a not matching 32 bit process.\r\n"), targetPid);
 			AppendText(txtbox, tmp);
 			TCHAR *dllname = dll32bitName;
 			TCHAR *exename = _T("SetMsgHook32.exe");
@@ -184,12 +188,17 @@ void StartMessageHook()
 				exename = _T("SetMsgHook64.exe");
 				setMsgHookRes = IDR_SETMH64;
 			}
+			_tcscat_s(tmp, 500, _T("Do you wish to open a new matching Message Hook Window?"));
+			int mbResult = MessageBox(mainHwnd, tmp, _T("Message Hook"), MB_ICONQUESTION | MB_YESNO);
+			if (mbResult == IDNO)
+				return ;
 			_stprintf_s(tmp, _T("%s %s 0 %d"), exename, dllname, targetPid);
 			RunResource(setMsgHookRes, tmp);
 			//EnableMenuItem(mainMenu, ID_FILE_STOPHOOK, MF_ENABLED);
 			//EnableMenuItem(mainMenu, ID_FILE_STARTHOOK, MF_DISABLED | MF_GRAYED);
 			_tcscat_s(tmp, 500, _T("\r\n"));
 			AppendText(txtbox, tmp);
+			PostQuitMessage(2);
 			return;
 		}
 		AppendText(txtbox, tmp);
@@ -431,6 +440,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    if (!hWnd) {
 	    DWORD lastErr = GetLastError();
 		printf("Error Creating Window %d\n", lastErr);
+		_tprintf(_T("Window Class Name: %s, Instance: %ld\n"), szWindowClass, (long)hInstance);
 		return FALSE;
    }
    mainHwnd = hWnd;
@@ -441,6 +451,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    //WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL
    txtbox = CreateWindow(TEXT("Edit"),TEXT(""), WS_CHILD | WS_VISIBLE | ES_MULTILINE | WS_VSCROLL | ES_AUTOVSCROLL | ES_READONLY, 
 	   txtboxSpacing, txtboxSpacing,rect.right-(txtboxSpacing*2), rect.bottom-(txtboxSpacing*2), hWnd, NULL, NULL, NULL);
+   SendMessage(txtbox, EM_SETLIMITTEXT, (WPARAM)TXTBOX_LIMIT, 0);
 
    HFONT hFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, 
 	  OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 

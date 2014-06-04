@@ -18,6 +18,7 @@ AutomationBridge::AutomationBridge()
 {
 	enumFilters = gcnew Dictionary<System::String ^, System::String ^>();
 	cacheRequest = nullptr;
+	useCache = true;
 	initializeCache("");
 }
 
@@ -25,6 +26,7 @@ AutomationBridge::AutomationBridge(System::String ^cachedProperties)
 {
 	enumFilters = gcnew Dictionary<System::String ^, System::String ^>();
 	cacheRequest = nullptr;
+	useCache = true;
 	initializeCache(cachedProperties);
 }
 
@@ -34,6 +36,11 @@ AutomationBridge::~AutomationBridge()
 	if (cacheRequest != nullptr)
 		cacheRequest->Pop(); //disable UI Automation Cache
 	//Console::WriteLine("disposing of AutomationBridge");
+}
+
+void AutomationBridge::useCachedRequests(System::Boolean cacheRequestsFlg)
+{
+	useCache = cacheRequestsFlg;
 }
 
 void AutomationBridge::initializeCache(System::String ^cachedProperties)
@@ -158,7 +165,10 @@ Boolean AutomationBridge::isElementFiltered(System::Windows::Automation::Automat
 				}
 				else //all other property types that are strings
 				{
-					valStr = element->GetCachedPropertyValue(ap)->ToString();
+					if (useCache)
+						valStr = element->GetCachedPropertyValue(ap)->ToString();
+					else
+						valStr = element->GetCurrentPropertyValue(ap)->ToString();
 					//valStr = element->GetCurrentPropertyValue(ap)->ToString();
 				}
 				//System::Console::WriteLine("test property vals: {0} , {1}", valStr, enumFilters[key]);
@@ -285,7 +295,12 @@ array<System::String ^> ^ AutomationBridge::enumWindowInfo(AutomationElement ^pa
 	//System::Console::WriteLine("get info: {0}", getWindowInfo(element, properties));
 	//AutomationElement ^currentElement = tw->GetFirstChild(element, cacheRequest);
 	AutomationElement ^currentElement = nullptr;
-	currentElement = tw->GetFirstChild(parentElement, cacheRequest);
+
+	if (useCache)
+		currentElement = tw->GetFirstChild(parentElement, cacheRequest);
+	else
+		currentElement = tw->GetFirstChild(parentElement);
+
 	if (currentElement == nullptr)
 	{
 		//System::Console::WriteLine("no children {0}", element->CachedChildren->Count);
@@ -319,7 +334,10 @@ array<System::String ^> ^ AutomationBridge::enumWindowInfo(AutomationElement ^pa
 		{
 			output(ex, "");
 		}
-		currentElement = tw->GetNextSibling(currentElement, cacheRequest);
+		if (useCache)
+			currentElement = tw->GetNextSibling(currentElement, cacheRequest);
+		else
+			currentElement = tw->GetNextSibling(currentElement);
     }
 	return winInfoList->ToArray();
 }
@@ -387,7 +405,12 @@ System::String ^ AutomationBridge::getWindowInfo(AutomationElement ^element, Sys
 					else
 						currentVal = element->GetCurrentPropertyValue(ap); //cached pattern was having issues;
 				}
-				currentVal = element->GetCachedPropertyValue(ap);
+				
+				if (useCache)
+					currentVal = element->GetCachedPropertyValue(ap);
+				else
+					currentVal = element->GetCurrentPropertyValue(ap);
+
 				if (currentVal == nullptr)
 					continue;
 				if (ap->ProgrammaticName->Equals(L"AutomationElementIdentifiers.RuntimeIdProperty"))

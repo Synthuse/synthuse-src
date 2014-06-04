@@ -20,6 +20,7 @@ namespace uiabridge {
 		AutomationBridge(void);
 		AutomationBridge(System::String ^cachedProperties);
 		~AutomationBridge();
+		void useCachedRequests(System::Boolean cacheRequestsFlg);
 		int addEnumFilter(System::String ^propertyName, System::String ^propertyValue);
 		void clearEnumFilters();
 		Boolean isElementFiltered(System::Windows::Automation::AutomationElement ^element);
@@ -38,12 +39,14 @@ namespace uiabridge {
 		static System::String ^PARENT_MODIFIER = L"Parent";//find all children of this matching parent filter
 		static System::String ^FIRST_MODIFIER = L"First"; //find first element matching this filter then stop
 		static System::String ^DEFAULT_CACHED_PROPS = L"RuntimeIdProperty,ParentRuntimeIdProperty,NativeWindowHandleProperty,ProcessIdProperty,FrameworkIdProperty,LocalizedControlTypeProperty,ControlTypeProperty,ClassNameProperty,NameProperty,BoundingRectangleProperty,ValueProperty";
+
 	private:
 		void initializeCache(System::String ^cachedProperties);
 		void output(Exception ^ex, System::String ^message);
 		Dictionary<System::String ^, System::String ^> ^enumFilters;
 		void AutomationBridge::processFilterModifier(Boolean filtered, Boolean modifierChanged, List<System::String ^> ^filterModifierList);
 		CacheRequest ^cacheRequest;
+		System::Boolean useCache;
 		array<AutomationProperty^> ^cachedRootProperties;
 	};
 }

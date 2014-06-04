@@ -57,6 +57,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		TCHAR tmp[100];
 		_stprintf_s(tmp, _T("%ld"), (long)procId);
 		MsgHook_CreateMsgHookWindow(tmp);
+		//_getch();
 		return 0;
 	}
 

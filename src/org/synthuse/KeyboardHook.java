@@ -81,6 +81,8 @@ public class KeyboardHook implements Runnable{
 	public static HHOOK hHook = null;
 	public static LowLevelKeyboardProc lpfn;
 	public static volatile boolean quit = false;
+
+	private static Thread khThread = null;
 	
 	
 	public interface User32Ex extends W32APIOptions {  
@@ -199,6 +201,14 @@ public class KeyboardHook implements Runnable{
 	//stops Keyboard hook and causes the unhook command to be called
 	public static void stopKeyboardHook() {
 		quit = true;
+		if (khThread != null)
+		{
+			try {
+				khThread.join();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	// search target keyboard event list for a match and return it otherwise return null if no match
@@ -228,14 +238,27 @@ public class KeyboardHook implements Runnable{
 		}
 		return target;
 	}
+
+	// clear all target keys to watch for
+	public static void clearKeyEvent() {
+		KeyboardHook.targetList.clear();
+	}
+
 	
 	// add more target keys to watch for
 	public static void addKeyEvent(int targetKeyCode, boolean withShift, boolean withCtrl, boolean withAlt) {
 		KeyboardHook.targetList.add(new TargetKeyPress(KeyboardHook.targetList.size() + 1 , targetKeyCode, withShift, withCtrl, withAlt));
 	}
 	
+	// add more target keys to watch for
+	public static void addKeyEvent(int targetKeyCode) {
+		KeyboardHook.targetList.add(new TargetKeyPress(targetKeyCode));
+	}
+
+	
 	private void registerAllHotKeys() // must register hot keys in the same thread that is watching for hotkey messages
 	{
+		//System.out.println("registering hotkeys");
 		for (TargetKeyPress tkp : KeyboardHook.targetList) {
 			//BOOL WINAPI RegisterHotKey(HWND hWnd, int id, UINT fsModifiers, UINT vk);
 			int modifiers = User32.MOD_NOREPEAT;
@@ -256,18 +279,13 @@ public class KeyboardHook implements Runnable{
 	
 	private void unregisterAllHotKeys() // must register hot keys in the same thread that is watching for hotkey messages
 	{
+		//System.out.println("unregistering hotkeys");
 		for (TargetKeyPress tkp : KeyboardHook.targetList) {
 			if (!User32.INSTANCE.UnregisterHotKey(Pointer.NULL, tkp.idNumber))
 			{
 	            System.out.println("Couldn't unregister hotkey " + tkp.targetKeyCode);
 			}
 		}
-	}
-
-	
-	// add more target keys to watch for
-	public static void addKeyEvent(int targetKeyCode) {
-		KeyboardHook.targetList.add(new TargetKeyPress(targetKeyCode));
 	}
 	
 	@Override
@@ -286,8 +304,9 @@ public class KeyboardHook implements Runnable{
 	}
 	
 	public static void StartKeyboardHookThreaded(KeyboardEvents events) {
-		Thread t = new Thread(new KeyboardHook(events));
-        t.start();
+		quit = false;
+		khThread = new Thread(new KeyboardHook(events));
+		khThread.start();
 	}
 	
 	/*
