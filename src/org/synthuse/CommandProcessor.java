@@ -64,6 +64,13 @@ public class CommandProcessor implements Runnable{
 	
 	public void setQuiet(boolean val) {
 		isQuiet = val;
+		if (val)
+		{
+			if (currentStatusWin != null)
+				currentStatusWin.dispose();
+			currentStatusWin = null;
+		}
+			
 	}
 	
 	public CommandProcessor () {
@@ -245,7 +252,11 @@ public class CommandProcessor implements Runnable{
 			if (command.equals("setWindowText")) 
 				return win.cmdSetText(args);
 			if (command.equals("getWindowText")) 
-				return win.cmdGetText(args);
+				return win.cmdGetText(args);			
+			if (command.equals("selectListIndex"))
+				return win.cmdSelectListIndex(args);
+			if (command.equals("selectListString"))
+				return win.cmdSelectListString(args);
 			
 			// Misc Command and Test/Sample command
 			if (command.equals("delay") || command.equals("pause")) {
@@ -264,6 +275,8 @@ public class CommandProcessor implements Runnable{
 				return main.cmdOpen(args);
 			if (command.equals("displayText")) 
 				return main.cmdDisplayText(args);
+			if (command.equals("disableStatus")) 
+				return main.cmdDisableStatus(args);
 			if (command.equals("forceRefresh")) 
 				return main.cmdForceRefresh(args);
 			if (command.equals("setSpeed")) 
@@ -276,6 +289,8 @@ public class CommandProcessor implements Runnable{
 				return main.cmdVerifyElementNotPresent(args);
 			if (command.equals("verifyElementPresent")) 
 				return main.cmdVerifyElementPresent(args);
+			if (command.equals("takeScreenCapture")) 
+				return main.cmdTakeScreenCapture(args);
 			if (command.equals("targetRefresh")) 
 				return main.cmdTargetRefresh(args);
 			if (command.equals("waitForTitle")) 

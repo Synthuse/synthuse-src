@@ -194,5 +194,23 @@ public class WindowsCommands extends BaseCommand {
 		
 		return true;
 	}
-}
+	
+	public boolean cmdSelectListIndex(String[] args) {
+		if (!checkArgumentLength(args, 2))
+			return false;
+		WinPtr handle = findHandleWithXpath(args[0]); //xpath to HWND is first argument
+		if (handle.isEmpty())
+			return false;
+		handle.convertToNativeHwnd();
+		int index = Integer.parseInt(args[1]);
+		Api.SelectListItemByIndex(handle.hWnd, index);
+		return true;
+	}
+	
+	public boolean cmdSelectListString(String[] args) {
+		//CB_SELECTSTRING
+		return true;
+	
+	}
 
+}

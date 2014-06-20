@@ -80,7 +80,7 @@ public class WindowsEnumeratedXml implements Runnable{
 	public static String getXml() {
 		final Map<String, WindowInfo> infoList = new LinkedHashMap<String, WindowInfo>();
 		
-		HWND desktopRootHwnd = Api.User32.instance.GetDesktopWindow();
+		HWND desktopRootHwnd = Api.User32Ex.instance.GetDesktopWindow();
 		WindowInfo wi = new WindowInfo(desktopRootHwnd, false);
 		wi.controlType = "DesktopRoot";
 		infoList.put(wi.hwndStr, wi);
@@ -94,7 +94,7 @@ public class WindowsEnumeratedXml implements Runnable{
 				return true;
 			}
 	    }
-	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
+	    Api.User32Ex.instance.EnumWindows(new ParentWindowCallback(), 0);
 	    
 	    //process all windows that have been flagged for uiaBridge (useUiaBridge == true)
 	    appendUiaBridgeWindows(infoList);
@@ -132,7 +132,7 @@ public class WindowsEnumeratedXml implements Runnable{
 			}
 	    }
 	    
-		Api.User32.instance.EnumChildWindows(parentHwnd, new ChildWindowCallback(), new Pointer(0));
+		Api.User32Ex.instance.EnumChildWindows(parentHwnd, new ChildWindowCallback(), new Pointer(0));
 	    
 		return infoList;
 	}

@@ -12,13 +12,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
+import org.synthuse.Api.WinDefEx.*;
 import com.sun.jna.Callback;
+import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.platform.win32.WinDef.*;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
+import com.sun.jna.platform.win32.BaseTSD.SIZE_T;
 import com.sun.jna.platform.win32.BaseTSD.ULONG_PTR;
 import com.sun.jna.platform.win32.WinBase.SYSTEM_INFO;
 import com.sun.jna.platform.win32.WinDef;
@@ -81,6 +86,8 @@ public class Api {
     
     public static int PROCESS_QUERY_INFORMATION = 0x0400;
     public static int PROCESS_VM_READ = 0x0010;
+    public static int PROCESS_VM_WRITE = 0x0020;
+    public static int PROCESS_VM_OPERATION = 0x0008;
     
     public static int PS_SOLID = 0x0;
     public static int PS_DASH = 0x1;
@@ -111,8 +118,18 @@ public class Api {
     public static int LVM_GETITEMCOUNT = LVM_FIRST + 4;
     public static int LVM_GETITEM = LVM_FIRST + 75;
     public static int LVIF_TEXT = 0x0001;
+    public static int LVM_GETSELECTEDCOUNT = (LVM_FIRST + 50);
+    public static int LVM_SETITEMSTATE = (LVM_FIRST + 43);
+    public static int LVM_GETITEMSTATE = (LVM_FIRST + 44);
+    public static int LVIS_SELECTED = 0x0002;
+    public static int LVIS_FOCUSED = 0x0001;
     
     public static int LB_GETCOUNT = 0x18B;
+    public static int LB_GETCURSEL = 0x0188;
+    public static int LB_SETCURSEL = 0x0186;
+    public static int LB_GETTEXT = 0x0189;
+    public static int LB_GETTEXTLEN = 0x018A;
+    public static int LB_SELECTSTRING = 396;
     
     public static int CB_GETCOUNT = 0x146;
     
@@ -133,10 +150,18 @@ public class Api {
     public static int MN_GETHMENU = 0x01E1;
     
     public static int CWP_ALL = 0x0000; //    Does not skip any child windows
+    
+    public static int PAGE_READWRITE = 0x04;
+    
+    public static int MEM_COMMIT = 0x1000;
+    public static int MEM_RESERVE = 0x2000;
+    public static int MEM_RELEASE = 0x8000;
+    public static int MEM_FREE = 0x10000;
+    public static int MEM_DECOMMIT = 0x4000;
 	
-    public User32 user32;
-    public Psapi psapi;
-    public Kernel32 kernel32;
+    public User32Ex user32;
+    public PsapiEx psapi;
+    public Kernel32Ex kernel32;
 
     public static final int POINT_Y(long i)
     {
@@ -153,7 +178,7 @@ public class Api {
 		return ((long)(((short)((int)(low) & 0xffff)) | ((int)((short)((int)(high) & 0xffff))) << 16));
 	}
     
-    public interface WinDefExt extends WinDef {
+    public interface WinDefEx extends WinDef {
         //Structures
         public class MENUITEMINFO extends Structure {
             public static final int MFS_CHECKED = 0x00000008;
@@ -205,6 +230,35 @@ public class Api {
             public HBITMAP hbmpItem; //A handle to the bitmap to be displayed, or it can be one of the values in the following table.
         }
         
+        
+        //64bit LVITEM size 88
+        //32bit LVITEM size 60
+        public static class LVITEM_VISTA extends Structure {
+            public int mask;
+            public int iItem; 
+            public int iSubItem; 
+            public int state; 
+            public int stateMask; 
+            public Pointer pszText;
+            public int cchTextMax; 
+            public int iImage; 
+            public LPARAM lParam; 
+            public int iIndent; 
+            public int iGoupId; 
+            public int cColumns; 
+            public Pointer puColumns; 
+            //NTDDI_VERSION >= NTDDI_VISTA
+            public Pointer piColFmt;
+            public int iGroup;
+            @Override
+            protected List<?> getFieldOrder() {
+                return Arrays.asList(new String[] { 
+    "mask",  "iItem",  "iSubItem",  "state", "stateMask", "pszText", "cchTextMax",  "iImage", "lParam",  "iIndent", "iGoupId",  "cColumns", "puColumns", "piColFmt", "iGroup" });
+            }
+        }
+        
+
+        
         public static class COPYDATASTRUCT extends Structure {
         	//The by-reference version of this structure.
             public static class ByReference extends COPYDATASTRUCT implements Structure.ByReference { }
@@ -240,8 +294,8 @@ public class Api {
        
     }
 	
-	public interface User32 extends W32APIOptions {  
-		User32 instance = (User32) Native.loadLibrary("user32", User32.class, DEFAULT_OPTIONS);  
+	public interface User32Ex extends W32APIOptions {  
+		User32Ex instance = (User32Ex) Native.loadLibrary("user32", User32Ex.class, DEFAULT_OPTIONS);  
 		
 		int SetWindowLongPtr(HWND hWnd, int nIndex, Callback callback);
 		LRESULT CallWindowProc(LONG_PTR proc, HWND hWnd, int uMsg, WPARAM uParam, LPARAM lParam);
@@ -254,6 +308,7 @@ public class Api {
 		HWND FindWindow(String winClass, String title);
 		LRESULT PostMessage(HWND hWnd, int Msg, WPARAM wParam, LPARAM lParam);
 		LRESULT SendMessage(HWND hWnd, int Msg, WPARAM wParam, LPARAM lParam);
+		LRESULT SendMessage(HWND hWnd, int Msg, WPARAM wParam, LVITEM_VISTA lParam);
 	    LRESULT SendMessageA(HWND editHwnd, int wmGettext, long l, byte[] lParamStr);
 	    boolean DestroyWindow(HWND hWnd);
 		
@@ -299,7 +354,7 @@ public class Api {
 		int GetMenuItemCount(HMENU hMenu);
 		int GetMenuItemID(HMENU hMenu, int nPos);
 		//BOOL WINAPI GetMenuItemInfo(_In_ HMENU hMenu, _In_ UINT uItem, _In_ BOOL fByPosition, _Inout_ LPMENUITEMINFO lpmii);
-		boolean GetMenuItemInfoA(HMENU hMenu, int uItem, boolean fByPosition, WinDefExt.MENUITEMINFO mii); //MENUITEMINFO
+		boolean GetMenuItemInfoA(HMENU hMenu, int uItem, boolean fByPosition, WinDefEx.MENUITEMINFO mii); //MENUITEMINFO
 		boolean TrackPopupMenu(HMENU hMenu, int uFlags, int x, int y, int nReserved, HWND hWnd, long prcRect);
 		boolean GetMenuItemRect(HWND hWnd, HMENU hMenu, int uItem, RECT rect);
 		
@@ -307,34 +362,51 @@ public class Api {
 		int GetDlgItemText(HWND hDlg, int nIDDlgItem, byte[] buffer, int nMaxCount);
 	}  
 	
-	public interface Gdi32 extends W32APIOptions {  
-		Gdi32 instance = (Gdi32) Native.loadLibrary("gdi32", Gdi32.class, DEFAULT_OPTIONS); 
+	public interface Gdi32Ex extends W32APIOptions {  
+		Gdi32Ex instance = (Gdi32Ex) Native.loadLibrary("gdi32", Gdi32Ex.class, DEFAULT_OPTIONS); 
 		HANDLE SelectObject(HDC hdc, HANDLE hgdiobj);
 		HANDLE GetStockObject(int fnObject);
 		boolean Rectangle(HDC hdc, int nLeftRect, int nTopRect, int nRightRect, int nBottomRect);
 		HPEN CreatePen(int fnPenStyle, int nWidth, int crColor);
 	}
 	
-	public interface Psapi extends W32APIOptions {  
-		Psapi instance = (Psapi) Native.loadLibrary("psapi", Psapi.class, DEFAULT_OPTIONS); 
+	public interface PsapiEx extends W32APIOptions {  
+		PsapiEx instance = (PsapiEx) Native.loadLibrary("psapi", PsapiEx.class, DEFAULT_OPTIONS); 
 		int GetModuleBaseNameW(Pointer hProcess, Pointer hmodule, char[] lpBaseName, int size);
 	}
 
-	public interface Kernel32 extends W32APIOptions {
-		Kernel32 instance = (Kernel32) Native.loadLibrary("kernel32", Kernel32.class, DEFAULT_OPTIONS);  
+	public interface Kernel32Ex extends W32APIOptions {
+		Kernel32Ex instance = (Kernel32Ex) Native.loadLibrary("kernel32", Kernel32Ex.class, DEFAULT_OPTIONS);  
 		boolean GetDiskFreeSpaceEx(String lpDirectoryName, LARGE_INTEGER.ByReference lpFreeBytesAvailable, LARGE_INTEGER.ByReference lpTotalNumberOfBytes, LARGE_INTEGER.ByReference lpTotalNumberOfFreeBytes);
 	    int GetLastError();
 	    Pointer OpenProcess(int dwDesiredAccess, boolean bInheritHandle, Pointer pointer);
+	    //int OpenProcess(int dwDesiredAccess, boolean bInheritHandle, Pointer pointer);
 	    boolean CloseHandle(HANDLE hObject);
 	    void GetNativeSystemInfo(SYSTEM_INFO lpSystemInfo);
 	    boolean IsWow64Process(HANDLE hProcess, IntByReference Wow64Process);
+	    //LPVOID VirtualAllocEx(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect);
+	    
+	    //int VirtualAllocEx(HANDLE hProcess, int lpAddress, int dwSize, DWORD flAllocationType, DWORD flProtect);
+	    IntByReference VirtualAllocEx(HANDLE hProc, IntByReference addr, SIZE_T size, int allocType, int prot);
+		Pointer VirtualAllocEx(HANDLE hProc, int i, int lngMemLen2, int allocType, int pAGE_READWRITE);  
+	    boolean VirtualFreeEx(HANDLE hProcess, IntByReference lpAddress, SIZE_T dwSize, DWORD dwFreeType);
+	    boolean WriteProcessMemory(HANDLE hProcess, IntByReference lpBaseAddress, Pointer lpBuffer, int len, IntByReference bytesWritten);
+	    
+	    //boolean WriteProcessMemory(Pointer p, long address, Pointer buffer, int size, IntByReference written);  
+	    boolean ReadProcessMemory(Pointer hProcess, long inBaseAddress, Pointer outputBuffer, int nSize, IntByReference outNumberOfBytesRead);
+		int WriteProcessMemory(HANDLE handle, Pointer lngMemVar2, LVITEM_VISTA lvi,
+				int lngMemLen2, IntByReference byteIO);
+		int ReadProcessMemory(HANDLE handle, Pointer lngMemVar1,
+				Pointer lngVarPtr1, int lngMemLen1, IntByReference byteIO);
+		int VirtualFreeEx(HANDLE hProcess, Pointer lngMemVar1, int i,
+				int mEM_RELEASE);
 	}
 	
 	
 	public Api() {
-		user32 = User32.instance;
-	    psapi = Psapi.instance;
-	    kernel32 = Kernel32.instance;
+		user32 = User32Ex.instance;
+	    psapi = PsapiEx.instance;
+	    kernel32 = Kernel32Ex.instance;
 	}
 	
     public static Long GetHandleAsLong(HWND hWnd) {
@@ -365,14 +437,14 @@ public class Api {
     
     public static String getWindowClassName(HWND hWnd) {
         char[] buffer = new char[1026];
-		User32.instance.GetClassName(hWnd, buffer, 1026);
+		User32Ex.instance.GetClassName(hWnd, buffer, 1026);
 		return Native.toString(buffer);
     }
     
     public static String getWindowText(HWND hWnd) {
     	String text = "";
         byte[] buffer = new byte[1024];
-        User32.instance.GetWindowTextA(hWnd, buffer, buffer.length);
+        User32Ex.instance.GetWindowTextA(hWnd, buffer, buffer.length);
         text = Native.toString(buffer);
         if (text.isEmpty())
         	text = new Api().sendWmGetText(hWnd);
@@ -382,15 +454,15 @@ public class Api {
     public static Point getCursorPos() {
     	
     	long[] getPos = new long [1];
-    	User32.instance.GetCursorPos(getPos);
+    	User32Ex.instance.GetCursorPos(getPos);
     	return new Point(POINT_X(getPos[0]), POINT_Y(getPos[0]));
     }
     
     public static HWND getWindowFromCursorPos() {
     	
     	long[] getPos = new long [1];
-    	User32.instance.GetCursorPos(getPos);
-    	HWND hwnd = User32.instance.WindowFromPoint(getPos[0]);
+    	User32Ex.instance.GetCursorPos(getPos);
+    	HWND hwnd = User32Ex.instance.WindowFromPoint(getPos[0]);
     	HWND childHwnd = getHiddenChildWindowFromPoint(hwnd, getPos[0]);
     	hwnd = childHwnd;
     	//System.out.println(getPos[0] + "," + getPos[1] + " int: " + x + ", " + y);
@@ -408,11 +480,11 @@ public class Api {
     	//x = POINT_X(getPos[0]);y = POINT_Y(getPos[0]);
         //System.out.println("ClientToScreen " + GetHandleAsString(inHwnd) + ", " + x  + ", " + y);
         
-        if (!User32.instance.ScreenToClient(inHwnd, getPos)) return inHwnd; // if point is not correct use original hwnd.
+        if (!User32Ex.instance.ScreenToClient(inHwnd, getPos)) return inHwnd; // if point is not correct use original hwnd.
         //x = POINT_X(getPos[0]);y = POINT_Y(getPos[0]);
         //System.out.println("ScreenToClient " + GetHandleAsString(inHwnd) + ", " + x  + ", " + y);
 
-        HWND childHwnd = User32.instance.ChildWindowFromPointEx(inHwnd, getPos[0], CWP_ALL);
+        HWND childHwnd = User32Ex.instance.ChildWindowFromPointEx(inHwnd, getPos[0], CWP_ALL);
     	//System.out.println("ChildWindowFromPointEx2 " + GetHandleAsString(inHwnd) + ", " + x  + ", " + y  + " = " + GetHandleAsString(childHwnd));
 
         if (childHwnd == null) // if childHwnd is not correct use original hwnd.
@@ -562,7 +634,7 @@ public class Api {
 		LARGE_INTEGER.ByReference lpFreeBytesAvailable = new LARGE_INTEGER.ByReference();
         LARGE_INTEGER.ByReference lpTotalNumberOfBytes = new LARGE_INTEGER.ByReference();
         LARGE_INTEGER.ByReference lpTotalNumberOfFreeBytes = new LARGE_INTEGER.ByReference();
-        Kernel32.instance.GetDiskFreeSpaceEx(target, lpFreeBytesAvailable, lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes);
+        Kernel32Ex.instance.GetDiskFreeSpaceEx(target, lpFreeBytesAvailable, lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes);
         double freeBytes = lpTotalNumberOfFreeBytes.getValue();
         double totalBytes = lpTotalNumberOfBytes.getValue();
         //System.out.println("freespace " + humanReadableByteCount(freeBytes) + "/ totalspace " + humanReadableByteCount(totalBytes));
@@ -580,7 +652,7 @@ public class Api {
 	
 	public static void highlightWindow(HWND hwnd){
 		RECT rect = new RECT();
-		User32.instance.GetWindowRect(hwnd, rect);
+		User32Ex.instance.GetWindowRect(hwnd, rect);
 		//System.out.println("RECT: " + rect.left + "," + rect.top + "," + (rect.right - rect.left) + "," + (rect.bottom - rect.top));
 		highlightWindow(hwnd, 0, 0, rect.right - rect.left, rect.bottom - rect.top);
 	}
@@ -589,31 +661,31 @@ public class Api {
 	public static void highlightWindow(HWND hwnd, int x, int y, int x2, int y2){
 		//COLORREF i.e. 0x00804070  Red = 0x70 green = 0x40 blue = 0x80
 		//g_hRectanglePen = CreatePen (PS_SOLID, 3, RGB(256, 0, 0));
-		HPEN rectPen = Gdi32.instance.CreatePen(PS_SOLID, 3, 0x00000099); //RGB(255, 0, 0)
-		HDC dc = User32.instance.GetWindowDC(hwnd);
+		HPEN rectPen = Gdi32Ex.instance.CreatePen(PS_SOLID, 3, 0x00000099); //RGB(255, 0, 0)
+		HDC dc = User32Ex.instance.GetWindowDC(hwnd);
 		if (dc != null) {
 			// Select our created pen into the DC and backup the previous pen.
-		    HANDLE prevPen = Gdi32.instance.SelectObject(dc, rectPen);
+		    HANDLE prevPen = Gdi32Ex.instance.SelectObject(dc, rectPen);
 		    
 		    // Select a transparent brush into the DC and backup the previous brush.
-		    HANDLE prevBrush = Gdi32.instance.SelectObject(dc, Gdi32.instance.GetStockObject(HOLLOW_BRUSH));
+		    HANDLE prevBrush = Gdi32Ex.instance.SelectObject(dc, Gdi32Ex.instance.GetStockObject(HOLLOW_BRUSH));
 
 		    // Draw a rectangle in the DC covering the entire window area of the found window.
-		    Gdi32.instance.Rectangle (dc, x, y, x2, y2);
+		    Gdi32Ex.instance.Rectangle (dc, x, y, x2, y2);
 
 		    // Reinsert the previous pen and brush into the found window's DC.
-		    Gdi32.instance.SelectObject(dc, prevPen);
-		    Gdi32.instance.SelectObject(dc, prevBrush);
+		    Gdi32Ex.instance.SelectObject(dc, prevPen);
+		    Gdi32Ex.instance.SelectObject(dc, prevBrush);
 
 		    // Finally release the DC.
-		    User32.instance.ReleaseDC(hwnd, dc);
+		    User32Ex.instance.ReleaseDC(hwnd, dc);
 		}
 	}
 	
 	public static void refreshWindow(HWND hwnd) {
-		User32.instance.InvalidateRect(hwnd, 0, true);
-		User32.instance.UpdateWindow(hwnd);
-		User32.instance.RedrawWindow(hwnd, 0, 0, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+		User32Ex.instance.InvalidateRect(hwnd, 0, true);
+		User32Ex.instance.UpdateWindow(hwnd);
+		User32Ex.instance.RedrawWindow(hwnd, 0, 0, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
 	}
 	
 	public static boolean isDotNet4Installed() {
@@ -636,21 +708,21 @@ public class Api {
 	{
 		try {
 			SYSTEM_INFO lpSystemInfo = new SYSTEM_INFO();
-			Kernel32.instance.GetNativeSystemInfo(lpSystemInfo);
+			Kernel32Ex.instance.GetNativeSystemInfo(lpSystemInfo);
 			if (lpSystemInfo.processorArchitecture.dwOemID.intValue() == 0)
 			{
 				System.out.println("intel x86"); //not a 64 bit os
 				return false;
 			}
 			
-		    Pointer process = Kernel32.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, new Pointer(pid));
+		    Pointer process = Kernel32Ex.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, new Pointer(pid));
 		    IntByReference isWow64 = new IntByReference(0);
-		    if (!Kernel32.instance.IsWow64Process(new HANDLE(process), isWow64))
+		    if (!Kernel32Ex.instance.IsWow64Process(new HANDLE(process), isWow64))
 		    {
 		    	//handle error
 		    }
 		    //System.out.println("isProcess64bit " + pid + " = " + isWow64.getValue());
-		    Kernel32.instance.CloseHandle(new HANDLE(process));
+		    Kernel32Ex.instance.CloseHandle(new HANDLE(process));
 		    if (isWow64.getValue() == 1)
 		    	return false;
 		    return true;
@@ -669,7 +741,7 @@ public class Api {
 			@Override
 			public boolean callback(HWND hWnd, Pointer lParam) {
 				PointerByReference pointer = new PointerByReference();
-				User32.instance.GetWindowThreadProcessId(hWnd, pointer);
+				User32Ex.instance.GetWindowThreadProcessId(hWnd, pointer);
 				long pid = pointer.getPointer().getInt(0);
 				if (pid == targetProcessId)
 					if (resultList.isEmpty())
@@ -678,10 +750,91 @@ public class Api {
 			}
 	    }
 	    
-	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
+	    Api.User32Ex.instance.EnumWindows(new ParentWindowCallback(), 0);
 	    if (!resultList.isEmpty())
 	    	return resultList.get(0);
 	    return null;
 	}
 	
+	public static void GetListViewItemByIndex(HWND listViewHwnd, int index)
+	{
+		LVITEM_VISTA lvi;
+		int strSize = 255;
+		int result = 0;
+		Pointer lngVarPtr1 = null;Pointer lngMemVar1 = null;
+		Pointer lngVarPtr2 = null;Pointer lngMemVar2 = null;
+		Pointer lviVarPtr = null;Pointer lviVar = null;
+		int lngMemLen1; int lngMemLen2;
+		PointerByReference lngProcID = new PointerByReference();
+		int ThreadId = User32Ex.instance.GetWindowThreadProcessId(listViewHwnd, lngProcID);
+		
+		Pointer lngProcHandle = Kernel32Ex.instance.OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, false, lngProcID.getValue());
+		lvi = new LVITEM_VISTA();
+		lngMemLen1 = strSize;
+		lngMemLen2 = lvi.size(); 
+		lngMemVar2 = Kernel32Ex.instance.VirtualAllocEx(new HANDLE(lngProcHandle), 0, lngMemLen2, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);        
+		lvi.cchTextMax = strSize;
+		lvi.iItem = index;
+		lvi.iSubItem = 0;
+		lvi.mask = LVIF_TEXT;
+		//lvi.pszText = lngMemVar1;       
+		//result  = Kernel32.WriteProcessMemory(lngProcHandle, lngMemVar1, lngVarPtr1, lngMemLen1, byteswritten1);
+		IntByReference byteIO = new IntByReference();
+		result = Kernel32Ex.instance.WriteProcessMemory(new HANDLE(lngProcHandle), lngMemVar2, lvi, lngMemLen2, byteIO);
+		LRESULT sresult = User32Ex.instance.SendMessage(listViewHwnd, LVM_GETITEM, new WPARAM(0), new LPARAM(lngMemVar2.getLong(0)));
+		lngVarPtr1 = new Memory(strSize + 1);
+		result = Kernel32Ex.instance.ReadProcessMemory(new HANDLE(lngProcHandle), lngMemVar1, lngVarPtr1, lngMemLen1, byteIO);
+		result = Kernel32Ex.instance.VirtualFreeEx (new HANDLE(lngProcHandle), lngMemVar1, 0, MEM_RELEASE);
+		result = Kernel32Ex.instance.VirtualFreeEx (new HANDLE(lngProcHandle), lngMemVar2, 0, MEM_RELEASE);        
+		boolean cresult = Kernel32Ex.instance.CloseHandle(new HANDLE(lngProcHandle));
+		System.out.println(lngVarPtr1.getString(0));
+	}
+	
+	public static void SelectListViewItemByIndex(HWND listViewHwnd, int index)
+	{
+		/*
+		HANDLE hProcess = OpenProcess(PROCESS_VM_WRITE | PROCESS_VM_OPERATION, FALSE, 0x0000c130);
+		LPVOID epLvi = VirtualAllocEx(hProcess, NULL, 4096, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+
+		LVITEM lvi;
+		lvi.state = LVIS_FOCUSED | LVIS_SELECTED;
+		lvi.stateMask = LVIS_FOCUSED | LVIS_SELECTED;
+		SIZE_T cbWritten = 0;
+		WriteProcessMemory(hProcess, epLvi, &lvi, sizeof(lvi), &cbWritten);
+		DWORD dw = SendMessage((HWND)0x00020C4C, LVM_SETITEMSTATE, 1, (LPARAM)epLvi);
+
+		VirtualFreeEx(hProcess, epLvi, 4096, MEM_DECOMMIT | MEM_RELEASE);
+		CloseHandle(hProcess);
+		*/
+		PointerByReference pointer = new PointerByReference();
+		User32Ex.instance.GetWindowThreadProcessId(listViewHwnd, pointer);
+		int pid = pointer.getPointer().getInt(0);
+	    Pointer process = Kernel32Ex.instance.OpenProcess(Api.PROCESS_VM_WRITE | Api.PROCESS_VM_OPERATION, false, new Pointer(pid));
+	    IntByReference addr = new IntByReference(0);
+	    SIZE_T size = new SIZE_T(4096);
+	    IntByReference epLvi = Kernel32Ex.instance.VirtualAllocEx(new HANDLE(process), addr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	    
+	    LVITEM_VISTA lvitem = new LVITEM_VISTA();
+		lvitem.stateMask = LVIS_FOCUSED | LVIS_SELECTED;
+		lvitem.state = LVIS_FOCUSED | LVIS_SELECTED;
+		IntByReference bytesWritten = new IntByReference();
+		Api.Kernel32Ex.instance.WriteProcessMemory(new HANDLE(process), epLvi, lvitem.getPointer(), lvitem.size(),bytesWritten);
+		Api.User32Ex.instance.SendMessage(listViewHwnd, LVM_SETITEMSTATE, new WPARAM(index), lvitem);
+		
+		Api.Kernel32Ex.instance.VirtualFreeEx(new HANDLE(process), epLvi, new SIZE_T(4096), new DWORD(MEM_DECOMMIT | MEM_RELEASE));
+		Api.Kernel32Ex.instance.CloseHandle(new HANDLE(process));
+	}
+	
+	public static void SelectListItemByIndex(HWND listHwnd, int index)
+	{
+		//com.sun.jna.platform.win32.User32.INSTANCE
+		Api.User32Ex.instance.SendMessage(listHwnd, LB_SETCURSEL, new WPARAM(index), new LPARAM(0));
+		SelectListViewItemByIndex(listHwnd, index);
+		//GetListViewItemByIndex(listHwnd, index);
+		//LVITEM lvitem = new LVITEM();
+		//lvitem.stateMask = LVIS_FOCUSED | LVIS_SELECTED;
+		//lvitem.state = LVIS_FOCUSED | LVIS_SELECTED;
+		//JOptionPane.showMessageDialog(null, "lvitem size: " + lvitem.size());
+
+	}
 }

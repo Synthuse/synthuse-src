@@ -420,6 +420,14 @@ ALT %
 		    			specialKeyFlag = false;
 		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_DIVIDE} );
 		    		}
+		    		else if (specialKey.equals("{PERCENT}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_5} );
+		    		}
+		    		else if (specialKey.equals("{CARROT}")) {
+		    			specialKeyFlag = false;
+		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_SHIFT, KeyEvent.VK_6} );
+		    		}
 		    		else if (specialKey.equals("{INSERT}")) {
 		    			specialKeyFlag = false;
 		    			pressKeyCodes(robot, new int[]{KeyEvent.VK_INSERT} );

@@ -150,8 +150,17 @@ public class CommandPopupMenu extends JPopupMenu {
 		CommandMenuItem mntmGetwindowclass = new CommandMenuItem("getWindowClass", 2);
 		mnWinMessages.add(mntmGetwindowclass);
 
+		CommandMenuItem mntmSelectListIndex = new CommandMenuItem("selectListIndex", 3);
+		mnWinMessages.add(mntmSelectListIndex);
+
+		CommandMenuItem mntmSelectListString = new CommandMenuItem("selectListString", 3);
+		mnWinMessages.add(mntmSelectListString);
+
 		CommandMenuItem mntmDisplayText = new CommandMenuItem("displayText", 3, false);
 		add(mntmDisplayText);
+
+		CommandMenuItem mntmDisableStatus = new CommandMenuItem("disableStatus", 2, false);
+		add(mntmDisableStatus);
 
 		CommandMenuItem mntmForceRefresh = new CommandMenuItem("forceRefresh", 1, false);
 		add(mntmForceRefresh);
@@ -173,6 +182,9 @@ public class CommandPopupMenu extends JPopupMenu {
 		
 		CommandMenuItem mntmSetUpdateThreshold = new CommandMenuItem("setUpdateThreshold", 2, false);
 		add(mntmSetUpdateThreshold);
+
+		CommandMenuItem mntmTakeScreenCapture = new CommandMenuItem("takeScreenCapture", 2, false);
+		add(mntmTakeScreenCapture);
 
 		CommandMenuItem mntmTargetRefresh = new CommandMenuItem("targetRefresh", 2);
 		add(mntmTargetRefresh);

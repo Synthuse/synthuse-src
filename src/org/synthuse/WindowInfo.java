@@ -59,7 +59,7 @@ public class WindowInfo {
     public WindowInfo(HWND hWnd, boolean isChild) {
     	this.framework = "win32";
         byte[] buffer = new byte[1024];
-        User32.instance.GetWindowTextA(hWnd, buffer, buffer.length);
+        User32Ex.instance.GetWindowTextA(hWnd, buffer, buffer.length);
         text = Native.toString(buffer);
         if (text.isEmpty())
         	text = new Api().sendWmGetText(hWnd);
@@ -70,7 +70,7 @@ public class WindowInfo {
         	text = text.substring(0, MAX_TEXT_SIZE);
         
         //Get item count depending on what type of control it is
-    	LRESULT tbCount = Api.User32.instance.SendMessage(hWnd, Api.TB_BUTTONCOUNT, new WPARAM(0), new LPARAM(0));
+    	LRESULT tbCount = Api.User32Ex.instance.SendMessage(hWnd, Api.TB_BUTTONCOUNT, new WPARAM(0), new LPARAM(0));
     	if (tbCount.intValue() > 0) { // toolbar button count
     		//System.out.println("TB_BUTTONCOUNT: " + tbCount.intValue());
     		if (extra == null)
@@ -79,25 +79,25 @@ public class WindowInfo {
     		//Api.User32.instance.SendMessageA(hWnd, Api.TB_GETTOOLTIPS, 0, buffer);
     		//text = Native.toString(buffer);
     	}
-    	LRESULT lvCount = Api.User32.instance.SendMessage(hWnd, Api.LVM_GETITEMCOUNT, new WPARAM(0), new LPARAM(0));
+    	LRESULT lvCount = Api.User32Ex.instance.SendMessage(hWnd, Api.LVM_GETITEMCOUNT, new WPARAM(0), new LPARAM(0));
     	if (lvCount.intValue() > 0) { // listview item count
     		if (extra == null)
     			extra = new LinkedHashMap<String, String>(); 
     		extra.put("lvCount", lvCount.intValue() + "");
     	}
-    	LRESULT lbCount = Api.User32.instance.SendMessage(hWnd, Api.LB_GETCOUNT, new WPARAM(0), new LPARAM(0));
+    	LRESULT lbCount = Api.User32Ex.instance.SendMessage(hWnd, Api.LB_GETCOUNT, new WPARAM(0), new LPARAM(0));
     	if (lbCount.intValue() > 0) { // listbox item count
     		if (extra == null)
     			extra = new LinkedHashMap<String, String>(); 
     		extra.put("lbCount", lbCount.intValue() + "");
     	}
-    	LRESULT cbCount = Api.User32.instance.SendMessage(hWnd, Api.CB_GETCOUNT, new WPARAM(0), new LPARAM(0));
+    	LRESULT cbCount = Api.User32Ex.instance.SendMessage(hWnd, Api.CB_GETCOUNT, new WPARAM(0), new LPARAM(0));
     	if (cbCount.intValue() > 0) { // listbox item count
     		if (extra == null)
     			extra = new LinkedHashMap<String, String>(); 
     		extra.put("cbCount", cbCount.intValue() + "");
     	}
-    	LRESULT tvCount = Api.User32.instance.SendMessage(hWnd, Api.TVM_GETCOUNT, new WPARAM(0), new LPARAM(0));
+    	LRESULT tvCount = Api.User32Ex.instance.SendMessage(hWnd, Api.TVM_GETCOUNT, new WPARAM(0), new LPARAM(0));
 		if (tvCount.intValue() > 0) { //treeview node count
 			if (extra == null)
 				extra = new LinkedHashMap<String, String>(); 
@@ -105,13 +105,13 @@ public class WindowInfo {
 		}
 		
         char[] buffer2 = new char[1026];
-		User32.instance.GetClassName(hWnd, buffer2, 1026);
+		User32Ex.instance.GetClassName(hWnd, buffer2, 1026);
 		className = Native.toString(buffer2);
 		
 		//check if window has a menu
-    	HMENU hmenu = Api.User32.instance.GetMenu(hWnd);
+    	HMENU hmenu = Api.User32Ex.instance.GetMenu(hWnd);
 		if (hmenu != null) { //menu item count
-	    	int menuCount = Api.User32.instance.GetMenuItemCount(hmenu);
+	    	int menuCount = Api.User32Ex.instance.GetMenuItemCount(hmenu);
 	    	if (menuCount > 0) {
 				this.menus = menuCount;
 				this.menu = hmenu;
@@ -120,12 +120,12 @@ public class WindowInfo {
 		else // if (className.equals("#32768")) //check if its a popup menu window
 		{
     		//LRESULT result = Api.User32.instance.PostMessage(hWnd, Api.MN_GETHMENU, new WPARAM(0), new LPARAM(0));
-			LRESULT result = Api.User32.instance.SendMessage(hWnd, Api.MN_GETHMENU, new WPARAM(0), new LPARAM(0));
+			LRESULT result = Api.User32Ex.instance.SendMessage(hWnd, Api.MN_GETHMENU, new WPARAM(0), new LPARAM(0));
     		if (result.longValue() != 1)
     		{
     			//System.out.println("MN_GETHMENU: " + result.longValue());
     			hmenu = new HMENU(new Pointer(result.longValue()));
-    			int menuCount = Api.User32.instance.GetMenuItemCount(hmenu);
+    			int menuCount = Api.User32Ex.instance.GetMenuItemCount(hmenu);
     			if (menuCount > 0)
     			{
         			//System.out.println("Popup Win: " + menuCount);
@@ -137,11 +137,11 @@ public class WindowInfo {
 
 		
 		rect = new RECT();
-		User32.instance.GetWindowRect(hWnd, rect);
+		User32Ex.instance.GetWindowRect(hWnd, rect);
 		
 		this.isChild = isChild;
 		if (isChild) {
-			parent = User32.instance.GetParent(hWnd);
+			parent = User32Ex.instance.GetParent(hWnd);
 			parentStr = Api.GetHandleAsString(parent);
 			// test to see if uiaBridge should be used on this child
 			if (this.className.startsWith("HwndWrapper") || this.className.startsWith("MicrosoftSilverlight") || this.className.startsWith("GeckoPluginWindow"))
@@ -149,7 +149,7 @@ public class WindowInfo {
 		}
 		else {
 			PointerByReference pointer = new PointerByReference();
-			User32.instance.GetWindowThreadProcessId(hWnd, pointer);
+			User32Ex.instance.GetWindowThreadProcessId(hWnd, pointer);
 			pid = pointer.getPointer().getInt(0);
 			getProcessInfo();
 		    //test to see if uiaBridge should be used on this parent
@@ -258,10 +258,10 @@ public class WindowInfo {
     	if (pid == 0)
     		return;
         char[] buffer = new char[1026];
-	    Pointer process = Kernel32.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, new Pointer(pid));
-	    Psapi.instance.GetModuleBaseNameW(process, null, buffer, 512);
+	    Pointer process = Kernel32Ex.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, new Pointer(pid));
+	    PsapiEx.instance.GetModuleBaseNameW(process, null, buffer, 512);
 	    processName = Native.toString(buffer);
-	    Kernel32.instance.CloseHandle(new HANDLE(process));
+	    Kernel32Ex.instance.CloseHandle(new HANDLE(process));
 		is64bit = Api.isProcess64bit((int)pid);
     }
     

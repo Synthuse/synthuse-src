@@ -8,8 +8,13 @@
 package org.synthuse.commands;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.Toolkit;
-import java.io.IOException;
+import java.awt.image.BufferedImage;
+import java.io.*;
+
+import javax.imageio.ImageIO;
 
 import org.synthuse.*;
 
@@ -196,5 +201,32 @@ public class MainCommands extends BaseCommand {
 			return false;
 		}
 	}
+
+	public boolean cmdDisableStatus(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		boolean val = args[0].toUpperCase().equals("TRUE");
+		parentProcessor.setQuiet(val);
+		return true;
+	}
 	
+	public boolean cmdTakeScreenCapture(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		try {
+			String saveName = args[0];
+			if (!saveName.toLowerCase().endsWith(".png"))
+				saveName += ".png";
+			//LOG.debug("take Screen Capture " + new File(saveName).getAbsolutePath());
+			Robot robot = new Robot();
+			Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+			BufferedImage image = robot.createScreenCapture(new Rectangle(screenSize));
+			ImageIO.write(image, "png", new File(saveName));
+		}
+		catch(Exception e) {
+			//e.printStackTrace();
+			appendError(e);
+		}
+		return true;
+	}
 }

@@ -41,7 +41,7 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.synthuse.Api.User32;
+import org.synthuse.Api.User32Ex;
 import org.synthuse.DragTarget.dragEvents;
 
 
@@ -51,7 +51,7 @@ public class SynthuseDlg extends JFrame {
 	/**
 	 * 
 	 */
-	public static String VERSION_STR = "1.2.2";
+	public static String VERSION_STR = "1.2.4";
 
 	public static String RES_STR_MAIN_ICON = "/org/synthuse/img/gnome-robots.png";
 	public static String RES_STR_REFRESH_IMG = "/org/synthuse/img/rapidsvn.png";
@@ -520,9 +520,9 @@ public class SynthuseDlg extends JFrame {
 		HWND hwnd = Api.getWindowFromCursorPos();//new Point(targetX,targetY)
 		String handleStr = Api.GetHandleAsString(hwnd);
 		String classStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.getWindowClassName(hwnd));
-		String parentStr = Api.GetHandleAsString(User32.instance.GetParent(hwnd));
+		String parentStr = Api.GetHandleAsString(User32Ex.instance.GetParent(hwnd));
 		PointerByReference pointer = new PointerByReference();
-		User32.instance.GetWindowThreadProcessId(hwnd, pointer);
+		User32Ex.instance.GetWindowThreadProcessId(hwnd, pointer);
 		int pid = pointer.getPointer().getInt(0);
 
 		String enumProperties = "";
@@ -549,7 +549,7 @@ public class SynthuseDlg extends JFrame {
 			//lastDragHwnd = (hwnd + "");
 			if (framework.equals(UiaBridge.FRAMEWORK_ID_WPF) || framework.equals(UiaBridge.FRAMEWORK_ID_SILVER))
 			{// WPF and Silverlight apps don't expose their child windows boundaries the same as win32 apps
-				Api.highlightWindow(Api.User32.instance.GetDesktopWindow(), rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
+				Api.highlightWindow(Api.User32Ex.instance.GetDesktopWindow(), rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
 			}
 			else
 				Api.highlightWindow(hwnd);

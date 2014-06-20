@@ -13,9 +13,9 @@ import static org.junit.Assert.*;
 import org.synthuse.Api;
 import org.synthuse.WindowInfo;
 import org.synthuse.WindowsEnumeratedXml;
-import org.synthuse.Api.Kernel32;
-import org.synthuse.Api.Psapi;
-import org.synthuse.Api.User32;
+import org.synthuse.Api.Kernel32Ex;
+import org.synthuse.Api.PsapiEx;
+import org.synthuse.Api.User32Ex;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -57,7 +57,7 @@ public class WinApiTest {
 
         byte[] buffer = new byte[1024];
         output("Calling GetWindowTextA");
-        User32.instance.GetWindowTextA(hWnd, buffer, buffer.length);
+        User32Ex.instance.GetWindowTextA(hWnd, buffer, buffer.length);
         text = Native.toString(buffer);
         output("GetWindowTextA returned: " + text);
         if (text.isEmpty()) {
@@ -68,14 +68,14 @@ public class WinApiTest {
         
         char[] buffer2 = new char[1026];
         output("Calling GetClassName");
-		User32.instance.GetClassName(hWnd, buffer2, 1026);
+		User32Ex.instance.GetClassName(hWnd, buffer2, 1026);
 		className = Native.toString(buffer2);
 		output("GetClassName returned: " + className);
 		
-    	HMENU hmenu = Api.User32.instance.GetMenu(hWnd);
+    	HMENU hmenu = Api.User32Ex.instance.GetMenu(hWnd);
 		//hmenu = Api.User32.instance.GetSubMenu(hmenu, 0);
 		if (hmenu != null) { //menu item count
-	    	int menuCount = Api.User32.instance.GetMenuItemCount(hmenu);
+	    	int menuCount = Api.User32Ex.instance.GetMenuItemCount(hmenu);
 	    	if (menuCount > 0) {
 				if (extra == null)
 					extra = new LinkedHashMap<String, String>(); 
@@ -93,12 +93,12 @@ public class WinApiTest {
 		
 		rect = new RECT();
         output("Calling GetWindowRect");
-		User32.instance.GetWindowRect(hWnd, rect);
+		User32Ex.instance.GetWindowRect(hWnd, rect);
 		output("GetWindowRect returned: " + rect.toString());
 		
 		if (isChild) {
 			output("Calling GetParent");
-			parent = User32.instance.GetParent(hWnd);
+			parent = User32Ex.instance.GetParent(hWnd);
 			parentStr = Api.GetHandleAsString(parent);
 			output("GetParent returned: " + parentStr);
 		}
@@ -107,13 +107,13 @@ public class WinApiTest {
 			//IntByReference pointer = new IntByReference();
 			PointerByReference pointer = new PointerByReference();
 			output("Calling GetWindowThreadProcessId");
-			User32.instance.GetWindowThreadProcessId(hWnd, pointer);
+			User32Ex.instance.GetWindowThreadProcessId(hWnd, pointer);
 			pid =  pointer.getPointer().getInt(0);
 			output("GetWindowThreadProcessId returned: " + pid);
-		    Pointer process = Kernel32.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, pointer.getPointer());
+		    Pointer process = Kernel32Ex.instance.OpenProcess(Api.PROCESS_QUERY_INFORMATION | Api.PROCESS_VM_READ, false, pointer.getPointer());
 		    //output("OpenProcess returned: " + process.getLong(0));
 		    output("Calling GetModuleBaseNameW");
-		    Psapi.instance.GetModuleBaseNameW(process, null, buffer2, 512);
+		    PsapiEx.instance.GetModuleBaseNameW(process, null, buffer2, 512);
 		    processName = Native.toString(buffer2);
 		    output("GetModuleBaseNameW returned: " + processName);
 			//processName = Native.toString(path);
@@ -137,7 +137,7 @@ public class WinApiTest {
 				return true;
 			}
 	    }	    
-	    Api.User32.instance.EnumWindows(new ParentWindowCallback(), 0);
+	    Api.User32Ex.instance.EnumWindows(new ParentWindowCallback(), 0);
 	    output("enumerateParentWindowsTest size: " + infoList.size());
 	    assertTrue(infoList.size() > 0);
 	}

@@ -118,13 +118,13 @@ public class MessageHookFrame extends JFrame {
 						}
 						else
 							System.out.println("MESSAGE: " + uMsg);
-						return Api.User32.instance.CallWindowProc(oldWndProc, hWnd, uMsg, wParam, lParam);
+						return Api.User32Ex.instance.CallWindowProc(oldWndProc, hWnd, uMsg, wParam, lParam);
 						//return new LRESULT(0);
 			            //return User32.INSTANCE.DefWindowProc(hWnd, uMsg, wParam, lParam);
 			        }
 			    };
 
-				Api.User32.instance.SetWindowLongPtr(myHwnd, GWLP_WNDPROC, wndProc);
+				Api.User32Ex.instance.SetWindowLongPtr(myHwnd, GWLP_WNDPROC, wndProc);
 			}
 		});
 		toolBar.add(btnPause);
@@ -225,7 +225,7 @@ public class MessageHookFrame extends JFrame {
 					//	memcpy(&Event, (HEVENT*)pCopyDataStruct->lpData, sizeof(HEVENT)); // transfer data to internal variable
 					//}
 
-					Api.WinDefExt.COPYDATASTRUCT cds = new Api.WinDefExt.COPYDATASTRUCT(lParam.longValue());
+					Api.WinDefEx.COPYDATASTRUCT cds = new Api.WinDefEx.COPYDATASTRUCT(lParam.longValue());
 					HEVENT he = new HEVENT(cds.lpData);
 					appendLine("msg: WM_COPYDATA" + cds.cbData);
 					appendLine("hwnd: " + he.hWnd + ", msg: " + he.nCode + ", wParam: " + he.wParam + ", lParam: " + he.lParam);
@@ -235,13 +235,13 @@ public class MessageHookFrame extends JFrame {
 				//else
 				//	System.out.println("MESSAGE: " + uMsg);
 				
-				return Api.User32.instance.CallWindowProc(oldWndProc, hWnd, uMsg, wParam, lParam);
+				return Api.User32Ex.instance.CallWindowProc(oldWndProc, hWnd, uMsg, wParam, lParam);
 	            //return User32.INSTANCE.DefWindowProc(hWnd, uMsg, wParam, lParam);
 	        }
 	    };
 	    
 	    //Set the wndproc callback on this MessageHookFrame so we can process Windows Messages
-		Api.User32.instance.SetWindowLongPtr(myHwnd, GWLP_WNDPROC, wndProc);
+		Api.User32Ex.instance.SetWindowLongPtr(myHwnd, GWLP_WNDPROC, wndProc);
 	
 		IntByReference intByRef = new IntByReference(0);
 		final int threadId = User32.INSTANCE.GetWindowThreadProcessId(Api.GetHandleFromString(txtTarget.getText()), intByRef);

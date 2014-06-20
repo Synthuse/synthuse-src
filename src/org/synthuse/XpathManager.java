@@ -14,7 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 
-import org.synthuse.Api.User32;
+import org.synthuse.Api.User32Ex;
 
 import com.sun.jna.platform.win32.WinDef.HWND;
 
@@ -126,7 +126,7 @@ public class XpathManager implements Runnable{
 			List<String> resultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
 			//int matches = nextXpathMatch(builtXpath, textPane, true);
 			if (resultList.size() > 1) { // if there are multiple results with the simple xpath then include parent class and text with the xpath statement.
-				HWND parent = User32.instance.GetParent(hwnd);
+				HWND parent = User32Ex.instance.GetParent(hwnd);
 				String parentClassStr = WindowsEnumeratedXml.escapeXmlAttributeValue(Api.getWindowClassName(parent));
 				String parentTxtOrig = Api.getWindowText(parent);
 				String parentTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(parentTxtOrig);
