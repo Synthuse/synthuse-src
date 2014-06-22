@@ -12,11 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.JOptionPane;
-
 import org.synthuse.Api.WinDefEx.*;
 import com.sun.jna.Callback;
-import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
@@ -26,7 +23,6 @@ import com.sun.jna.platform.win32.BaseTSD.LONG_PTR;
 import com.sun.jna.platform.win32.BaseTSD.SIZE_T;
 import com.sun.jna.platform.win32.BaseTSD.ULONG_PTR;
 import com.sun.jna.platform.win32.WinBase.SYSTEM_INFO;
-import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.platform.win32.WinReg;
 import com.sun.jna.platform.win32.WinUser;
@@ -178,7 +174,7 @@ public class Api {
 		return ((long)(((short)((int)(low) & 0xffff)) | ((int)((short)((int)(high) & 0xffff))) << 16));
 	}
     
-    public interface WinDefEx extends WinDef {
+    public interface WinDefEx extends com.sun.jna.platform.win32.WinDef {
         //Structures
         public class MENUITEMINFO extends Structure {
             public static final int MFS_CHECKED = 0x00000008;
@@ -754,40 +750,6 @@ public class Api {
 	    if (!resultList.isEmpty())
 	    	return resultList.get(0);
 	    return null;
-	}
-	
-	public static void GetListViewItemByIndex(HWND listViewHwnd, int index)
-	{
-		LVITEM_VISTA lvi;
-		int strSize = 255;
-		int result = 0;
-		Pointer lngVarPtr1 = null;Pointer lngMemVar1 = null;
-		Pointer lngVarPtr2 = null;Pointer lngMemVar2 = null;
-		Pointer lviVarPtr = null;Pointer lviVar = null;
-		int lngMemLen1; int lngMemLen2;
-		PointerByReference lngProcID = new PointerByReference();
-		int ThreadId = User32Ex.instance.GetWindowThreadProcessId(listViewHwnd, lngProcID);
-		
-		Pointer lngProcHandle = Kernel32Ex.instance.OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, false, lngProcID.getValue());
-		lvi = new LVITEM_VISTA();
-		lngMemLen1 = strSize;
-		lngMemLen2 = lvi.size(); 
-		lngMemVar2 = Kernel32Ex.instance.VirtualAllocEx(new HANDLE(lngProcHandle), 0, lngMemLen2, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);        
-		lvi.cchTextMax = strSize;
-		lvi.iItem = index;
-		lvi.iSubItem = 0;
-		lvi.mask = LVIF_TEXT;
-		//lvi.pszText = lngMemVar1;       
-		//result  = Kernel32.WriteProcessMemory(lngProcHandle, lngMemVar1, lngVarPtr1, lngMemLen1, byteswritten1);
-		IntByReference byteIO = new IntByReference();
-		result = Kernel32Ex.instance.WriteProcessMemory(new HANDLE(lngProcHandle), lngMemVar2, lvi, lngMemLen2, byteIO);
-		LRESULT sresult = User32Ex.instance.SendMessage(listViewHwnd, LVM_GETITEM, new WPARAM(0), new LPARAM(lngMemVar2.getLong(0)));
-		lngVarPtr1 = new Memory(strSize + 1);
-		result = Kernel32Ex.instance.ReadProcessMemory(new HANDLE(lngProcHandle), lngMemVar1, lngVarPtr1, lngMemLen1, byteIO);
-		result = Kernel32Ex.instance.VirtualFreeEx (new HANDLE(lngProcHandle), lngMemVar1, 0, MEM_RELEASE);
-		result = Kernel32Ex.instance.VirtualFreeEx (new HANDLE(lngProcHandle), lngMemVar2, 0, MEM_RELEASE);        
-		boolean cresult = Kernel32Ex.instance.CloseHandle(new HANDLE(lngProcHandle));
-		System.out.println(lngVarPtr1.getString(0));
 	}
 	
 	public static void SelectListViewItemByIndex(HWND listViewHwnd, int index)
