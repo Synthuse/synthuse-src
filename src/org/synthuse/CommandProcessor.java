@@ -279,6 +279,10 @@ public class CommandProcessor implements Runnable{
 				return main.cmdDisableStatus(args);
 			if (command.equals("forceRefresh")) 
 				return main.cmdForceRefresh(args);
+			if (command.equals("forceWin32Refresh")) 
+				return main.cmdForceWin32Refresh(args);
+			if (command.equals("onlyRefreshWin32")) 
+				return main.cmdOnlyRefreshWin32(args);
 			if (command.equals("setSpeed")) 
 				return main.cmdSetSpeed(args);
 			if (command.equals("setTimeout")) 

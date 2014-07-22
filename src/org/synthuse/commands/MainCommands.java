@@ -76,6 +76,21 @@ public class MainCommands extends BaseCommand {
 		return true;
 	}
 	
+	public boolean cmdForceWin32Refresh(String[] args) {
+		if (!checkArgumentLength(args, 0))
+			return false;
+		forceWin32OnlyXmlRefresh();
+		return true;
+	}
+	
+	public boolean cmdOnlyRefreshWin32(String[] args) {
+		if (!checkArgumentLength(args, 1))
+			return false;
+		boolean flg = Boolean.parseBoolean(args[0]);
+		onlyRefreshWin32(flg);
+		return true;
+	}
+	
 	public boolean cmdTargetRefresh(String[] args) {
 		if (!checkArgumentLength(args, 1))
 			return false;

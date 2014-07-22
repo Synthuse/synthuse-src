@@ -107,6 +107,15 @@ public class BaseCommand {
 		WIN_XML = WindowsEnumeratedXml.getXml();
 		LAST_UPDATED_XML = System.nanoTime();
 	}
+	
+	public void forceWin32OnlyXmlRefresh() {
+		WIN_XML = WindowsEnumeratedXml.getWin32Xml();
+		LAST_UPDATED_XML = System.nanoTime();
+	}
+	
+	public void onlyRefreshWin32(boolean flg) {
+		SynthuseDlg.config.disableUiaBridge = flg + "";
+	}
 
 	public void targetXmlRefresh(String xpath) {
 		if (WIN_XML.isEmpty()) //can't target refresh unless there is XML to start with

@@ -165,6 +165,13 @@ public class CommandPopupMenu extends JPopupMenu {
 		CommandMenuItem mntmForceRefresh = new CommandMenuItem("forceRefresh", 1, false);
 		add(mntmForceRefresh);
 		
+		CommandMenuItem mntmForcewin32Refresh = new CommandMenuItem("forceWin32Refresh", 1, false);
+		add(mntmForcewin32Refresh);
+		
+		CommandMenuItem mntmOnlyRefreshWin32 = new CommandMenuItem("onlyRefreshWin32", 2, false);
+		add(mntmOnlyRefreshWin32);
+
+
 		CommandMenuItem mntmOpen = new CommandMenuItem("open", 2, false);
 		add(mntmOpen);
 		
