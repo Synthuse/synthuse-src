@@ -146,13 +146,14 @@ public class XpathManager implements Runnable{
 				if (!parentClassStr.isEmpty())
 				{
 					if (!txtStr.isEmpty()&&useFullTextMatching) {
-						if (txtStr.length() > maxTextLength) {// if the text is too long only test the first maxTextLength characters
-							txtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(txtStr.substring(0, maxTextLength));
-							txtStr = " and starts-with(@text,'" + txtStr + "')";
+						String copyOfTxtStr = txtStr;
+						if (copyOfTxtStr.length() > maxTextLength) {// if the text is too long only test the first maxTextLength characters
+							copyOfTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(copyOfTxtStr.substring(0, maxTextLength));
+							copyOfTxtStr = " and starts-with(@text,'" + copyOfTxtStr + "')";
 						}
 						else
-							txtStr = " and @text='" + txtStr + "'";
-						builtXpath = "//win[@class='" + parentClassStr + "'" + parentTxtStr + "]/win[@class='" + classStr + "'" + txtStr + "]";
+							copyOfTxtStr = " and @text='" + copyOfTxtStr + "'";
+						builtXpath = "//win[@class='" + parentClassStr + "'" + parentTxtStr + "]/win[@class='" + classStr + "'" + copyOfTxtStr + "]";
 					}
 					else
 					{
