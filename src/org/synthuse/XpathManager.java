@@ -52,7 +52,8 @@ public class XpathManager implements Runnable{
 	
 	@Override
 	public void run() {
-		String results = buildXpathStatement();
+		//@TODO (AJK) create separate action to use text mathing
+		String results = buildXpathStatement(true,50,50);
 		events.executionCompleted(hwnd, results);
 	}
 	
@@ -143,7 +144,22 @@ public class XpathManager implements Runnable{
 						parentTxtStr = " and @text='" + parentTxtStr + "'";
 				}
 				if (!parentClassStr.isEmpty())
-					builtXpath = "//win[@class='" + parentClassStr + "'" + parentTxtStr + "]/win[@class='" + classStr + "']";
+				{
+					if (!txtStr.isEmpty()&&useFullTextMatching) {
+						if (txtStr.length() > maxTextLength) {// if the text is too long only test the first maxTextLength characters
+							txtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(txtStr.substring(0, maxTextLength));
+							txtStr = " and starts-with(@text,'" + txtStr + "')";
+						}
+						else
+							txtStr = " and @text='" + txtStr + "'";
+						builtXpath = "//win[@class='" + parentClassStr + "'" + parentTxtStr + "]/win[@class='" + classStr + "'" + txtStr + "]";
+					}
+					else
+					{
+						builtXpath = "//win[@class='" + parentClassStr + "'" + parentTxtStr + "]/win[@class='" + classStr + "']";
+					}
+				}
+				System.out.println(builtXpath);
 				resultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
 				if (resultList.size() > 1) { // if there are still multiple results add position to the xpath
 					int position = 1;
