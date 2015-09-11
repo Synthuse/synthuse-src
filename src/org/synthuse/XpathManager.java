@@ -108,6 +108,10 @@ public class XpathManager implements Runnable{
 	}
 	
 	public String buildXpathStatement() {
+		return buildXpathStatement(false, 20, 30);
+	}
+
+	public String buildXpathStatement(boolean useFullTextMatching, int maxParentTextLength, int maxTextLength) {
 		String builtXpath = "";
 		try {
 			String xml = this.windowsXmlTextPane.getText();
@@ -131,8 +135,8 @@ public class XpathManager implements Runnable{
 				String parentTxtOrig = Api.getWindowText(parent);
 				String parentTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(parentTxtOrig);
 				if (!parentTxtStr.isEmpty()) {
-					if (parentTxtOrig.length() > 20) {// if the parent text is too long only test the first 20 characters
-						parentTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(parentTxtOrig.substring(0, 20));
+					if (parentTxtOrig.length() > maxParentTextLength) {// if the parent text is too long only test the first maxParentTextLength characters
+						parentTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(parentTxtOrig.substring(0, maxParentTextLength));
 						parentTxtStr = " and starts-with(@text,'" + parentTxtStr + "')";
 					}
 					else
@@ -153,8 +157,8 @@ public class XpathManager implements Runnable{
 				}
 				if (resultList.size() == 0) { //some reason a window might have a parent window that is not associated with it's child (orphans!!)
 					if (!txtStr.isEmpty()) {
-						if (parentTxtOrig.length() > 30) {// if the text is too long only test the first 20 characters
-							txtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(txtStr.substring(0, 30));
+						if (txtStr.length() > maxTextLength) {// if the text is too long only test the first maxTextLength characters
+							txtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(txtStr.substring(0, maxTextLength));
 							txtStr = " and starts-with(@text,'" + txtStr + "')";
 						}
 						else
