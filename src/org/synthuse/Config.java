@@ -20,6 +20,9 @@ public class Config extends PropertiesSerializer {
 	public String xpathList = "";
 	public String xpathHightlight = ".*process=\"([^\"]*)\".*";
 	
+	private boolean useStrongTextMatching = false; 
+
+	
 	public Config() //needed for cloning
 	{
 	}
@@ -73,5 +76,13 @@ public class Config extends PropertiesSerializer {
 		else
 			keyStr = this.targetKey;
 		return RobotMacro.getKeyCode(keyStr.charAt(0))[0];
+	}
+
+	public boolean isUseStrongTextMatching() {
+		return useStrongTextMatching;
+	}
+
+	public void setUseStrongTextMatching(boolean useStrongTextMatching) {
+		this.useStrongTextMatching = useStrongTextMatching;
 	}
 }

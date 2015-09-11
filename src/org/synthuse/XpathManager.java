@@ -52,8 +52,7 @@ public class XpathManager implements Runnable{
 	
 	@Override
 	public void run() {
-		//@TODO (AJK) create separate action to use text mathing
-		String results = buildXpathStatement(true,50,50);
+		String results = SynthuseDlg.config.isUseStrongTextMatching()?buildXpathStatement(true,50,50):buildXpathStatement();
 		events.executionCompleted(hwnd, results);
 	}
 	
