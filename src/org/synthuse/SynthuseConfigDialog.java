@@ -19,11 +19,18 @@ public class SynthuseConfigDialog extends JDialog {
 
 	public SynthuseConfigDialog(JFrame aParentFrame, Config aConfig) {
 		super(aParentFrame);
-		this.setTitle("Synthuse Properties");
-		theSynthuseConfigPanel = new SynthuseConfigPanel();
+		
 		this.setConfig(aConfig);
+
+		this.setTitle("Synthuse Properties");
+		
+		theSynthuseConfigPanel = new SynthuseConfigPanel();
+		
+		SynthuseConfigDialogControllers.bindActionControllers(theSynthuseConfigPanel,theConfig);
+		
 		this.getContentPane().add(theSynthuseConfigPanel);
 		this.setSize(492, 260);
+		
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
