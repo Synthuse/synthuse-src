@@ -4,6 +4,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.synthuse.controllers.SynthuseConfigDialogControllers;
 import org.synthuse.views.SynthuseConfigPanel;
 
 public class SynthuseConfigDialog extends JDialog {
@@ -26,24 +27,12 @@ public class SynthuseConfigDialog extends JDialog {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				SynthuseConfigDialog.this.initializeUI();
+				SynthuseConfigDialogControllers.initializeUI(theSynthuseConfigPanel,theConfig);
 			}
 		});
-	}
-
-	synchronized private void initializeUI() {
-		theSynthuseConfigPanel.getAlwaysOnTopCheckBox().setSelected(theConfig.isAlwaysOnTop());
-		theSynthuseConfigPanel.getDisableFiltersUiaCheckBox().setSelected(theConfig.isFilterUiaDisabled());
-		theSynthuseConfigPanel.getDisableUiaBridgeCheckBox().setSelected(theConfig.isUiaBridgeDisabled());
-		theSynthuseConfigPanel.getRefreshKeyTextField().setText(Integer.toString(theConfig.getRefreshKeyCode()));
-		theSynthuseConfigPanel.getStrongTextMatchingCheckBox().setSelected(theConfig.isUseStrongTextMatching());
-		theSynthuseConfigPanel.getTargetKeyTextField().setText(Integer.toString(theConfig.getTargetKeyCode()));
-		theSynthuseConfigPanel.getXPathHighlightTextField().setText(theConfig.getXpathHighlight());
-		theSynthuseConfigPanel.getXPathListTextField().setText(theConfig.getXpathList());
 	}
 
 	synchronized private void setConfig(Config aConfig) {
 		theConfig = aConfig;
 	}
-
 }
