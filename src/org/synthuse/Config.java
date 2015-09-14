@@ -85,4 +85,12 @@ public class Config extends PropertiesSerializer {
 	public void setUseStrongTextMatching(boolean useStrongTextMatching) {
 		this.useStrongTextMatching = useStrongTextMatching;
 	}
+
+	public String getXpathList() {
+		return xpathList;
+	}
+
+	public String getXpathHighlight() {
+		return xpathHightlight;
+	}
 }

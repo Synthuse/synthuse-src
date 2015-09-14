@@ -43,6 +43,7 @@ import java.util.List;
 
 import org.synthuse.Api.User32Ex;
 import org.synthuse.DragTarget.dragEvents;
+import org.synthuse.views.SynthuseConfigPanel;
 
 
 
@@ -85,6 +86,7 @@ public class SynthuseDlg extends JFrame {
 	private JButton btnAdvanced;
 	
 	private TestIdeFrame testIde = null;
+	protected SynthuseConfigDialog configDialog=null;
 	//private MessageHookFrame msgHook = null;
 	private int targetX;
 	private int targetY;
@@ -301,8 +303,12 @@ public class SynthuseDlg extends JFrame {
 		btnConfig.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				SynthuseDlg.config.setUseStrongTextMatching(!SynthuseDlg.config.isUseStrongTextMatching());
+				if(configDialog==null) {
+					createConfigDialog();
+				}
+				configDialog.setVisible(true);
 			}
+
 		});
 		c.gridx = 2;
 		c.gridwidth = 1;
@@ -576,4 +582,9 @@ public class SynthuseDlg extends JFrame {
         WindowEvent closingEvent = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
         Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(closingEvent);
     }
+
+	private void createConfigDialog() {
+		configDialog=new SynthuseConfigDialog(this, config);
+		configDialog.setLocationRelativeTo(null);
+	}
 }
