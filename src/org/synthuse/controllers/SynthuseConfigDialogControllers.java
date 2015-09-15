@@ -3,6 +3,8 @@ package org.synthuse.controllers;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JOptionPane;
+
 import org.synthuse.Config;
 import org.synthuse.views.SynthuseConfigPanel;
 
@@ -36,6 +38,7 @@ public class SynthuseConfigDialogControllers {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
 				aConfig.setXPathList(aSynthuseConfigPanel.getXPathListTextField().getText());
+				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
 	}
@@ -46,6 +49,7 @@ public class SynthuseConfigDialogControllers {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
 				aConfig.setXPathHighlight(aSynthuseConfigPanel.getXPathHighlightTextField().getText());
+				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
 	}
@@ -56,6 +60,7 @@ public class SynthuseConfigDialogControllers {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
 				aConfig.setTargetKeyCode(aSynthuseConfigPanel.getTargetKeyTextField().getText());
+				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
 	}
@@ -76,6 +81,7 @@ public class SynthuseConfigDialogControllers {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
 				aConfig.setRefreshKeyCode(aSynthuseConfigPanel.getRefreshKeyTextField().getText());
+				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
 	}
@@ -86,6 +92,7 @@ public class SynthuseConfigDialogControllers {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
 				aConfig.setDisableUiaBridge(aSynthuseConfigPanel.getDisableUiaBridgeCheckBox().isSelected());
+				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
 	}
@@ -96,6 +103,7 @@ public class SynthuseConfigDialogControllers {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
 				aConfig.setDisableFiltersUia(aSynthuseConfigPanel.getDisableFiltersUiaCheckBox().isSelected());
+				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
 	}
@@ -106,6 +114,7 @@ public class SynthuseConfigDialogControllers {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
 				aConfig.setAlwaysOnTop(aSynthuseConfigPanel.getAlwaysOnTopCheckBox().isSelected());
+				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
 	}
