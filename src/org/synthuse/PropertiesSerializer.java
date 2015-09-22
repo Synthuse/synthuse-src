@@ -59,13 +59,13 @@ public class PropertiesSerializer {
 		}
 		catch (Exception e) 
 		{
-			e.printStackTrace();
+			System.out.println("Unable to load properties from file: "+propertyFilename+". Default values will be used.");
+			return;
 		}
 
 		Field[] fields = this.getClass().getFields();
 		for (int i = 0 ; i < fields.length; i++)
 		{
-			//fields[i].get(this);
 			String pName = fields[i].getName();
 			String pType = "String";
 			try 
@@ -74,20 +74,26 @@ public class PropertiesSerializer {
 			}
 			catch (Exception e) 
 			{
-				//e.printStackTrace();
+//				e.printStackTrace();
 			}
+			final Object myProperty = prop.get(pName);
 			try 
 			{
-				if (pType.equalsIgnoreCase("integer"))
-					fields[i].set(this, Integer.parseInt(prop.get(pName) + ""));
-				if (pType.equalsIgnoreCase("boolean"))
-					fields[i].set(this, Boolean.parseBoolean(prop.get(pName) + ""));
-				else
-					fields[i].set(this, prop.get(pName));
+				if(myProperty==null) {
+					System.out.println("Property "+pName+"["+pType+"] not set; input was null");
+				} else {
+					if (pType.equalsIgnoreCase("integer"))
+						fields[i].set(this, Integer.parseInt(myProperty + ""));
+					if (pType.equalsIgnoreCase("boolean"))
+						fields[i].set(this, Boolean.parseBoolean(myProperty + ""));
+					else
+						fields[i].set(this, myProperty);
+					System.out.println("Property "+pName+"["+pType+"] set to: "+myProperty);
+				}
 			} 
 			catch (Exception e) 
 			{
-				//e.printStackTrace();
+//				e.printStackTrace();
 			}
 		}
 	}

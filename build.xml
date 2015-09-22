@@ -21,6 +21,9 @@
     <mkdir dir="${lib}"/>
     <echo>basedir: ${basedir}</echo>
     <echo>VM: ${java.vm.name}</echo>
+    <echo>VM Version: ${java.vm.specification.version}</echo>
+    <echo>VM Vendor: ${java.vm.vendor}</echo>
+    <echo>VM Build: ${java.vm.version}</echo>
     <echo>Username: ${user.name}</echo>
   </target>
   
