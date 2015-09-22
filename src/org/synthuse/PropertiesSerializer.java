@@ -80,7 +80,7 @@ public class PropertiesSerializer {
 			try 
 			{
 				if(myProperty==null) {
-					System.out.println("Property "+pName+"["+pType+"] not set; input was null");
+//					System.out.println("Property "+pName+"["+pType+"] not set; input was null");
 				} else {
 					if (pType.equalsIgnoreCase("integer"))
 						fields[i].set(this, Integer.parseInt(myProperty + ""));
@@ -88,7 +88,7 @@ public class PropertiesSerializer {
 						fields[i].set(this, Boolean.parseBoolean(myProperty + ""));
 					else
 						fields[i].set(this, myProperty);
-					System.out.println("Property "+pName+"["+pType+"] set to: "+myProperty);
+//					System.out.println("Property "+pName+"["+pType+"] set to: "+myProperty);
 				}
 			} 
 			catch (Exception e) 
