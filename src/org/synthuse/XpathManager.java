@@ -52,7 +52,7 @@ public class XpathManager implements Runnable{
 	
 	@Override
 	public void run() {
-		String results = buildXpathStatement();
+		String results = SynthuseDlg.config.isUseStrongTextMatching()?buildXpathStatement(true,50,50):buildXpathStatement();
 		events.executionCompleted(hwnd, results);
 	}
 	
@@ -143,7 +143,23 @@ public class XpathManager implements Runnable{
 						parentTxtStr = " and @text='" + parentTxtStr + "'";
 				}
 				if (!parentClassStr.isEmpty())
-					builtXpath = "//win[@class='" + parentClassStr + "'" + parentTxtStr + "]/win[@class='" + classStr + "']";
+				{
+					if (!txtStr.isEmpty()&&useFullTextMatching) {
+						String copyOfTxtStr = txtStr;
+						if (copyOfTxtStr.length() > maxTextLength) {// if the text is too long only test the first maxTextLength characters
+							copyOfTxtStr = WindowsEnumeratedXml.escapeXmlAttributeValue(copyOfTxtStr.substring(0, maxTextLength));
+							copyOfTxtStr = " and starts-with(@text,'" + copyOfTxtStr + "')";
+						}
+						else
+							copyOfTxtStr = " and @text='" + copyOfTxtStr + "'";
+						builtXpath = "//win[@class='" + parentClassStr + "'" + parentTxtStr + "]/win[@class='" + classStr + "'" + copyOfTxtStr + "]";
+					}
+					else
+					{
+						builtXpath = "//win[@class='" + parentClassStr + "'" + parentTxtStr + "]/win[@class='" + classStr + "']";
+					}
+				}
+				System.out.println(builtXpath);
 				resultList = WindowsEnumeratedXml.evaluateXpathGetValues(xml, builtXpath);
 				if (resultList.size() > 1) { // if there are still multiple results add position to the xpath
 					int position = 1;
