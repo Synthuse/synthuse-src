@@ -20,7 +20,7 @@ public class Config extends PropertiesSerializer {
 	public String xpathList = "";
 	public String xpathHightlight = ".*process=\"([^\"]*)\".*";
 	
-	private boolean useStrongTextMatching = false; 
+	public boolean useStrongTextMatching = false; 
 
 	
 	public Config() //needed for cloning
