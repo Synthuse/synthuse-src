@@ -70,7 +70,7 @@ public class Config extends PropertiesSerializer {
 		alwaysOnTop=aNewValue?"true":"false";
 	}
 	
-	public int getRefreshKeyCode()
+	public char getRefreshKey()
 	{
 		String keyStr = ""; 
 		if (this.refreshKey == null)
@@ -79,14 +79,19 @@ public class Config extends PropertiesSerializer {
 			keyStr = new Config().refreshKey; //use default value
 		else
 			keyStr = this.refreshKey;
-		return RobotMacro.getKeyCode(keyStr.charAt(0))[0];
+		return keyStr.charAt(0);
 	}
 
-	public void setRefreshKeyCode(String aText) {
+	public int getRefreshKeyCode()
+	{
+		return RobotMacro.getKeyCode(this.getRefreshKey())[0];
+	}
+
+	public void setRefreshKey(String aText) {
 		this.refreshKey=aText;
 	}
 	
-	public int getTargetKeyCode()
+	public char getTargetKey()
 	{
 		String keyStr = ""; 
 		if (this.targetKey == null)
@@ -95,10 +100,15 @@ public class Config extends PropertiesSerializer {
 			keyStr = new Config().targetKey; //use default value
 		else
 			keyStr = this.targetKey;
-		return RobotMacro.getKeyCode(keyStr.charAt(0))[0];
+		return keyStr.charAt(0);
 	}
 
-	public void setTargetKeyCode(String aText) {
+	public int getTargetKeyCode()
+	{
+		return RobotMacro.getKeyCode(this.getTargetKey())[0];
+	}
+
+	public void setTargetKey(String aText) {
 		this.targetKey=aText;
 	}
 

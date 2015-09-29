@@ -88,7 +88,7 @@ public class PropertiesSerializer {
 						fields[i].set(this, Boolean.parseBoolean(myProperty + ""));
 					else
 						fields[i].set(this, myProperty);
-//					System.out.println("Property "+pName+"["+pType+"] set to: "+myProperty);
+					System.out.println("Property "+pName+"["+pType+"] set to: "+myProperty);
 				}
 			} 
 			catch (Exception e) 

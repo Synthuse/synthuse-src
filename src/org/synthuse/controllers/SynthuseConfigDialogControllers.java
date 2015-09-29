@@ -14,9 +14,9 @@ public class SynthuseConfigDialogControllers {
 		aSynthuseConfigPanel.getAlwaysOnTopCheckBox().setSelected(aConfig.isAlwaysOnTop());
 		aSynthuseConfigPanel.getDisableFiltersUiaCheckBox().setSelected(aConfig.isFilterUiaDisabled());
 		aSynthuseConfigPanel.getDisableUiaBridgeCheckBox().setSelected(aConfig.isUiaBridgeDisabled());
-		aSynthuseConfigPanel.getRefreshKeyTextField().setText(Integer.toString(aConfig.getRefreshKeyCode()));
+		aSynthuseConfigPanel.getRefreshKeyTextField().setText(Character.toString(aConfig.getRefreshKey()));
 		aSynthuseConfigPanel.getStrongTextMatchingCheckBox().setSelected(aConfig.isUseStrongTextMatching());
-		aSynthuseConfigPanel.getTargetKeyTextField().setText(Integer.toString(aConfig.getTargetKeyCode()));
+		aSynthuseConfigPanel.getTargetKeyTextField().setText(Character.toString(aConfig.getTargetKey()));
 		aSynthuseConfigPanel.getXPathHighlightTextField().setText(aConfig.getXpathHighlight());
 		aSynthuseConfigPanel.getXPathListTextField().setText(aConfig.getXpathList());
 	}
@@ -59,7 +59,7 @@ public class SynthuseConfigDialogControllers {
 		return new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
-				aConfig.setTargetKeyCode(aSynthuseConfigPanel.getTargetKeyTextField().getText());
+				aConfig.setTargetKey(aSynthuseConfigPanel.getTargetKeyTextField().getText());
 				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
@@ -80,7 +80,7 @@ public class SynthuseConfigDialogControllers {
 		return new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent aE) {
-				aConfig.setRefreshKeyCode(aSynthuseConfigPanel.getRefreshKeyTextField().getText());
+				aConfig.setRefreshKey(aSynthuseConfigPanel.getRefreshKeyTextField().getText());
 				JOptionPane.showMessageDialog(aSynthuseConfigPanel, "May require restart to be effective");
 			}
 		};
