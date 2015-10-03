@@ -43,8 +43,6 @@ import java.util.List;
 
 import org.synthuse.Api.User32Ex;
 import org.synthuse.DragTarget.dragEvents;
-import org.synthuse.views.SynthuseConfigPanel;
-
 
 
 //public class SynthuseDlg extends JDialog {
@@ -205,13 +203,20 @@ public class SynthuseDlg extends JFrame {
 			    			MsgHook.createMsgHookWinThread(lastHwndLong, lastDragPid);
 			    			
 			    		}
+			    		if (event.getActionCommand() == "Settings") {
+							if(configDialog==null) {
+								createConfigDialog();
+							}
+							configDialog.setVisible(true);
+
+			    		}
 			    	}
 			    };
 				JMenuItem mnMessageHook = new JMenuItem("Message Hook");
 				mnMessageHook.addActionListener(menuListener);
 				menu.add(mnMessageHook);
 				JMenuItem mnSettings = new JMenuItem("Settings");
-				mnSettings.setEnabled(false);
+				mnSettings.setEnabled(true);
 				mnSettings.addActionListener(menuListener);
 				menu.add(mnSettings);
 
@@ -297,22 +302,6 @@ public class SynthuseDlg extends JFrame {
 		lblTarget.setMinimumSize(new Dimension(imageIcon.getIconWidth(), imageIcon.getIconHeight()));
 		lblTarget.setIcon(imageIcon);
 		panel.add(lblTarget, c);
-		
-		final JButton btnConfig = new JButton("Cfg");
-		
-		btnConfig.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(configDialog==null) {
-					createConfigDialog();
-				}
-				configDialog.setVisible(true);
-			}
-
-		});
-		c.gridx = 2;
-		c.gridwidth = 1;
-		panel.add(btnConfig, c);
 
 		btnFind = new JButton("Find");
 		btnFind.addActionListener(new ActionListener() {

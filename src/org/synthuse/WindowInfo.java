@@ -109,7 +109,12 @@ public class WindowInfo {
 		className = Native.toString(buffer2);
 		
 		//check if window has a menu
-    	HMENU hmenu = Api.User32Ex.instance.GetMenu(hWnd);
+		HMENU hmenu = null;
+		try {
+			hmenu = Api.User32Ex.instance.GetMenu(hWnd);
+		} catch(Exception ex) {
+			//ex.printStackTrace();
+		}
 		if (hmenu != null) { //menu item count
 	    	int menuCount = Api.User32Ex.instance.GetMenuItemCount(hmenu);
 	    	if (menuCount > 0) {
