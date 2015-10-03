@@ -20,6 +20,9 @@ public class Config extends PropertiesSerializer {
 	public String xpathList = "";
 	public String xpathHightlight = ".*process=\"([^\"]*)\".*";
 	
+	public boolean useStrongTextMatching = false; 
+
+	
 	public Config() //needed for cloning
 	{
 	}
@@ -37,12 +40,23 @@ public class Config extends PropertiesSerializer {
 		return disableUiaBridge.equals("true") || disableUiaBridge.equals("True");
 	}
 	
+
+	public void setDisableUiaBridge(boolean aNewValue) {
+		disableUiaBridge=aNewValue?"true":"false";
+	}
+
+	
 	public boolean isFilterUiaDisabled()
 	{
 		if (disableFiltersUia == null)
 			return false;
 		return disableFiltersUia.equals("true") || disableFiltersUia.equals("True");
 	}
+	
+	public void setDisableFiltersUia(boolean aNewValue) {
+		disableFiltersUia=aNewValue?"true":"false";
+	}
+
 	
 	public boolean isAlwaysOnTop()
 	{
@@ -51,7 +65,12 @@ public class Config extends PropertiesSerializer {
 		return alwaysOnTop.equals("true") || alwaysOnTop.equals("True");
 	}
 	
-	public int getRefreshKeyCode()
+	public void setAlwaysOnTop(boolean aNewValue)
+	{
+		alwaysOnTop=aNewValue?"true":"false";
+	}
+	
+	public char getRefreshKey()
 	{
 		String keyStr = ""; 
 		if (this.refreshKey == null)
@@ -60,10 +79,19 @@ public class Config extends PropertiesSerializer {
 			keyStr = new Config().refreshKey; //use default value
 		else
 			keyStr = this.refreshKey;
-		return RobotMacro.getKeyCode(keyStr.charAt(0))[0];
+		return keyStr.charAt(0);
+	}
+
+	public int getRefreshKeyCode()
+	{
+		return RobotMacro.getKeyCode(this.getRefreshKey())[0];
+	}
+
+	public void setRefreshKey(String aText) {
+		this.refreshKey=aText;
 	}
 	
-	public int getTargetKeyCode()
+	public char getTargetKey()
 	{
 		String keyStr = ""; 
 		if (this.targetKey == null)
@@ -72,6 +100,39 @@ public class Config extends PropertiesSerializer {
 			keyStr = new Config().targetKey; //use default value
 		else
 			keyStr = this.targetKey;
-		return RobotMacro.getKeyCode(keyStr.charAt(0))[0];
+		return keyStr.charAt(0);
+	}
+
+	public int getTargetKeyCode()
+	{
+		return RobotMacro.getKeyCode(this.getTargetKey())[0];
+	}
+
+	public void setTargetKey(String aText) {
+		this.targetKey=aText;
+	}
+
+	public boolean isUseStrongTextMatching() {
+		return useStrongTextMatching;
+	}
+
+	public void setUseStrongTextMatching(boolean useStrongTextMatching) {
+		this.useStrongTextMatching = useStrongTextMatching;
+	}
+
+	public String getXpathList() {
+		return xpathList;
+	}
+
+	public void setXPathList(String aText) {
+		xpathList=aText;
+	}
+
+	public String getXpathHighlight() {
+		return xpathHightlight;
+	}
+
+	public void setXPathHighlight(String aText) {
+		xpathHightlight=aText;
 	}
 }

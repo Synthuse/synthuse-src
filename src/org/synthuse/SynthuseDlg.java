@@ -43,6 +43,7 @@ import java.util.List;
 
 import org.synthuse.Api.User32Ex;
 import org.synthuse.DragTarget.dragEvents;
+import org.synthuse.views.SynthuseConfigPanel;
 
 
 
@@ -85,6 +86,7 @@ public class SynthuseDlg extends JFrame {
 	private JButton btnAdvanced;
 	
 	private TestIdeFrame testIde = null;
+	protected SynthuseConfigDialog configDialog=null;
 	//private MessageHookFrame msgHook = null;
 	private int targetX;
 	private int targetY;
@@ -283,7 +285,7 @@ public class SynthuseDlg extends JFrame {
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 0.5;
-		c.gridwidth = 1;
+		c.gridwidth = 2;
 		c.gridx = 0;
 		c.gridy = 0;
 		c.insets = new Insets(3,3,3,3); // add padding around objects
@@ -291,9 +293,27 @@ public class SynthuseDlg extends JFrame {
 		final DragTarget lblTarget = new DragTarget();
 		
 		lblTarget.setHorizontalAlignment(SwingConstants.CENTER);
-		lblTarget.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_TARGET_IMG)));
+		final ImageIcon imageIcon = new ImageIcon(SynthuseDlg.class.getResource(RES_STR_TARGET_IMG));
+		lblTarget.setMinimumSize(new Dimension(imageIcon.getIconWidth(), imageIcon.getIconHeight()));
+		lblTarget.setIcon(imageIcon);
 		panel.add(lblTarget, c);
 		
+		final JButton btnConfig = new JButton("Cfg");
+		
+		btnConfig.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(configDialog==null) {
+					createConfigDialog();
+				}
+				configDialog.setVisible(true);
+			}
+
+		});
+		c.gridx = 2;
+		c.gridwidth = 1;
+		panel.add(btnConfig, c);
+
 		btnFind = new JButton("Find");
 		btnFind.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {				
@@ -323,8 +343,8 @@ public class SynthuseDlg extends JFrame {
 		        }
 		    }
 		});
-		c.gridwidth = 3;
-		c.gridx = 1;
+		c.gridwidth = 1;
+		c.gridx = 3;
 		panel.add(cmbXpath, c);
 		btnFind.setIcon(new ImageIcon(SynthuseDlg.class.getResource(RES_STR_FIND_IMG)));
 		c.gridwidth = 1;
@@ -562,4 +582,9 @@ public class SynthuseDlg extends JFrame {
         WindowEvent closingEvent = new WindowEvent(this, WindowEvent.WINDOW_CLOSING);
         Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(closingEvent);
     }
+
+	private void createConfigDialog() {
+		configDialog=new SynthuseConfigDialog(this, config);
+		configDialog.setLocationRelativeTo(null);
+	}
 }
