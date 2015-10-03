@@ -20,6 +20,9 @@ public class Config extends PropertiesSerializer {
 	public String xpathList = "";
 	public String xpathHightlight = ".*process=\"([^\"]*)\".*";
 	
+	public boolean useStrongTextMatching = false; 
+
+	
 	public Config() //needed for cloning
 	{
 	}
@@ -37,6 +40,12 @@ public class Config extends PropertiesSerializer {
 		return disableUiaBridge.equals("true") || disableUiaBridge.equals("True");
 	}
 	
+
+	public void setDisableUiaBridge(boolean aNewValue) {
+		disableUiaBridge=aNewValue?"true":"false";
+	}
+
+	
 	public boolean isFilterUiaDisabled()
 	{
 		if (disableFiltersUia == null)
@@ -44,11 +53,21 @@ public class Config extends PropertiesSerializer {
 		return disableFiltersUia.equals("true") || disableFiltersUia.equals("True");
 	}
 	
+	public void setDisableFiltersUia(boolean aNewValue) {
+		disableFiltersUia=aNewValue?"true":"false";
+	}
+
+	
 	public boolean isAlwaysOnTop()
 	{
 		if (alwaysOnTop == null)
 			return new Config().alwaysOnTop.equals("true") || new Config().alwaysOnTop.equals("True");
 		return alwaysOnTop.equals("true") || alwaysOnTop.equals("True");
+	}
+	
+	public void setAlwaysOnTop(boolean aNewValue)
+	{
+		alwaysOnTop=aNewValue?"true":"false";
 	}
 	
 	public int getRefreshKeyCode()
@@ -62,6 +81,10 @@ public class Config extends PropertiesSerializer {
 			keyStr = this.refreshKey;
 		return RobotMacro.getKeyCode(keyStr.charAt(0))[0];
 	}
+
+	public void setRefreshKeyCode(String aText) {
+		this.refreshKey=aText;
+	}
 	
 	public int getTargetKeyCode()
 	{
@@ -73,5 +96,33 @@ public class Config extends PropertiesSerializer {
 		else
 			keyStr = this.targetKey;
 		return RobotMacro.getKeyCode(keyStr.charAt(0))[0];
+	}
+
+	public void setTargetKeyCode(String aText) {
+		this.targetKey=aText;
+	}
+
+	public boolean isUseStrongTextMatching() {
+		return useStrongTextMatching;
+	}
+
+	public void setUseStrongTextMatching(boolean useStrongTextMatching) {
+		this.useStrongTextMatching = useStrongTextMatching;
+	}
+
+	public String getXpathList() {
+		return xpathList;
+	}
+
+	public void setXPathList(String aText) {
+		xpathList=aText;
+	}
+
+	public String getXpathHighlight() {
+		return xpathHightlight;
+	}
+
+	public void setXPathHighlight(String aText) {
+		xpathHightlight=aText;
 	}
 }
